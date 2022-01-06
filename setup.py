@@ -3,11 +3,12 @@ import setuptools
 # read the contents of your README file
 from pathlib import Path
 this_directory = Path(__file__).parent
-long_description = (this_directory / "pypiREADME.md").read_text()
+
+long_description = (this_directory/"README.md").read_text()
 
 setuptools.setup(
     name="pyoxynet",
-    version="0.0.1.1",
+    version="0.0.1.3",
     author="Andrea Zignoli",
     author_email="andrea.zignoli@unitn.it",
     description="Python package of the Oxynet project (visit www.oxynet.net)",
