@@ -36,17 +36,17 @@
   <h3 align="center">The Oxynet Python package repository</h3>
 
   <p align="center">
-    <a :earth_africa: ></a>
+    <a> :earth_africa: </a>
     <br />
-    <a With strained healthcare systems and ageing populations, we requireworld-wide coordinated and systemic actions to provide timely andefficient diagnostics.></a>
+    <a> With strained healthcare systems and ageing populations, we requireworld-wide coordinated and systemic actions to provide timely andefficient diagnostics.</a>
     <br />
-        <a :hospital: ></a>
+        <aZ> :hospital: </a>
     <br />
-    <a We want to contribute with sustainable approaches for the digitaltransformation and with the delivery of equitable health and careservices with improved accessibility.></a>
+    <a> We want to contribute with sustainable approaches for the digitaltransformation and with the delivery of equitable health and careservices with improved accessibility.</a>
     <br />
-        <a :computer: ></a>
+        <a> :computer: </a>
     <br />
-    <a The goal of the Oxynet project is to develop automatic interpreter ofcardiopulmonary exercising tests (CPET).></a>
+    <a> The goal of the Oxynet project is to develop automatic interpreter ofcardiopulmonary exercising tests (CPET).</a>
     <br />
     <a href="http://oxynet.net"><strong>Visit the website »</strong></a>
     <br />
