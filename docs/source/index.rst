@@ -10,6 +10,11 @@ Welcome to pyoxynet's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+Contents
+--------
+
+.. toctree::
+   usage
 
 
 Indices and tables
