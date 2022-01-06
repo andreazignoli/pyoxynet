@@ -57,7 +57,7 @@
     ·
     <a href="https://pypi.org/project/pyoxynet/">Pypi</a>
     ·
-    <a href="https://pyoxynet.readthedocs.io/en/latest/">Docs</a>
+    <a href="https://pyoxynet.readthedocs.io/en/latest/index.html">Docs</a>
   </p>
 </div>
 
