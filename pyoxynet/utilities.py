@@ -1,31 +1,22 @@
-def PrintHello():
-    """This function does something.
+def PrintHello(hello='hello'):
+    """This function prints to screen.
 
     Args:
        name (str):  The name to use.
 
-    Kwargs:
-       state (bool): Current state to be in.
-
     Returns:
-       int.  The return code::
-
-          0 -- Success!
-          1 -- No good.
-          2 -- Try again.
+       none
 
     Raises:
-       AttributeError, KeyError
+       None
 
-    A really great idea.  A way you might use me is
+    As an example
 
-    >>> print public_fn_with_googley_docstring(name='foo', state=None)
-    0
-
-    BTW, this always returns 0.  **NEVER** use with :class:`MyPublicClass`.
+    >>> PrintHello()
+    hello
 
     """
     
-    print("Hello from the Oxynet Python package")
+    print(hello)
     
     return

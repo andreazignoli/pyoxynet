@@ -10,6 +10,8 @@ To use pyoxynet, first install it using pip:
 
    (.venv) $ pip install pyoxynet
 
+Functions
+------------
 
 To test the package you can use the ``utilities.PrintHello()`` function:
 
