@@ -1,0 +1,4 @@
+pyoxynet/models/*
+!pyoxynet/models/.gitkeep
+pyoxynet.egg-info
+dist
