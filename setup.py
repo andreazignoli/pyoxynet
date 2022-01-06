@@ -1,11 +1,18 @@
 import setuptools
 
+# read the contents of your README file
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setuptools.setup(
     name="pyoxynet",
-    version="0.0.0.4",
+    version="0.0.0.8",
     author="Andrea Zignoli",
     author_email="andrea.zignoli@unitn.it",
     description="Python package of the Oxynet project (visit www.oxynet.net)",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3.8",
@@ -13,7 +20,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     include_package_data=True,
-    package_data={'': ['models/*']},
+    package_data={'': ['pics/*', 'models/*']},
     #exclude_package_data={
     #    '': 'debugging.py.c'},
     python_requires='>=3.8',

@@ -2,3 +2,5 @@ pyoxynet/models/*
 !pyoxynet/models/.gitkeep
 pyoxynet.egg-info
 dist
+venv
+pyoxynet/__pycache__
