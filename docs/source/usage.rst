@@ -10,6 +10,7 @@ To use pyoxynet, first install it using pip:
 
    (.venv) $ pip install pyoxynet
 
+
 PrintHello
 ----------------
 
@@ -28,3 +29,7 @@ To test the package you can use the ``pyoxynet.PrintHello()`` function:
     -------
     str
         A str saying Hello
+
+To test the package you can use the ``utilities.PrintHello()`` function:
+
+.. autofunction:: utilities.PrintHello()
