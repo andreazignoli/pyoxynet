@@ -38,15 +38,15 @@
   <p align="center">
     <a> :earth_africa: </a>
     <br />
-    <a> With strained healthcare systems and ageing populations, we requireworld-wide coordinated and systemic actions to provide timely andefficient diagnostics.</a>
+    <a> With strained healthcare systems and ageing populations, we require world-wide coordinated actions for timely diagnostics.</a>
     <br />
         <aZ> :hospital: </a>
     <br />
-    <a> We want to contribute with sustainable approaches for the digitaltransformation and with the delivery of equitable health and careservices with improved accessibility.</a>
+    <a> We want to contribute with sustainable approaches to more equitable health and care services.</a>
     <br />
         <a> :computer: </a>
     <br />
-    <a> The goal of the Oxynet project is to develop automatic interpreter ofcardiopulmonary exercising tests (CPET).</a>
+    <a> With Oxynet we develop automatic interpreter of cardiopulmonary exercising tests.</a>
     <br />
     <a href="http://oxynet.net"><strong>Visit the website »</strong></a>
     <br />
@@ -58,70 +58,26 @@
   </p>
 </div>
 
-
-
-
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
-
-
-
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## The Oxynet Project
 
 <!--[![Product Name Screen Shot][product-screenshot]](https://example.com)-->
 
-There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
+There are challenges that transcend both national and continental boundaries and providing people with universal access to good quality health care is one of them. Emerging technologies in the field of AI and the availability of vast amounts of data can offer big opportunities to stimulate innovation and develop solutions.
 
-Here's why:
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should implement DRY principles to the rest of your life :smile:
+Oxynet wants to become a tool for a quick and encompassing diagnosis of medical conditions with cardiopulmonary exercise tests (CPET) and promote accurate and timely clinical decisions, ultimately reducing the costs associated with current evaluation errors and delays.
 
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
+The main building blocks of Oxynet are: 
 
-Use the `BLANK_README.md` to get started.
+* A network of experts in the field of CPET
+* A large crowdsourced data set
+* An AI algorithm able to approximate human cognition in the analysis of CPET 
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+The people and the institutions currently involved in this project are listed in Sect. \ref{contributors} of this document. Nevertheless, we are interested in creating more research opportunities with other Universities and Departments, hospitals and clinics, medical doctors and physiologists (also operating in intensive care units), companies involved in the development (including patenting and validation) and in the commercialisation of medical devices (e.g. metabolic carts and medical software). 
 
-### Built With
-
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
-
-* [Next.js](https://nextjs.org/)
-* [React.js](https://reactjs.org/)
-* [Vue.js](https://vuejs.org/)
-* [Angular](https://angular.io/)
-* [Svelte](https://svelte.dev/)
-* [Laravel](https://laravel.com)
-* [Bootstrap](https://getbootstrap.com)
-* [JQuery](https://jquery.com)
+We want to bring together key actors from across sectors to jointly implement our R&D road map and: support the research activities financially (including scholarships for research fellows or publication fees for open access journals), provide intellectual contribution for scientific publications or grant application, share data for testing/developing new algorithms, develop web-based applications (e.g. crowdsourcing applications, automatic interpretation of new data, websites for communicating the outcomes of the project), conduct market and patent analyses, and validate the algorithms for clinical settings.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -129,13 +85,15 @@ This section should list any major frameworks/libraries used to bootstrap your p
 This is an example of how you may give instructions on setting up your project locally.
 To get a local copy up and running follow these simple example steps.
 
-### Prerequisites
+### Pip install the package
 
 This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+
+```sh
+pip install pyoxynet
+```
+
+<p align="right">(<a href="#top">back to top</a>)</p>
 
 ### Installation
 
@@ -157,8 +115,6 @@ _Below is an example of how you can instruct your audience on installing and set
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-
-
 <!-- USAGE EXAMPLES -->
 ## Usage
 
@@ -167,8 +123,6 @@ Use this space to show useful examples of how a project can be used. Additional 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
-
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -203,8 +157,6 @@ Don't forget to give the project a star! Thanks again!
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-
-
 <!-- LICENSE -->
 ## License
 
@@ -212,18 +164,14 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-
-
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
+Andrea Zignoli - [@andrea_zignoli](https://twitter.com/andrea_zignoli) - andrea.zignoli@unitn.it
 
-Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
+Repository project link: [pyoxynet](https://github.com/andreazignoli/pyoxynet)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
-
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
@@ -240,8 +188,6 @@ Use this space to list resources you find helpful and would like to give credit 
 * [React Icons](https://react-icons.github.io/react-icons/search)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
-
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
