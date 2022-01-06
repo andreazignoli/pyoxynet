@@ -6,15 +6,15 @@
 Welcome to pyoxynet's documentation!
 ====================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
 Contents
 --------
 
 .. toctree::
    usage
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
 
 
 Indices and tables
