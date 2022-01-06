@@ -7,14 +7,6 @@ def PrintHello(hello='hello'):
     Returns:
        none
 
-    Raises:
-       None
-
-    As an example
-
-    >>> PrintHello()
-    hello
-
     """
     
     print(hello)
