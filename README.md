@@ -56,6 +56,8 @@
     <a href="https://oxynetresearch.promfacility.eu">Web app</a>
     ·
     <a href="https://pypi.org/project/pyoxynet/">Pypi</a>
+    ·
+    <a href="https://pyoxynet.readthedocs.io/en/latest/">Docs</a>
   </p>
 </div>
 
