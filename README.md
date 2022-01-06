@@ -39,7 +39,7 @@
     <br />
     <a> With strained healthcare systems and ageing populations, we require world-wide coordinated actions for timely diagnostics.</a>
     <br />
-        <aZ> :hospital: </a>
+        <az> :hospital: </a>
     <br />
     <a> We want to contribute with sustainable approaches to more equitable health and care services.</a>
     <br />
