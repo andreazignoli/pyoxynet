@@ -10,6 +10,7 @@ To use pyoxynet, first install it using pip:
 
    (.venv) $ pip install pyoxynet
 
+
 Functions
 ---------
 
