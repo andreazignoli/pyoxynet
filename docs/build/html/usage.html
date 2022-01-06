@@ -190,25 +190,33 @@
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(.venv)</span> <span class="gp">$ </span>pip install pyoxynet
 </pre></div>
 </div>
-</section>
-<section id="printhello">
-<h2>PrintHello<a class="headerlink" href="#printhello" title="Permalink to this headline">¶</a></h2>
-<p>To test the package you can use the <code class="docutils literal notranslate"><span class="pre">pyoxynet.PrintHello()</span></code> function:</p>
+<p>To test the package you can use the <code class="docutils literal notranslate"><span class="pre">utilities.PrintHello()</span></code> function:</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="pyoxynet.PrintHello">
-<span class="sig-prename descclassname"><span class="pre">pyoxynet.</span></span><span class="sig-name descname"><span class="pre">PrintHello</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyoxynet.PrintHello" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>nothing<span class="classifier">str</span></dt><dd><p>Nothing at all</p>
+<dt class="sig sig-object py" id="utilities.PrintHello">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">PrintHello</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utilities.PrintHello" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function does something.</p>
+<dl>
+<dt>Args:</dt><dd><p>name (str):  The name to use.</p>
 </dd>
-<dt>nothing_at_all<span class="classifier">bool, optional</span></dt><dd><p>A flag not used to do anything (default is False)</p>
+<dt>Kwargs:</dt><dd><p>state (bool): Current state to be in.</p>
+</dd>
+<dt>Returns:</dt><dd><p>int.  The return code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>0 -- Success!
+1 -- No good.
+2 -- Try again.
+</pre></div>
+</div>
+</dd>
+<dt>Raises:</dt><dd><p>AttributeError, KeyError</p>
 </dd>
 </dl>
-<dl class="simple">
-<dt>str</dt><dd><p>A str saying Hello</p>
-</dd>
-</dl>
+<p>A really great idea.  A way you might use me is</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">public_fn_with_googley_docstring</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'foo'</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>BTW, this always returns 0.  <strong>NEVER</strong> use with <code class="xref py py-class docutils literal notranslate"><span class="pre">MyPublicClass</span></code>.</p>
 </dd></dl>
-<p>To test the package you can use the <code class="docutils literal notranslate"><span class="pre">pyoxynet.PrintHello()</span></code> function:</p>
 </section>
 </section>
 
@@ -257,7 +265,6 @@
             <ul>
 <li><a class="reference internal" href="#">Usage</a><ul>
 <li><a class="reference internal" href="#installation">Installation</a></li>
-<li><a class="reference internal" href="#printhello">PrintHello</a></li>
 </ul>
 </li>
 </ul>
