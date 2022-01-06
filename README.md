@@ -33,21 +33,21 @@
     <img src="pics/logo_BW.png" alt="Logo" width="120" height="120">
   </a>
 
-  <h3 align="center">Best-README-Template</h3>
+  <h3 align="center">The Oxynet Python package repository</h3>
 
   <p align="center">
-    An awesome README template to jumpstart your projects!
     <br />
-    <a href="https://github.com/othneildrew/Best-README-Template"><strong>Explore the docs »</strong></a>
+    <a href="http://oxynet.net"><strong>Visit the website »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/othneildrew/Best-README-Template">View Demo</a>
+    <a href="https://www.overleaf.com/read/zgsfxmvcbhkz">Overleaf</a>
     ·
-    <a href="https://github.com/othneildrew/Best-README-Template/issues">Report Bug</a>
+    <a href="https://oxynetresearch.promfacility.eu">Web app</a>
     ·
-    <a href="https://github.com/othneildrew/Best-README-Template/issues">Request Feature</a>
+    <a href="https://pypi.org/project/pyoxynet/">Pypi :smile:</a>
   </p>
 </div>
+
 
 
 
@@ -97,8 +97,6 @@ Use the `BLANK_README.md` to get started.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-
-
 ### Built With
 
 This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
@@ -113,7 +111,6 @@ This section should list any major frameworks/libraries used to bootstrap your p
 * [JQuery](https://jquery.com)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
-
 
 
 <!-- GETTING STARTED -->
@@ -249,5 +246,5 @@ Use this space to list resources you find helpful and would like to give credit 
 [license-shield]: https://img.shields.io/github/license/andreazignoli/pyoxynet.svg?style=for-the-badge
 [license-url]: https://github.com/andreazignoli/pyoxynet/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/andreazignoli
+[linkedin-url]: https://www.linkedin.com/in/andrea-zignoli-8080a438/
 [product-screenshot]: images/screenshot.png
