@@ -48,6 +48,7 @@
     <br />
     <a> With Oxynet we develop automatic interpreter of cardiopulmonary exercising tests.</a>
     <br />
+    <br />
     <a href="http://oxynet.net"><strong>Visit the website »</strong></a>
     <br />
     <a href="https://www.overleaf.com/read/zgsfxmvcbhkz">Overleaf</a>
