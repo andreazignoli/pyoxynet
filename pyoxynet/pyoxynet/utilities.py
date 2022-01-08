@@ -80,6 +80,7 @@ def load_tf_model():
        none
 
     """
+
     import importlib_resources
     import pickle
     from io import BytesIO
