@@ -24,16 +24,13 @@
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a>
     <img src="pics/logo_BW.png" alt="Logo" width="120" height="120">
   </a>
-
   <h3 align="center">The Oxynet Python package repository</h3>
-
   <p align="center">
     <a> :earth_africa: </a>
     <br />
@@ -75,7 +72,7 @@ The main building blocks of Oxynet are:
 * A large crowdsourced data set
 * An AI algorithm able to approximate human cognition in the analysis of CPET 
 
-The people and the institutions currently involved in this project are listed in Sect. \ref{contributors} of this document. Nevertheless, we are interested in creating more research opportunities with other Universities and Departments, hospitals and clinics, medical doctors and physiologists (also operating in intensive care units), companies involved in the development (including patenting and validation) and in the commercialisation of medical devices (e.g. metabolic carts and medical software). 
+We are interested in creating more research opportunities with other Universities and Departments, hospitals and clinics, medical doctors and physiologists (also operating in intensive care units), companies involved in the development (including patenting and validation) and in the commercialisation of medical devices (e.g. metabolic carts and medical software). 
 
 We want to bring together key actors from across sectors to jointly implement our R&D road map and: support the research activities financially (including scholarships for research fellows or publication fees for open access journals), provide intellectual contribution for scientific publications or grant application, share data for testing/developing new algorithms, develop web-based applications (e.g. crowdsourcing applications, automatic interpretation of new data, websites for communicating the outcomes of the project), conduct market and patent analyses, and validate the algorithms for clinical settings.
 
@@ -122,22 +119,23 @@ _Below is an example of how you can instruct your audience on installing and set
 
 Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+_For more examples, please refer to the package [Documentation](https://pyoxynet.readthedocs.io/en/latest/index.html)_
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
+- [x] Create web app for inference
+- [x] Create web app for data crowd sourcing
+- [x] Create website
+- [ ] Create Python package for inference
+- [ ] ----
+- [ ] ----
+    - [ ] ----
+    - [ ] ----
 
-See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/andreazignoli/pyoxynet/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

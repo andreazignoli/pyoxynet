@@ -3,3 +3,6 @@ twine
 sphinx
 myst-parser
 furo
+importlib-resources
+tflite_runtime
+wheel

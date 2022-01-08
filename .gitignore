@@ -4,3 +4,4 @@ pyoxynet.egg-info
 dist
 venv
 pyoxynet/__pycache__
+.idea

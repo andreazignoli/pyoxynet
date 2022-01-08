@@ -25,13 +25,14 @@ def optimal_filter(t, y, my_lambda):
             Smoothing factor
 
     Returns:
-        array
+        x : array
             Filtered variable
     
     """
 
     import numpy as np
-    # be robust for non-monotonic x variables
+
+    # be robust for non-monotonic x variables (made for the time in CPET specifically)
     for i in np.arange(1, len(t)-1):
         if t[i+1] == t[i]:
             t[i+1] = t[i] + 0.1
@@ -68,3 +69,30 @@ def optimal_filter(t, y, my_lambda):
         x[i + 1] = x[i] + (t[i + 1] - t[i]) * u[i]
 
     return x
+
+def load_tf_model():
+    """This function loads the saved tflite models.
+
+    Args:
+       name (str):  The name of the pickle file of the model.
+
+    Returns:
+       none
+
+    """
+    import importlib_resources
+    import pickle
+    from io import BytesIO
+    # import pyoxynet.models
+    import tflite_runtime.interpreter as tflite
+
+    interpreter = tflite.Interpreter(model_path='models/tfl_model.tflite')
+    output_details = interpreter.get_output_details()
+    interpreter.allocate_tensors()
+
+    # tfl_model.tflite
+    # tfl_model_binaries = importlib_resources.read_binary(models, 'tfl_model.pickle')
+    # tfl_model_decoded = pickle.loads(tfl_model_binaries)
+
+    # return BytesIO(tfl_model_decoded)
+    return interpreter
