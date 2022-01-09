@@ -89,10 +89,6 @@ def load_tf_model():
     pip_install_tflite()
     import tflite_runtime.interpreter as tflite
 
-    #interpreter = tflite.Interpreter(model_path='models/tfl_model.tflite')
-    #output_details = interpreter.get_output_details()
-    #interpreter.allocate_tensors()
-
     # tfl_model.tflite
     tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'tfl_model.pickle')
     tfl_model_decoded = pickle.loads(tfl_model_binaries)
@@ -104,14 +100,51 @@ def load_tf_model():
     return interpreter
 
 def pip_install_tflite():
+    """Makes sure TFLite is installed
 
+    Parameters: 
+        none
+
+    Returns:
+        none
+
+    """
     import os
     import pkg_resources
     installed_packages = pkg_resources.working_set
     installed_packages_list = sorted(["%s" % (i.key) for i in installed_packages])
-    print(installed_packages_list)
 
     if 'tflite-runtime' in installed_packages_list:
         print('Tflite runtime already present in the package list (skipping)')
     else:
         os.system("pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime")
+
+def test_tfl_model(interpreter):
+    """Test if the model is running correclty
+
+    Parameters: 
+        interpreter : loaded tf.lite.Interpreter
+            Loaded interpreter TFLite model
+
+    Returns:
+        x : array
+            Model output example
+
+    """
+    import numpy as np
+
+    # Allocate tensors.
+    interpreter.allocate_tensors()
+
+    # Get input and output tensors.
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    # Test the model on random input data.
+    input_shape = input_details[0]['shape']
+    input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+
+    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.invoke()
+
+    return interpreter.get_tensor(output_details[0]['index'])
