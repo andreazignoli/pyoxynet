@@ -84,16 +84,34 @@ def load_tf_model():
     import importlib_resources
     import pickle
     from io import BytesIO
-    # import pyoxynet.models
+    import pyoxynet.models
+
+    pip_install_tflite()
     import tflite_runtime.interpreter as tflite
 
-    interpreter = tflite.Interpreter(model_path='models/tfl_model.tflite')
-    output_details = interpreter.get_output_details()
-    interpreter.allocate_tensors()
+    #interpreter = tflite.Interpreter(model_path='models/tfl_model.tflite')
+    #output_details = interpreter.get_output_details()
+    #interpreter.allocate_tensors()
 
     # tfl_model.tflite
-    # tfl_model_binaries = importlib_resources.read_binary(models, 'tfl_model.pickle')
-    # tfl_model_decoded = pickle.loads(tfl_model_binaries)
+    tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'tfl_model.pickle')
+    tfl_model_decoded = pickle.loads(tfl_model_binaries)
 
-    # return BytesIO(tfl_model_decoded)
+    # save model locally on tmp
+    open('/tmp/tfl_model' + '.tflite', 'wb').write(tfl_model_decoded.getvalue())
+    interpreter = tflite.Interpreter(model_path='/tmp/tfl_model.tflite')
+
     return interpreter
+
+def pip_install_tflite():
+
+    import os
+    import pkg_resources
+    installed_packages = pkg_resources.working_set
+    installed_packages_list = sorted(["%s" % (i.key) for i in installed_packages])
+    print(installed_packages_list)
+
+    if 'tflite-runtime' in installed_packages_list:
+        print('Tflite runtime already present in the package list (skipping)')
+    else:
+        os.system("pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime")
