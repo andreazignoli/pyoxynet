@@ -106,6 +106,12 @@ This is an example of how to list things you need to use the software and how to
 pip install pyoxynet
 ```
 
+Packages that require addition extra url cannot be installed via setuptools, which letely allows and suggests to use pip when possibile. To workaround this problem, TFLite is automatically installed with the following command the first time pyoxynet is imported:
+
+```sh
+pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
+```
+
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ### Installation
@@ -140,6 +146,21 @@ Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2),
 |     |      |    |       |        |       |        |
 
 Oxynet inference models work on data oversampled on a sec-by-sec basis. When dealing with breath-by-breath data, linear interpolation at 1 second is appropriate. When dealing with averaged 5-by-5 second data or 10-by-10 second data, cubic interpolation is more appropriate. Pyoxynet however, can implement a number of interpolation algorithm to process raw data as well as data already processed. 
+
+### See pyoxynet at work on sample data
+
+```python
+import pyoxynet
+
+# Load the TFL model
+tfl_model = pyoxynet.load_tf_model()
+
+# Make inference on a random input
+test_tfl_model(tfl_model)
+
+# Plot the inference on a test dataset
+pyoxynet.test_pyoxynet()
+```
 
 ![plot](./pics/terminal_plot.png)
 

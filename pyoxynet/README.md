@@ -20,11 +20,13 @@ pip install pyoxynet
 import pyoxynet
 
 # Load the TFL model
-tfl_model = load_tf_model()
+tfl_model = pyoxynet.load_tf_model()
 
 # Make inference on a random input
 test_tfl_model(tfl_model)
 
+# Plot the inference on a test dataset
+pyoxynet.test_pyoxynet()
 ```
 
 Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2), minute ventilation (VE), end tidal O2 (PetO2) and CO2(PetCO2), and ventilatory equivalents (VEVO2 and VEVCO2):
@@ -36,9 +38,8 @@ Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2),
 |     |      |    |       |        |       |        |
 
 ## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-Please make sure to update tests as appropriate.
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 
