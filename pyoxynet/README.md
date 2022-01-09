@@ -44,3 +44,7 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 ## License
 
 Please refer to the LICENSE file at the [GitHub repository](https://github.com/andreazignoli/pyoxynet). 
+
+## Disclaimer
+
+All content found on this website, including: text, images, tables, or other formats are created for informational purposes only. The information provided by this software is not intended to be a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition. Never disregard professional medical advice or delay in seeking it because of something has been provided by this software.

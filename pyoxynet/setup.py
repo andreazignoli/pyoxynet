@@ -13,7 +13,7 @@ setuptools.setup(
     version="0.0.7.3",
     author="Andrea Zignoli",
     author_email="andrea.zignoli@unitn.it",
-    description="Python package of the Oxynet project (visit www.oxynet.net)",
+    description="Python package of the Oxynet project",
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=setuptools.find_packages(),
