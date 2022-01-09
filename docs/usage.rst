@@ -14,10 +14,10 @@ To use pyoxynet, first install it using pip:
 Functions
 ---------
 
-To test the package you can use the ``pyoxynet.utilities.PrintHello()`` function:
+To test the package you can use the ``pyoxynet.PrintHello()`` function:
 
-.. autofunction:: pyoxynet.utilities.PrintHello()
+.. autofunction:: pyoxynet.PrintHello()
 
-The optimal filter adopted for the project ``pyoxynet.utilities.optimal_filter(t, y, my_lambda)`` function:
+The optimal filter adopted for the project ``pyoxynet.optimal_filter(t, y, my_lambda)`` function:
 
-.. autofunction:: pyoxynet.utilities.optimal_filter(t, y, my_lambda)
+.. autofunction:: pyoxynet.optimal_filter(t, y, my_lambda)
