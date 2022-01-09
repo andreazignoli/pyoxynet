@@ -1,3 +1,3 @@
 from pyoxynet import *
 
-here=0
+test_pyoxynet()
