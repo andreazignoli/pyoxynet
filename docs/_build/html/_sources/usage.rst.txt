@@ -14,10 +14,14 @@ To use pyoxynet, first install it using pip:
 Functions
 ---------
 
-To test the package you can use the ``utilities.PrintHello()`` function:
+To test the presence of the package you can use the ``pyoxynet.PrintHello()`` function:
 
-.. autofunction:: utilities.PrintHello()
+.. autofunction:: pyoxynet.PrintHello()
 
-The optimal filter adopted for the project ``utilities.optimal_filter(t, y, my_lambda)`` function:
+The optimal filter adopted for the project ``pyoxynet.optimal_filter(t, y, my_lambda)`` function:
 
-.. autofunction:: utilities.optimal_filter(t, y, my_lambda)
+.. autofunction:: pyoxynet.optimal_filter(t, y, my_lambda)
+
+To test if the TFLite model has been correctly initiated you can use ``pyoxynet.test_tfl_model(interpreter)`` function:
+
+.. autofunction:: pyoxynet.test_tfl_model()
