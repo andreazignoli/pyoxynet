@@ -13,6 +13,26 @@ def PrintHello(hello='hello'):
     
     return
 
+def normalize(df):
+    """Pandas df normalisation
+
+    Parameters:
+        df (pd df) : input df
+
+    Returns:
+        result (pd df) : output df
+
+    """
+
+    result = df.copy()
+    for feature_name in df.columns:
+        max_value = df[feature_name].max()
+        min_value = df[feature_name].min()
+        result[feature_name] = 2 * (df[feature_name] - min_value) / (max_value - min_value) - 1
+    result = result.fillna(0)
+
+    return result
+
 def optimal_filter(t, y, my_lambda):
     """A bad ass optimisation filter
     
@@ -86,10 +106,9 @@ def load_tf_model():
     from io import BytesIO
     import pyoxynet.models
 
+    # get the model
     pip_install_tflite()
     import tflite_runtime.interpreter as tflite
-
-    # tfl_model.tflite
     tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'tfl_model.pickle')
     tfl_model_decoded = pickle.loads(tfl_model_binaries)
 
@@ -123,12 +142,10 @@ def test_tfl_model(interpreter):
     """Test if the model is running correclty
 
     Parameters: 
-        interpreter : loaded tf.lite.Interpreter
-            Loaded interpreter TFLite model
+        interpreter (loaded tf.lite.Interpreter) : Loaded interpreter TFLite model
 
     Returns:
-        x : array
-            Model output example
+        x (array) : Model output example
 
     """
     import numpy as np
@@ -148,3 +165,28 @@ def test_tfl_model(interpreter):
     interpreter.invoke()
 
     return interpreter.get_tensor(output_details[0]['index'])
+
+def load_csv_data(csv_file='data_test.csv'):
+    """Loads data from csv file (returns test data if no arguments)
+
+    Parameters:
+        csv_file (str) : name of the data csv file
+
+    Returns:
+        df (pandas df) : Model output example
+
+    """
+
+    from importlib import resources
+    import pandas as pd
+    import pyoxynet.data_test
+
+    if csv_file == 'data_test.csv':
+        import pkgutil
+        from io import StringIO
+        bytes_data = pkgutil.get_data('pyoxynet.data_test', "data_test.csv")
+        s = str(bytes_data, 'utf-8')
+        data = StringIO(s)
+        df = pd.read_csv(data)
+
+    return df

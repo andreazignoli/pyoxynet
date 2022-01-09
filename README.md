@@ -78,6 +78,20 @@ We want to bring together key actors from across sectors to jointly implement ou
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+## The Pyoxynet package
+
+Pyoxynet implements with TFLite the intelligence behind Oxynet algorithms. TFLite has been intentionally adopted to keep the package light and to promote the use of Oxynet related technologies. 
+
+You can read more about the rationale and the techhnology behind the Oxynet project at the following links: 
+
+* [Review](https://link.springer.com/article/10.1007%2Fs11332-019-00557-x) paper on the AI technologies applied to exercise cardiopulmonary and metabolic data processing
+* [Research](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229466) implementing an LSTM neural netwok to the estimation of VO2 during cycling exercise (regressor)
+* [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2019.1587523?journalCode=tejs20) implementing an LSTM neural netwok to the estimation of the intensity domain during incremental exercise (classifier)
+* [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2020.1866081?journalCode=tejs20) implementing a crowd sourcing and CNN inference to the problem of determining the intensity domain during incremental exercise (classifier)
+* [Blog article](https://www.linkedin.com/pulse/oxynet-collective-intelligence-approach-test-andrea-zignoli/) about the Oxynet project
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 <!-- GETTING STARTED -->
 ## Getting Started
 
@@ -117,7 +131,17 @@ _Below is an example of how you can instruct your audience on installing and set
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2), minute ventilation (VE), end tidal O2 (PetO2) and CO2(PetCO2), and ventilatory equivalents (VEVO2 and VEVCO2):
+
+| VO2 | VCO2 | VE | PetO2 | PetCO2 | VEVO2 | VEVCO2 |
+|-----|------|----|-------|--------|-------|--------|
+|     |      |    |       |        |       |        |
+|     |      |    |       |        |       |        |
+|     |      |    |       |        |       |        |
+
+Oxynet inference models work on data oversampled on a sec-by-sec basis. When dealing with breath-by-breath data, linear interpolation at 1 second is appropriate. When dealing with averaged 5-by-5 second data or 10-by-10 second data, cubic interpolation is more appropriate. Pyoxynet however, can implement a number of interpolation algorithm to process raw data as well as data already processed. 
+
+![plot](./pics/terminal_plot.png)
 
 _For more examples, please refer to the package [Documentation](https://pyoxynet.readthedocs.io/en/latest/index.html)_
 
@@ -174,16 +198,10 @@ Repository project link: [pyoxynet](https://github.com/andreazignoli/pyoxynet)
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-Use this space to list resources you find helpful and would like to give credit to. I've included a few of my favorites to kick things off!
+The following resources are extremely valuable for both the pyoxynet and Oxynet projects:
 
-* [Choose an Open Source License](https://choosealicense.com)
-* [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-* [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-* [Malven's Grid Cheatsheet](https://grid.malven.co/)
-* [Img Shields](https://shields.io)
-* [GitHub Pages](https://pages.github.com)
-* [Font Awesome](https://fontawesome.com)
-* [React Icons](https://react-icons.github.io/react-icons/search)
+* [TFLite inference](https://www.tensorflow.org/lite/guide/inference)
+* [Uniplot Python library](https://github.com/olavolav/uniplot)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 

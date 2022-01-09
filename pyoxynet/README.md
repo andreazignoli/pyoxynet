@@ -27,6 +27,14 @@ test_tfl_model(tfl_model)
 
 ```
 
+Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2), minute ventilation (VE), end tidal O2 (PetO2) and CO2(PetCO2), and ventilatory equivalents (VEVO2 and VEVCO2):
+
+| VO2 | VCO2 | VE | PetO2 | PetCO2 | VEVO2 | VEVCO2 |
+|-----|------|----|-------|--------|-------|--------|
+|     |      |    |       |        |       |        |
+|     |      |    |       |        |       |        |
+|     |      |    |       |        |       |        |
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
