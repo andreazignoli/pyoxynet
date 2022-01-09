@@ -12,9 +12,8 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../pyoxynet/pyoxynet'))
-import pyoxynet
-from pyoxynet import utilities
+sys.path.insert(0, os.path.abspath('../pyoxynet/pyoxynet'))
+
 
 # -- Project information -----------------------------------------------------
 
