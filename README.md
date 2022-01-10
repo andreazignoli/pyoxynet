@@ -57,21 +57,6 @@
   </p>
 </div>
 
-<!-- ABOUT THE PROJECT -->
-## The Oxynet Project
-
-<!--[![Product Name Screen Shot][product-screenshot]](https://example.com)-->
-
-There are challenges that transcend both national and continental boundaries and providing people with universal access to good quality health care is one of them. Emerging technologies in the field of AI and the availability of vast amounts of data can offer big opportunities to stimulate innovation and develop solutions.
-
-Oxynet wants to become a tool for a quick and encompassing diagnosis of medical conditions with cardiopulmonary exercise tests (CPET) and promote accurate and timely clinical decisions, ultimately reducing the costs associated with current evaluation errors and delays.
-
-The main building blocks of Oxynet are: 
-
-* A network of experts in the field of CPET
-* A large crowdsourced data set
-* An AI algorithm able to approximate human cognition in the analysis of CPET 
-
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## The Pyoxynet package
@@ -173,7 +158,17 @@ See the [open issues](https://github.com/andreazignoli/pyoxynet/issues) for a fu
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
-## Contributing
+## Contributing to the Oxynet project
+
+There are challenges that transcend both national and continental boundaries and providing people with universal access to good quality health care is one of them. Emerging technologies in the field of AI and the availability of vast amounts of data can offer big opportunities to stimulate innovation and develop solutions.
+
+Oxynet wants to become a tool for a quick and encompassing diagnosis of medical conditions with cardiopulmonary exercise tests (CPET) and promote accurate and timely clinical decisions, ultimately reducing the costs associated with current evaluation errors and delays.
+
+The main building blocks of Oxynet are: 
+
+* A network of experts in the field of CPET
+* A large crowdsourced data set
+* An AI algorithm able to approximate human cognition in the analysis of CPET 
 
 We are interested in creating more research opportunities with other Universities and Departments, hospitals and clinics, medical doctors and physiologists (also operating in intensive care units), companies involved in the development (including patenting and validation) and in the commercialisation of medical devices (e.g. metabolic carts and medical software). 
 
