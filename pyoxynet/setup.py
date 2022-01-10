@@ -27,5 +27,5 @@ setuptools.setup(
     package_data={'': ['models/*', 'data_test/*']},
     #exclude_package_data={
     #    '': 'debugging.py.c'},
-    python_requires='>=3.7',
+    python_requires='>=3.8',
 )

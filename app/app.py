@@ -1,8 +1,6 @@
 import flask
 import os
 from flask import Flask, request
-from werkzeug.utils import secure_filename
-import requests
 from pyoxynet import *
 import numpy as np
 import pandas as pd

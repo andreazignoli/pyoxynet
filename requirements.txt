@@ -9,5 +9,5 @@ tflite_runtime
 wheel
 pandas
 uniplot
-flask
 werkzeug
+pyoxynet
