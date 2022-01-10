@@ -72,10 +72,6 @@ The main building blocks of Oxynet are:
 * A large crowdsourced data set
 * An AI algorithm able to approximate human cognition in the analysis of CPET 
 
-We are interested in creating more research opportunities with other Universities and Departments, hospitals and clinics, medical doctors and physiologists (also operating in intensive care units), companies involved in the development (including patenting and validation) and in the commercialisation of medical devices (e.g. metabolic carts and medical software). 
-
-We want to bring together key actors from across sectors to jointly implement our R&D road map and: support the research activities financially (including scholarships for research fellows or publication fees for open access journals), provide intellectual contribution for scientific publications or grant application, share data for testing/developing new algorithms, develop web-based applications (e.g. crowdsourcing applications, automatic interpretation of new data, websites for communicating the outcomes of the project), conduct market and patent analyses, and validate the algorithms for clinical settings.
-
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## The Pyoxynet package
@@ -114,26 +110,6 @@ pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_run
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-### Installation
-
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
-
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = 'ENTER YOUR API';
-   ```
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 <!-- USAGE EXAMPLES -->
 ## Usage
 
@@ -168,6 +144,18 @@ _For more examples, please refer to the package [Documentation](https://pyoxynet
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+## Flask-Pyoxynet inference app
+
+A flask inference app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
+
+It is possibile therefore to call Flask-Pyoxynet from a terminal, and provide data in json format.
+
+```sh
+curl -X POST https://<<URL>>/read_json -d @test_data.json
+```
+
+It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*.
+
 <!-- ROADMAP -->
 ## Roadmap
 
@@ -187,9 +175,11 @@ See the [open issues](https://github.com/andreazignoli/pyoxynet/issues) for a fu
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+We are interested in creating more research opportunities with other Universities and Departments, hospitals and clinics, medical doctors and physiologists (also operating in intensive care units), companies involved in the development (including patenting and validation) and in the commercialisation of medical devices (e.g. metabolic carts and medical software). 
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+We want to bring together key actors from across sectors to jointly implement our R&D road map and: support the research activities financially (including scholarships for research fellows or publication fees for open access journals), provide intellectual contribution for scientific publications or grant application, share data for testing/developing new algorithms, develop web-based applications (e.g. crowdsourcing applications, automatic interpretation of new data, websites for communicating the outcomes of the project), conduct market and patent analyses, and validate the algorithms for clinical settings.
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 Don't forget to give the project a star! Thanks again!
 
 1. Fork the Project
