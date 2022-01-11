@@ -3,7 +3,7 @@ pyoxynet/models/*
 pyoxynet.egg-info
 dist
 venv
-pyoxynet/__pycache__
+pyoxynet/pyoxynet/__pycache__
 app/__pycache__
 .idea
 *.pyc

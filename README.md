@@ -108,6 +108,14 @@ Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2),
 
 Oxynet inference models work on data oversampled on a sec-by-sec basis. When dealing with breath-by-breath data, linear interpolation at 1 second is appropriate. When dealing with averaged 5-by-5 second data or 10-by-10 second data, cubic interpolation is more appropriate. Pyoxynet however, can implement a number of interpolation algorithm to process raw data as well as data already processed. 
 
+In case there is no access to VCO2 data, a different solution has been implemented (although not validated) considering the following inputs: 
+
+| VO2 | VE | PetO2 | Rf | VEVO2 |
+|-----|----|-------|----|-------|
+|     |    |       |    |       |
+|     |    |       |    |       |
+|     |    |       |    |       |
+
 ### See pyoxynet at work on sample data
 
 ```python
@@ -207,6 +215,8 @@ Repository project link: [pyoxynet](https://github.com/andreazignoli/pyoxynet)
 The following resources are extremely valuable for both the pyoxynet and Oxynet projects:
 
 * [TFLite inference](https://www.tensorflow.org/lite/guide/inference)
+* [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/)
+* [Flask](https://flask.palletsprojects.com/en/2.0.x/)
 * [Uniplot Python library](https://github.com/olavolav/uniplot)
 
 <p align="right">(<a href="#top">back to top</a>)</p>

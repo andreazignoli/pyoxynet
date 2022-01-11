@@ -90,14 +90,15 @@ def optimal_filter(t, y, my_lambda):
 
     return x
 
-def load_tf_model():
+def load_tf_model(n_inputs=7, past_points=40):
     """This function loads the saved tflite models.
 
     Args:
-       name (str):  The name of the pickle file of the model.
+       n_inputs (int):  Number of input variables.
+       past_points (int):  Number of past inputs in the time-series.
 
     Returns:
-       none
+       interpreter (tflite interpreter) : handle on the TFLite interpreter
 
     """
 
@@ -109,14 +110,25 @@ def load_tf_model():
     # get the model
     pip_install_tflite()
     import tflite_runtime.interpreter as tflite
-    tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'tfl_model.pickle')
-    tfl_model_decoded = pickle.loads(tfl_model_binaries)
 
-    # save model locally on tmp
-    open('/tmp/tfl_model' + '.tflite', 'wb').write(tfl_model_decoded.getvalue())
-    interpreter = tflite.Interpreter(model_path='/tmp/tfl_model.tflite')
+    if n_inputs==7 and past_points==40:
+        # load the classic Oxynet model configuration
+        print('Classic Oxynet configuration model uploaded')
+        tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'tfl_model.pickle')
+    if n_inputs==5 and past_points==40:
+        # load the 5 input model configuration (e.g. in this case when on CO2 info is included)
+        print('Specific configuration model uploaded (no VCO2 available)')
+        tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'tfl_model_5_40.pickle')
 
-    return interpreter
+    try:
+        tfl_model_decoded = pickle.loads(tfl_model_binaries)
+        # save model locally on tmp
+        open('/tmp/tfl_model' + '.tflite', 'wb').write(tfl_model_decoded.getvalue())
+        interpreter = tflite.Interpreter(model_path='/tmp/tfl_model.tflite')
+        return interpreter
+    except:
+        print('Could not find a model that could satisfy the input size required')
+        return None  
 
 def pip_install_tflite():
     """Makes sure TFLite is installed
@@ -170,7 +182,8 @@ def load_csv_data(csv_file='data_test.csv'):
     """Loads data from csv file (returns test data if no arguments)
 
     Parameters:
-        csv_file (str) : name of the data csv file
+        n_inputs (int) :  Number of input variables.
+        past_points (int) :  Number of past inputs in the time-series.
 
     Returns:
         df (pandas df) : Model output example
@@ -181,47 +194,62 @@ def load_csv_data(csv_file='data_test.csv'):
     import pandas as pd
     import pyoxynet.data_test
 
-    if csv_file == 'data_test.csv':
+    if csv_file=='data_test.csv':
         import pkgutil
         from io import StringIO
-        bytes_data = pkgutil.get_data('pyoxynet.data_test', "data_test.csv")
+        bytes_data = pkgutil.get_data('pyoxynet.data_test', csv_file)
         s = str(bytes_data, 'utf-8')
         data = StringIO(s)
         df = pd.read_csv(data)
 
     return df
 
-def test_pyoxynet():
+def test_pyoxynet(n_inputs=7, past_points=40):
+    """Test if the pyoxynet pipeline is running correclty
 
-    tfl_model = load_tf_model()
-    df = load_csv_data()
+    Parameters: 
+        n_inputs (int) : Number of inputs (deafult to Oxynet configuration)
+        past_points (int) : Number of past points in the time series (deafult to Oxynet configuration)
 
-    X = df[['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']]
-    XN = normalize(X)
+    Returns:
+        x (array) : Model output example
+
+    """
 
     import numpy as np
+    from uniplot import plot
 
+    tfl_model = load_tf_model(n_inputs=n_inputs, past_points=past_points)
+    df = load_csv_data()
+
+    if n_inputs==7 and past_points==40:
+        X = df[['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']]
+    if n_inputs==5 and past_points==40:
+        X = df[['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']]
+
+    XN = normalize(X)
+
+    # retrieve interpreter details
     input_details = tfl_model.get_input_details()
     output_details = tfl_model.get_output_details()
 
     time_series_len = input_details[0]['shape'][1]
-    p_md = []
-    p_hv = []
-    p_sv = []
+    p_1 = []
+    p_2 = []
+    p_3 = []
     time = []
 
     for i in np.arange(len(XN)-time_series_len):
         XN_array = np.asarray(XN[i:(i+time_series_len)])
         input_data = np.reshape(XN_array, input_details[0]['shape'])
         input_data = input_data.astype(np.float32)
-
         tfl_model.allocate_tensors()
         tfl_model.set_tensor(input_details[0]['index'], input_data)
         tfl_model.invoke()
         output_data = tfl_model.get_tensor(output_details[0]['index'])
-        p_md.append(output_data[0][2])
-        p_sv.append(output_data[0][1])
-        p_hv.append(output_data[0][0])
+        p_1.append(output_data[0][0])
+        p_2.append(output_data[0][1])
+        p_3.append(output_data[0][2])
         time.append(df.time[i])
 
     import pandas as pd
@@ -231,6 +259,4 @@ def test_pyoxynet():
     df['p_hv'] = p_hv
     df['p_sv'] = p_sv
 
-    from uniplot import plot
-
-    plot([p_md, p_sv, p_hv], title="Probabilities", color=True, legend_labels=['Moderate', 'Heavy', 'Severe'])
+    plot([p_1, p_2, p_3], title="Exercise intensity domains", color=True, legend_labels=['1', '2', '3'])
