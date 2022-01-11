@@ -72,7 +72,7 @@ def read_json():
 
 @app.route("/")
 def hello_world():
-    return "Hello World"
+    return "Hello World from the updated version"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port)

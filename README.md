@@ -141,10 +141,10 @@ _For more examples, please refer to the package [Documentation](https://pyoxynet
 
 A flask inference app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
 
-It is possibile therefore to call Flask-Pyoxynet from a terminal, and provide data in json format.
+It is possibile therefore to call Flask-Pyoxynet from a terminal, and provide data in json format. If your input data has only 7 variables, then the classic Oxynet configuration can be used by replacing X with 7 (see command below), otherwise if the input variables are only 5, you can replace X with 5:
 
 ```sh
-curl -X POST https://<<URL>>/read_json -d @test_data.json
+curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_json?n_inputs=X -d @test_data.json
 ```
 
 It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*.
