@@ -5,23 +5,50 @@ from pyoxynet import *
 import numpy as np
 import pandas as pd
 
-tfl_model = load_tf_model()
-input_details = tfl_model.get_input_details()
-output_details = tfl_model.get_output_details()
-
 app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9099))
 
-@app.route('/read_json', methods=['POST'])
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    args = request.args
+    model = args.get('model')
+
+    results = {}
+    results['model'] = model
+
+    return flask.jsonify(results)
+
+@app.route('/read_json', methods=['GET', 'POST'])
 def read_json():
+
+    args = request.args
+    n_inputs = args.get('n_inputs')
+
+    # loading the model
+    if n_inputs == '5':
+        tfl_model = load_tf_model(n_inputs=int(n_inputs),
+                                  past_points=40)
+    else:
+        tfl_model = load_tf_model()
+
+    input_details = tfl_model.get_input_details()
+    output_details = tfl_model.get_output_details()
+
     request_data = request.get_json(force=True)
     df = pd.DataFrame.from_dict(request_data)
-    XN = normalize(df)
+
+    if n_inputs == '7':
+        X = df[['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']]
+    if n_inputs == '5':
+        print(df.columns)
+        X = df[['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']]
+
+    XN = normalize(X)
 
     time_series_len = input_details[0]['shape'][1]
-    p_md = []
-    p_hv = []
-    p_sv = []
+    p_1 = []
+    p_2 = []
+    p_3 = []
 
     for i in np.arange(len(XN) - time_series_len):
         XN_array = np.asarray(XN[i:(i + time_series_len)])
@@ -32,14 +59,14 @@ def read_json():
         tfl_model.set_tensor(input_details[0]['index'], input_data)
         tfl_model.invoke()
         output_data = tfl_model.get_tensor(output_details[0]['index'])
-        p_md.append(output_data[0][2])
-        p_sv.append(output_data[0][1])
-        p_hv.append(output_data[0][0])
+        p_1.append(output_data[0][0])
+        p_2.append(output_data[0][1])
+        p_3.append(output_data[0][2])
 
     results = {}
-    results['p_md'] = str(p_md)
-    results['p_hv'] = str(p_hv)
-    results['p_sv'] = str(p_sv)
+    results['p_1'] = str(p_1)
+    results['p_2'] = str(p_2)
+    results['p_3'] = str(p_3)
 
     return flask.jsonify(results)
 

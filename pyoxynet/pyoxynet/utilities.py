@@ -219,8 +219,21 @@ def test_pyoxynet(n_inputs=7, past_points=40):
     import numpy as np
     from uniplot import plot
 
+    import json
+
     tfl_model = load_tf_model(n_inputs=n_inputs, past_points=past_points)
     df = load_csv_data()
+
+    # js = df1.to_json(orient='columns')
+
+    # with open('test_data.json', 'w') as f:
+    #    f.write(js)
+
+    # Opening JSON file
+    # with open('test_data.json') as json_file:
+    #     data = json.load(json_file)
+
+    # df = pd.DataFrame.from_dict(data)
 
     if n_inputs==7 and past_points==40:
         X = df[['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']]
@@ -255,8 +268,8 @@ def test_pyoxynet(n_inputs=7, past_points=40):
     import pandas as pd
     df = pd.DataFrame()
     df['time'] = time
-    df['p_md'] = p_md
-    df['p_hv'] = p_hv
-    df['p_sv'] = p_sv
+    df['p_md'] = p_1
+    df['p_hv'] = p_2
+    df['p_sv'] = p_3
 
     plot([p_1, p_2, p_3], title="Exercise intensity domains", color=True, legend_labels=['1', '2', '3'])
