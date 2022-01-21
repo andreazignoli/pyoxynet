@@ -7,6 +7,3 @@ pyoxynet/pyoxynet/__pycache__
 app/__pycache__
 .idea
 *.pyc
-
-
-docs/_build

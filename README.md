@@ -116,6 +116,25 @@ In case there is no access to VCO2 data, a different solution has been implement
 |     |    |       |    |       |
 |     |    |       |    |       |
 
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- GENERATION -->
+## Generation
+
+Pyoxynet also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive cardipulmonary exercise test data. As per the inference model, the *generator* is saved in a TFLite model file. Callign the related function and obtain a fake CPET data sample can be done as follows: 
+
+```python
+from pyoxynet import *
+# Call the generator
+generator = load_tf_generator()
+# Generate a Pandas df with fake CPET data inside
+df = generate_CPET(generator, plot=True)
+# Call Oxynet for inference on fake data
+test_pyoxynet(input_df=df)
+```
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 ### See pyoxynet at work on sample data
 
 ```python
@@ -139,7 +158,7 @@ _For more examples, please refer to the package [Documentation](https://pyoxynet
 
 ## Flask-Pyoxynet inference app
 
-A flask inference app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
+A flask inference/generation app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
 
 It is possibile therefore to call Flask-Pyoxynet from a terminal, and provide data in json format. If your input data has only 7 variables, then the classic Oxynet configuration can be used by replacing X with 7 (see command below), otherwise if the input variables are only 5, you can replace X with 5:
 
