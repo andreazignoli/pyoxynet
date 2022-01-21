@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Hello from Oxynet</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart" id="plot_VO2VCO2">
+                <script>
+                    var graphs = {{VO2VCO2 | safe}};
+                    Plotly.plot('plot_VO2VCO2',graphs,{});
+                </script>
+            </div>
+            <div class="chart" id="plot_Pet">
+                <script>
+                    var graphs = {{Pet | safe}};
+                    Plotly.plot('plot_Pet',graphs,{});
+                </script>
+            </div>
+            <div class="chart" id="plot_VERF">
+                <script>
+                    var graphs = {{VERF | safe}};
+                    Plotly.plot('plot_VERF',graphs,{});
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

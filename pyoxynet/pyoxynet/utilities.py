@@ -388,13 +388,13 @@ def generate_CPET(generator, plot=False, duration=600, VT1=320, VT2=500):
 
     df = pd.DataFrame()
     df['time'] = np.arange(0, duration)
-    df['VO2_I'] = (np.asarray(VO2) + 1)/2 * (4874 - 1109) + 1109 + random_walk(length=duration, scale_factor=100, variation=1)
-    df['VCO2_I'] = (np.asarray(VCO2) + 1)/2 * (5276 - 1051) + 1051 + random_walk(length=duration, scale_factor=100, variation=1)
-    df['VE_I'] = (np.asarray(VE) + 1)/2 * (180 - 39) + 39 + random_walk(length=duration, scale_factor=100, variation=1)
-    df['HR_I'] = (np.asarray(HR) + 1)/2 * (196 - 122) + 122 + random_walk(length=duration, scale_factor=200, variation=0.5)
-    df['RF_I'] = (np.asarray(RF) + 1)/2 * (69 - 32) + 32 + random_walk(length=duration, scale_factor=50, variation=1)
-    df['PetO2_I'] = (np.asarray(PetO2) + 1)/2 * (115 - 103) + 103 + random_walk(length=duration, scale_factor=100, variation=1)
-    df['PetCO2_I'] = (np.asarray(PetCO2) + 1)/2 * (41 - 30) + 30 + random_walk(length=duration, scale_factor=100, variation=1)
+    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (4874 - 1109) + 1109 + random_walk(length=duration, scale_factor=1, variation=10)
+    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (5276 - 1051) + 1051 + random_walk(length=duration, scale_factor=1, variation=10)
+    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (180 - 39) + 39 + random_walk(length=duration, scale_factor=1, variation=1)
+    df['HR_I'] = (np.asarray(HR) - np.min(HR))/(np.max((np.asarray(HR) - np.min(HR)))) * (196 - 122) + 122 + random_walk(length=duration, scale_factor=1, variation=0.5)
+    df['RF_I'] = (np.asarray(RF) - np.min(RF))/(np.max((np.asarray(RF) - np.min(RF)))) * (69 - 32) + 32 + random_walk(length=duration, scale_factor=1, variation=1)
+    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (115 - 103) + 103 + random_walk(length=duration, scale_factor=2, variation=1)
+    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (41 - 30) + 30 + random_walk(length=duration, scale_factor=2, variation=1)
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
 
