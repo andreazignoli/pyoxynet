@@ -145,12 +145,10 @@ _For more examples, please refer to the package [Documentation](https://pyoxynet
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 <!-- GENERATION -->
 ## Generation
 
-Pyoxynet also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive cardipulmonary exercise test data. As per the *inference* model, the *generator* is saved in a TFLite model file. Callign the related function and obtain a fake CPET data sample can be done as follows: 
+Pyoxynet also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive cardipulmonary exercise test data. As per the *inference* model, the *generator* is saved in a TFLite model file. Calling the related function and obtain a fake CPET data sample can be done as follows: 
 
 ```python
 from pyoxynet import *
@@ -161,6 +159,10 @@ df = generate_CPET(generator, plot=True)
 # Call Oxynet for inference on fake data
 test_pyoxynet(input_df=df)
 ```
+
+In the gif below, different epochs/steps of the training process are presented for the Conditional Adversarial Neural Network available in Pyoxynet. 
+
+![plot](./pics/dcgan_200.gif)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
