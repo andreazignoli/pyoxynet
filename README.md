@@ -176,7 +176,7 @@ It is possibile therefore to call Flask-Pyoxynet from a terminal, and provide da
 curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_json?n_inputs=X -d @test_data.json
 ```
 
-It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*.
+It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possibile to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possbile to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation).
 
 <!-- ROADMAP -->
 ## Roadmap
