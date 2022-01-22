@@ -34,7 +34,7 @@
   <p align="center">
     <a> :earth_africa: </a>
     <br />
-    <a> With strained healthcare systems and ageing populations, we require world-wide coordinated actions for timely diagnostics.</a>
+    <a> We require world-wide coordinated actions for timely diagnostics.</a>
     <br />
         <az> :hospital: </a>
     <br />
@@ -124,26 +124,7 @@ In case there is no access to VCO2 data, a different solution has been implement
 |     |    |       |    |       |
 |     |    |       |    |       |
 
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-<!-- GENERATION -->
-## Generation
-
-Pyoxynet also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive cardipulmonary exercise test data. As per the *inference* model, the *generator* is saved in a TFLite model file. Callign the related function and obtain a fake CPET data sample can be done as follows: 
-
-```python
-from pyoxynet import *
-# Call the generator
-generator = load_tf_generator()
-# Generate a Pandas df with fake CPET data inside
-df = generate_CPET(generator, plot=True)
-# Call Oxynet for inference on fake data
-test_pyoxynet(input_df=df)
-```
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-### See pyoxynet at work on sample data
+If you want to see how Pyoxynet can work on sample data:
 
 ```python
 import pyoxynet
@@ -164,9 +145,28 @@ _For more examples, please refer to the package [Documentation](https://pyoxynet
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- GENERATION -->
+## Generation
+
+Pyoxynet also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive cardipulmonary exercise test data. As per the *inference* model, the *generator* is saved in a TFLite model file. Callign the related function and obtain a fake CPET data sample can be done as follows: 
+
+```python
+from pyoxynet import *
+# Call the generator
+generator = load_tf_generator()
+# Generate a Pandas df with fake CPET data inside
+df = generate_CPET(generator, plot=True)
+# Call Oxynet for inference on fake data
+test_pyoxynet(input_df=df)
+```
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
 ## Flask-Pyoxynet inference app
 
-A flask inference/generation app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
+A [Flask](https://flask.palletsprojects.com/en/2.0.x/) inference/generation app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
 
 It is possibile therefore to call Flask-Pyoxynet from a terminal, and provide data in json format. If your input data has only 7 variables, then the classic Oxynet configuration can be used by replacing X with 7 (see command below), otherwise if the input variables are only 5, you can replace X with 5:
 
@@ -180,11 +180,14 @@ It is possible to check the required keys of the json dictionary in *app/test_da
 ## Roadmap
 
 - [x] Create web app for inference
-- [x] Create web app for data crowd sourcing
+- [x] Create web app for data crowd-sourcing
 - [x] Create website
-- [ ] Create Python package for inference
-- [ ] ----
-- [ ] ----
+- [x] Create Python package
+    - [x] Implement inference
+    - [x] Implement Generation
+- [x] Develop Flask-app
+- [x] Run Docker on AWS
+- [ ] Develop GUI for generation
     - [ ] ----
     - [ ] ----
 
@@ -210,7 +213,7 @@ We are interested in creating more research opportunities with other Universitie
 We want to bring together key actors from across sectors to jointly implement our R&D road map and: support the research activities financially (including scholarships for research fellows or publication fees for open access journals), provide intellectual contribution for scientific publications or grant application, share data for testing/developing new algorithms, develop web-based applications (e.g. crowdsourcing applications, automatic interpretation of new data, websites for communicating the outcomes of the project), conduct market and patent analyses, and validate the algorithms for clinical settings.
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+Don't forget to give Pyoxynet a star! Thanks again!
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -232,14 +235,14 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 Andrea Zignoli - [@andrea_zignoli](https://twitter.com/andrea_zignoli) - andrea.zignoli@unitn.it
 
-Repository project link: [pyoxynet](https://github.com/andreazignoli/pyoxynet)
+Repository project link: [Pyoxynet](https://github.com/andreazignoli/pyoxynet)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-The following resources are extremely valuable for both the pyoxynet and Oxynet projects:
+The following resources are valuable for both the Pyoxynet and Oxynet projects:
 
 * [TFLite inference](https://www.tensorflow.org/lite/guide/inference)
 * [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/)
