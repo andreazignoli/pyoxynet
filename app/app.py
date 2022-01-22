@@ -16,11 +16,35 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
 
     VT1 = VT[0]
     VT2 = VT[1]
-    data = []
 
-    fig = px.line(df[var_list])
+    fig = px.line(px.line(df.iloc[np.arange(0, len(df), 1)], x="time", y=var_list))
     fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="green", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
+
+    fig.update_layout(
+        xaxis=dict(
+            showline=True,
+            showgrid=True,
+            showticklabels=True,
+            linecolor='rgb(204, 204, 204)',
+            linewidth=2,
+            ticks='outside',
+            tickfont=dict(
+                family='Arial',
+                size=12,
+                color='rgb(82, 82, 82)',
+            ),
+        ),
+        yaxis=dict(
+            showgrid=True,
+            zeroline=True,
+            showline=True,
+            showticklabels=True,
+        ),
+        autosize=True,
+        showlegend=True,
+        template='plotly_dark'
+    )
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -111,10 +135,12 @@ def CPET_plot():
     plot_VO2VCO2 = CPET_var_plot(df, var_list=['VO2_I', 'VCO2_I'], VT=[VT1, VT2])
     plot_Pet = CPET_var_plot(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VT1, VT2])
     plot_VERF = CPET_var_plot(df, var_list=['VE_I', 'RF_I'], VT=[VT1, VT2])
+    plot_VEVO2 = CPET_var_plot(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VT1, VT2])
     return render_template('index.html',
                            VO2VCO2=plot_VO2VCO2,
                            Pet=plot_Pet,
-                           VERF=plot_VERF)
+                           VERF=plot_VERF,
+                           VEVO2=plot_VEVO2)
 
 @app.route('/')
 def Hello_World():
