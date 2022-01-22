@@ -38,11 +38,11 @@
     <br />
         <az> :hospital: </a>
     <br />
-    <a> We want to contribute with sustainable approaches to more equitable health and care services.</a>
+    <a> Oxynet research project contributes with more equitable health care services.</a>
     <br />
         <a> :computer: </a>
     <br />
-    <a> With Oxynet we develop automatic interpreter of cardiopulmonary exercising tests.</a>
+    <a> Oxynet is a set of tools for automatic interpretation of cardiopulmonary exercising tests data.</a>
     <br />
     <br />
     <a href="http://oxynet.net"><strong>Visit the website »</strong></a>
@@ -61,7 +61,14 @@
 
 ## The Pyoxynet package
 
-Pyoxynet implements with TFLite the intelligence behind Oxynet algorithms. TFLite has been intentionally adopted to keep the package light and to promote the use of Oxynet related technologies. 
+Pyoxynet is a collection of the algorithms developed within the Oxynet project. The core algorithms (i.e.models) are mainly deep neural networks, made in the attempt to process cardiopulmonary exercise test data (CPET). 
+
+All the models have been trained and tested with [Tensorflow](https://www.tensorflow.org/), but they are included in Pyoxynet only in their inference version in their [TFLite](https://www.tensorflow.org/lite). TFLite has been intentionally adopted to keep the package light and to promote the use of Oxynet related technologies. 
+
+To date, mainly two type of models are implemented: 
+
+* The *inference* model: it takes some CPET data as input and it provides an estimation of the exercise intensity domains 
+* The *generator* model: it generates new synthetic CPET data
 
 You can read more about the rationale and the techhnology behind the Oxynet project at the following links: 
 
@@ -76,29 +83,30 @@ You can read more about the rationale and the techhnology behind the Oxynet proj
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+There is no need to clone this repo if you don't want to. You can just install the public Python package or call the public Flask-Pyoxynet service from a web app, a terminal on a server or from your browser. 
 
 ### Pip install the package
 
-This is an example of how to list things you need to use the software and how to install them.
+This is the best solution for those Pyhton users who would like to have Oxynet algorithms always on the tip of their fingers. Assuming you have pip installed on your machine, begin with: 
 
 ```sh
 pip install pyoxynet
 ```
 
-Packages that require addition extra url cannot be installed via setuptools, which letely allows and suggests to use pip when possibile. To workaround this problem, TFLite is automatically installed with the following command the first time pyoxynet is imported:
+Packages that require addition extra url cannot be installed via *setuptools*, which letely allows and suggests to use pip when possibile. To workaround this problem, TFLite is automatically installed with the following command the first time pyoxynet is imported:
 
 ```sh
 pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
 ```
+
+Currently, The TFLite installation process is completed with a line command inside Python, which is not the best solution. 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2), minute ventilation (VE), end tidal O2 (PetO2) and CO2(PetCO2), and ventilatory equivalents (VEVO2 and VEVCO2):
+Data required for the *inference* include oxygen uptake (VO2), exhaled CO2 (VCO2), minute ventilation (VE), end tidal O2 (PetO2) and CO2(PetCO2), and ventilatory equivalents (VEVO2 and VEVCO2):
 
 | VO2 | VCO2 | VE | PetO2 | PetCO2 | VEVO2 | VEVCO2 |
 |-----|------|----|-------|--------|-------|--------|
@@ -108,7 +116,7 @@ Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2),
 
 Oxynet inference models work on data oversampled on a sec-by-sec basis. When dealing with breath-by-breath data, linear interpolation at 1 second is appropriate. When dealing with averaged 5-by-5 second data or 10-by-10 second data, cubic interpolation is more appropriate. Pyoxynet however, can implement a number of interpolation algorithm to process raw data as well as data already processed. 
 
-In case there is no access to VCO2 data, a different solution has been implemented (although not validated) considering the following inputs: 
+In case there is no access to VCO2 data, a different solution has been implemented (although validation has not been published) considering the following inputs: 
 
 | VO2 | VE | PetO2 | Rf | VEVO2 |
 |-----|----|-------|----|-------|
@@ -121,7 +129,7 @@ In case there is no access to VCO2 data, a different solution has been implement
 <!-- GENERATION -->
 ## Generation
 
-Pyoxynet also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive cardipulmonary exercise test data. As per the inference model, the *generator* is saved in a TFLite model file. Callign the related function and obtain a fake CPET data sample can be done as follows: 
+Pyoxynet also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive cardipulmonary exercise test data. As per the *inference* model, the *generator* is saved in a TFLite model file. Callign the related function and obtain a fake CPET data sample can be done as follows: 
 
 ```python
 from pyoxynet import *
