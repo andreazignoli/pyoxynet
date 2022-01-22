@@ -63,7 +63,7 @@
 
 Pyoxynet is a collection of the algorithms developed within the Oxynet project. The core algorithms (i.e.models) are mainly deep neural networks, made in the attempt to process cardiopulmonary exercise test data (CPET). 
 
-All the models have been trained and tested with [Tensorflow](https://www.tensorflow.org/), but they are included in Pyoxynet only in their inference version in their [TFLite](https://www.tensorflow.org/lite). TFLite has been intentionally adopted to keep the package light and to promote the use of Oxynet related technologies. 
+All the models have been trained and tested with [Tensorflow](https://www.tensorflow.org/), but they are included in Pyoxynet only in their in their [TFLite](https://www.tensorflow.org/lite) inference version. TFLite has been intentionally adopted to keep the package light and to promote the use of Oxynet related technologies. 
 
 To date, mainly two type of models are implemented: 
 
