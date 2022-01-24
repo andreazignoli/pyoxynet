@@ -31,7 +31,7 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
             ticks='outside',
             tickfont=dict(
                 family='Arial',
-                size=12,
+                size=10,
                 color='rgb(82, 82, 82)',
             ),
         ),
@@ -40,11 +40,16 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
             zeroline=True,
             showline=True,
             showticklabels=True,
+            tickfont=dict(
+                family='Arial',
+                size=10,
+                color='rgb(82, 82, 82)',
+            ),
         ),
         autosize=True,
         showlegend=True,
         template='plotly_dark',
-        width=800, height=400
+        width=1000, height=400
     )
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
