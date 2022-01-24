@@ -17,7 +17,7 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     VT1 = VT[0]
     VT2 = VT[1]
 
-    fig = px.line(px.line(df.iloc[np.arange(0, len(df), 1)], x="time", y=var_list))
+    fig = px.line(df.iloc[np.arange(0, len(df), 1)], x="time", y=var_list)
     fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="green", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
 
@@ -43,7 +43,8 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
         ),
         autosize=True,
         showlegend=True,
-        template='plotly_dark'
+        template='plotly_dark',
+        width=800, height=400
     )
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -132,15 +133,18 @@ def CPET_plot():
     VT2 = args.get("VT2", default=510, type=int)
     generator = load_tf_generator()
     df = generate_CPET(generator, plot=False, duration=duration, VT1=VT1, VT2=VT2)
+    df_oxynet = test_pyoxynet(input_df=df)
     plot_VO2VCO2 = CPET_var_plot(df, var_list=['VO2_I', 'VCO2_I'], VT=[VT1, VT2])
     plot_Pet = CPET_var_plot(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VT1, VT2])
     plot_VERF = CPET_var_plot(df, var_list=['VE_I', 'RF_I'], VT=[VT1, VT2])
     plot_VEVO2 = CPET_var_plot(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VT1, VT2])
+    plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2])
     return render_template('index.html',
                            VO2VCO2=plot_VO2VCO2,
                            Pet=plot_Pet,
                            VERF=plot_VERF,
-                           VEVO2=plot_VEVO2)
+                           VEVO2=plot_VEVO2,
+                           oxynet=plot_oxynet)
 
 @app.route('/')
 def Hello_World():

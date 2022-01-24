@@ -316,6 +316,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
          color=True,
          legend_labels=['1', '2', '3'])
 
+    return df
+
 def create_probabilities(duration=600, VT1=320, VT2=460):
     import numpy as np
 
