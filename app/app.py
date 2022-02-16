@@ -48,8 +48,8 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
         ),
         autosize=True,
         showlegend=True,
-        template='plotly_dark',
-        width=1000, height=400
+        template='plotly_white',
+        width=800, height=400
     )
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -122,23 +122,22 @@ def read_json():
 def CPET_generation():
 
     args = request.args
-    duration = args.get("duration", default=600, type=int)
-    VT1 = args.get("VT1", default=380, type=int)
-    VT2 = args.get("VT2", default=510, type=int)
+    fitness_group = args.get("fitness_group", default=None, type=int)
     generator = load_tf_generator()
-    df = generate_CPET(generator, plot=False, duration=duration, VT1=VT1, VT2=VT2)
+    df = generate_CPET(generator, plot=False, fitness_group=fitness_group)
 
     return flask.jsonify(df.to_dict())
 
 @app.route('/CPET_plot')
 def CPET_plot():
     args = request.args
-    duration = args.get("duration", default=600, type=int)
-    VT1 = args.get("VT1", default=380, type=int)
-    VT2 = args.get("VT2", default=510, type=int)
+    fitness_group = args.get("fitness_group", default=None, type=int)
     generator = load_tf_generator()
-    df = generate_CPET(generator, plot=False, duration=duration, VT1=VT1, VT2=VT2)
+    df = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+    VT1 = df.time[df.domain.diff() != 0].iloc[1]
+    VT2 = df.time[df.domain.diff() != 0].iloc[2]
     df_oxynet = test_pyoxynet(input_df=df)
+
     plot_VO2VCO2 = CPET_var_plot(df, var_list=['VO2_I', 'VCO2_I'], VT=[VT1, VT2])
     plot_Pet = CPET_var_plot(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VT1, VT2])
     plot_VERF = CPET_var_plot(df, var_list=['VE_I', 'RF_I'], VT=[VT1, VT2])

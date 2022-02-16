@@ -433,6 +433,10 @@ def generate_CPET(generator, plot=False, fitness_group=None):
     df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + random_walk(length=duration, scale_factor=2, variation=1)
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
+    df['domain'] = np.NaN
+    df.loc[df['time'] < VT1, 'domain'] = -1
+    df.loc[df['time'] >= VT2, 'domain'] = 1
+    df.loc[(df['time'] < VT2) & (df['time'] >= VT1), 'domain'] = 0
 
     if plot:
         terminal_plot([df['VO2_I'], df['VCO2_I']],
