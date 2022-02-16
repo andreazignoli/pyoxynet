@@ -11,6 +11,6 @@ ADD templates /home/templates
 
 EXPOSE 9098/tcp
 
-RUN pip install -r requirements.txt && pip list
+RUN pip install -r requirements.txt
 
 CMD [ "python", "./app.py"]

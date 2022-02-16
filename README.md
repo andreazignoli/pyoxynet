@@ -178,6 +178,14 @@ curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail
 
 It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possibile to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possbile to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation).
 
+To get different examples of random people carrying out a fake test, you just put this address in your browser and you change the fitness group from 1 to 3 (it's 3 in the examples):
+
+```sh
+https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot?fitness_group=3
+```
+
+Fitness group 1 means LOW fitness level, whilst 2 and 3 means MEDIUM and HIGH respectively. 
+
 <!-- ROADMAP -->
 ## Roadmap
 
