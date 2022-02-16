@@ -345,11 +345,45 @@ def random_walk(length=1, scale_factor=1, variation=1):
 
     return [i/scale_factor for i in random_walk]
 
-def generate_CPET(generator, plot=False, duration=600, VT1=320, VT2=500):
+def generate_CPET(generator, plot=False, fitness_group=None):
+
     import random
     import numpy as np
     import pandas as pd
     from uniplot import plot as terminal_plot
+
+    import pkgutil
+    from io import StringIO
+    bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics.csv')
+    s = str(bytes_data, 'utf-8')
+    data = StringIO(s)
+    db_df = pd.read_csv(data)
+
+    # extract sample from db
+    if fitness_group == None:
+        db_df_sample = db_df.sample()
+    else:
+        db_df_sample = db_df[db_df['fitness_group'] == fitness_group].sample()
+
+    duration = int(db_df_sample.duration)
+    VT1 = int(db_df_sample.VT1)
+    VT2 = int(db_df_sample.VT2)
+
+    VO2_peak = int(db_df_sample.VO2peak)
+    VCO2_peak = int(db_df_sample.VCO2peak)
+    VE_peak = int(db_df_sample.VEpeak)
+    RF_peak = int(db_df_sample.RFpeak)
+    PetO2_peak = int(db_df_sample.PetO2peak)
+    PetCO2_peak = int(db_df_sample.PetCO2peak)
+    HR_peak = int(db_df_sample.HRpeak)
+
+    VO2_min = int(db_df_sample.VO2min)
+    VCO2_min = int(db_df_sample.VCO2min)
+    VE_min = int(db_df_sample.VEmin)
+    RF_min = int(db_df_sample.RFmin)
+    PetO2_min = int(db_df_sample.PetO2min)
+    PetCO2_min = int(db_df_sample.PetCO2min)
+    HR_min = int(db_df_sample.HRmin)
 
     # probability definition
     p_mF, p_hF, p_sF = create_probabilities(duration=duration, VT1=VT1, VT2=VT2)
@@ -390,13 +424,13 @@ def generate_CPET(generator, plot=False, duration=600, VT1=320, VT2=500):
 
     df = pd.DataFrame()
     df['time'] = np.arange(0, duration)
-    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (4874 - 1109) + 1109 + random_walk(length=duration, scale_factor=1, variation=10)
-    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (5276 - 1051) + 1051 + random_walk(length=duration, scale_factor=1, variation=10)
-    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (180 - 39) + 39 + random_walk(length=duration, scale_factor=1, variation=1)
-    df['HR_I'] = (np.asarray(HR) - np.min(HR))/(np.max((np.asarray(HR) - np.min(HR)))) * (196 - 122) + 122 + random_walk(length=duration, scale_factor=1, variation=0.5)
-    df['RF_I'] = (np.asarray(RF) - np.min(RF))/(np.max((np.asarray(RF) - np.min(RF)))) * (69 - 32) + 32 + random_walk(length=duration, scale_factor=1, variation=1)
-    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (115 - 103) + 103 + random_walk(length=duration, scale_factor=2, variation=1)
-    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (41 - 30) + 30 + random_walk(length=duration, scale_factor=2, variation=1)
+    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + random_walk(length=duration, scale_factor=2, variation=10)
+    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min + random_walk(length=duration, scale_factor=2, variation=10)
+    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + random_walk(length=duration, scale_factor=2, variation=1)
+    df['HR_I'] = (np.asarray(HR) - np.min(HR))/(np.max((np.asarray(HR) - np.min(HR)))) * (HR_peak - HR_min) + HR_min + random_walk(length=duration, scale_factor=2, variation=0.5)
+    df['RF_I'] = (np.asarray(RF) - np.min(RF))/(np.max((np.asarray(RF) - np.min(RF)))) * (RF_peak - RF_min) + RF_min + random_walk(length=duration, scale_factor=2, variation=1)
+    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + random_walk(length=duration, scale_factor=2, variation=1)
+    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + random_walk(length=duration, scale_factor=2, variation=1)
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
 
@@ -410,5 +444,21 @@ def generate_CPET(generator, plot=False, duration=600, VT1=320, VT2=500):
         terminal_plot([df['PetO2_I'], df['PetCO2_I']],
                       title="CPET variables", width=120,
                       color=True, legend_labels=['PetO2_I', 'PetCO2_I'])
+
+    if db_df_sample.fitness_group.values == 1:
+        fitness_group = 'LOW'
+    if db_df_sample.fitness_group.values == 2:
+        fitness_group = 'MEDIUM'
+    if db_df_sample.fitness_group.values == 3:
+        fitness_group = 'HIGH'
+    if db_df_sample.gender.values == -1:
+        gender = 'MALE'
+    if db_df_sample.gender.values == 1:
+        gender = 'FEMALE'
+
+    print('Data generated for a ', gender, ' individual with ', fitness_group, ' fitness capacity.')
+    print('Weight: ', int(db_df_sample.weight.values), ' kg')
+    print('Height: ', db_df_sample.height.values[0], 'm')
+    print('Age: ', int(db_df_sample.Age.values), 'y')
 
     return df
