@@ -6,9 +6,92 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 import plotly
+from faker import Faker
 
 app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9098))
+
+def CPET_var_plot_vs_CO2(df, var_list=[]):
+    import json
+    import plotly.express as px
+
+    fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VCO2_I", y=var_list)
+
+    fig.update_layout(
+        xaxis=dict(
+            showline=True,
+            showgrid=True,
+            showticklabels=True,
+            linecolor='rgb(204, 204, 204)',
+            linewidth=2,
+            ticks='outside',
+            tickfont=dict(
+                family='Arial',
+                size=10,
+                color='rgb(82, 82, 82)',
+            ),
+        ),
+        yaxis=dict(
+            showgrid=True,
+            zeroline=True,
+            showline=True,
+            showticklabels=True,
+            tickfont=dict(
+                family='Arial',
+                size=10,
+                color='rgb(82, 82, 82)',
+            ),
+        ),
+        autosize=True,
+        showlegend=True,
+        template='plotly_white',
+        width=600, height=600
+    )
+
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return graphJSON
+
+def CPET_var_plot_vs_O2(df, var_list=[]):
+    import json
+    import plotly.express as px
+
+    fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VO2_I", y=var_list)
+
+    fig.update_layout(
+        xaxis=dict(
+            showline=True,
+            showgrid=True,
+            showticklabels=True,
+            linecolor='rgb(204, 204, 204)',
+            linewidth=2,
+            ticks='outside',
+            tickfont=dict(
+                family='Arial',
+                size=10,
+                color='rgb(82, 82, 82)',
+            ),
+        ),
+        yaxis=dict(
+            showgrid=True,
+            zeroline=True,
+            showline=True,
+            showticklabels=True,
+            tickfont=dict(
+                family='Arial',
+                size=10,
+                color='rgb(82, 82, 82)',
+            ),
+        ),
+        autosize=True,
+        showlegend=True,
+        template='plotly_white',
+        width=600, height=600
+    )
+
+    graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+    return graphJSON
 
 def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     import json
@@ -17,7 +100,7 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     VT1 = VT[0]
     VT2 = VT[1]
 
-    fig = px.line(df.iloc[np.arange(0, len(df), 1)], x="time", y=var_list)
+    fig = px.line(df.iloc[np.arange(0, len(df), 5)], x="time", y=var_list)
     fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="green", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
 
@@ -133,7 +216,7 @@ def CPET_plot():
     args = request.args
     fitness_group = args.get("fitness_group", default=None, type=int)
     generator = load_tf_generator()
-    df = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+    df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group)
     VT1 = df.time[df.domain.diff() != 0].iloc[1]
     VT2 = df.time[df.domain.diff() != 0].iloc[2]
     df_oxynet = test_pyoxynet(input_df=df)
@@ -143,12 +226,32 @@ def CPET_plot():
     plot_VERF = CPET_var_plot(df, var_list=['VE_I', 'RF_I'], VT=[VT1, VT2])
     plot_VEVO2 = CPET_var_plot(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VT1, VT2])
     plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2])
+    plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'])
+    plot_HRvsVO2 = CPET_var_plot_vs_O2(df, var_list=['HR_I'])
+    plot_VEvsVCO2 = CPET_var_plot_vs_CO2(df, var_list=['VE_I'])
+
+    fake = Faker()
+    fake_address = fake.address()
+    fake_name = fake.name()
+
+    data = [
+        {
+            'name': fake_name.split(' ')[0][0] + '. ' + fake_name.split(' ')[1],
+            'address': fake_address.replace('\n', ', ')
+        }
+    ]
+
     return render_template('index.html',
+                           VCO2vsVO2=plot_VCO2vsVO2,
+                           HRvsVO2=plot_HRvsVO2,
+                           VEvsVCO2=plot_VEvsVCO2,
                            VO2VCO2=plot_VO2VCO2,
                            Pet=plot_Pet,
                            VERF=plot_VERF,
                            VEVO2=plot_VEVO2,
-                           oxynet=plot_oxynet)
+                           oxynet=plot_oxynet,
+                           data=data,
+                           CPET_data=CPET_data)
 
 @app.route('/')
 def Hello_World():

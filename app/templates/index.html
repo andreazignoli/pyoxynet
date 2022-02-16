@@ -8,8 +8,42 @@
 </head>
 <body>
 <div class="container">
+    <title>Cardiopulmonary test done by:</title>
+    <ul>
+        {% for item in data %}
+            <li>Name: {{item.name}}</li>
+            <li>Address: {{item.address}}</li>
+        {% endfor %}
+    </ul>
+    <ul>
+        {% for item in CPET_data %}
+            <li>AGE: {{item.Age}}</li>
+            <li>Height: {{item.Height}} m</li>
+            <li>Weight: {{item.Weight}} kg</li>
+            <li>Gender: {{item.Gender}}</li>
+            <li>Fitness level: {{item.Aerobic_fitness_level}}</li>
+        {% endfor %}
+    </ul>
     <div class="row">
         <div class="col-md-6">
+            <div class="chart" id="plot_VCO2vsVO2">
+                <script>
+                    var graphs = {{VCO2vsVO2 | safe}};
+                    Plotly.plot('plot_VCO2vsVO2',graphs,{});
+                </script>
+            </div>
+            <div class="chart" id="plot_HRvsVO2">
+                <script>
+                    var graphs = {{HRvsVO2 | safe}};
+                    Plotly.plot('plot_HRvsVO2',graphs,{});
+                </script>
+            </div>
+            <div class="chart" id="plot_VEvsVCO2">
+                <script>
+                    var graphs = {{VEvsVCO2 | safe}};
+                    Plotly.plot('plot_VEvsVCO2',graphs,{});
+                </script>
+            </div>
             <div class="chart" id="plot_VO2VCO2">
                 <script>
                     var graphs = {{VO2VCO2 | safe}};

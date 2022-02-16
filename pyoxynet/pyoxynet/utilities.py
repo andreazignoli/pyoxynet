@@ -430,7 +430,7 @@ def generate_CPET(generator, plot=False, fitness_group=None):
     df['HR_I'] = (np.asarray(HR) - np.min(HR))/(np.max((np.asarray(HR) - np.min(HR)))) * (HR_peak - HR_min) + HR_min + random_walk(length=duration, scale_factor=2, variation=0.5)
     df['RF_I'] = (np.asarray(RF) - np.min(RF))/(np.max((np.asarray(RF) - np.min(RF)))) * (RF_peak - RF_min) + RF_min + random_walk(length=duration, scale_factor=2, variation=1)
     df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + random_walk(length=duration, scale_factor=2, variation=1)
-    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + random_walk(length=duration, scale_factor=2, variation=1)
+    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min - random_walk(length=duration, scale_factor=2, variation=1)
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
     df['domain'] = np.NaN
@@ -465,4 +465,12 @@ def generate_CPET(generator, plot=False, fitness_group=None):
     print('Height: ', db_df_sample.height.values[0], 'm')
     print('Age: ', int(db_df_sample.Age.values), 'y')
 
-    return df
+    data = [{'Age': str(int(db_df_sample.Age.values)),
+            'Height': str(db_df_sample.height.values[0]),
+            'Weight': str(int(db_df_sample.weight.values)),
+            'Gender': gender,
+            'Aerobic_fitness_level': fitness_group},
+            'VT1': str(VT1),
+            'VT2': str(VT2)]
+
+    return df, data
