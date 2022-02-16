@@ -469,8 +469,8 @@ def generate_CPET(generator, plot=False, fitness_group=None):
             'Height': str(db_df_sample.height.values[0]),
             'Weight': str(int(db_df_sample.weight.values)),
             'Gender': gender,
-            'Aerobic_fitness_level': fitness_group},
+            'Aerobic_fitness_level': fitness_group,
             'VT1': str(VT1),
-            'VT2': str(VT2)]
+            'VT2': str(VT2)}]
 
     return df, data
