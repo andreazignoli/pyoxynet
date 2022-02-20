@@ -11,3 +11,4 @@ pandas
 uniplot
 werkzeug
 pyoxynet
+sphinx-rtd-theme
