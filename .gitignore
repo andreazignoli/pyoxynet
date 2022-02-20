@@ -9,3 +9,8 @@ app/__pycache__
 *.pyc
 
 docs/_build
+docs/*
+!pyoxynet/models/conf.py
+!pyoxynet/models/index.rst
+!pyoxynet/models/usage.rst
+!pyoxynet/models/Makefile
