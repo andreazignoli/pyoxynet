@@ -4,17 +4,24 @@ Usage
 Installation
 ------------
 
+
 To use ``pyoxynet``, first install it using pip:
 
 .. code-block:: console
 
    (.venv) $ pip install pyoxynet
 
-Packages that require addition extra url cannot be installed via *setuptools*, which letely allows and suggests to use ``pip`` when possible. To workaround this problem, TFLite is automatically installed with the following command the first time ``pyoxynet`` is imported:
+
+.. note:: 
+
+   Packages that require addition extra url cannot be installed via *setuptools*, which letely allows and suggests to use ``pip`` when possible. Therefore, as a work-around, TFLite is automatically installed with the following command the first time ``pyoxynet`` is imported.
+   
+
+The executed commend is:
 
 .. code-block:: console
 
-   pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
+   (.venv) $ pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
 
 
 Currently, The TFLite installation process is completed with a line command inside Python, which i know is not the best solution. 
