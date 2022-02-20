@@ -34,8 +34,6 @@ To test if the TFLite model has been correctly initiated you can use ``utilities
 
 .. autofunction:: utilities.pip_install_tflite()
 
-.. autofunction:: utilities.test_tfl_model(interpreter)
-
 .. autofunction:: utilities.load_csv_data(csv_file='data_test.csv')
 
 .. autofunction:: utilities.test_pyoxynet(input_df=[], n_inputs=7, past_points=40)
