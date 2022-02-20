@@ -139,8 +139,6 @@ test_tfl_model(tfl_model)
 pyoxynet.test_pyoxynet()
 ```
 
-![plot](./pics/terminal_plot.png)
-
 _For more examples, please refer to the package [Documentation](https://pyoxynet.readthedocs.io/en/latest/index.html)_
 
 <p align="right">(<a href="#top">back to top</a>)</p>
