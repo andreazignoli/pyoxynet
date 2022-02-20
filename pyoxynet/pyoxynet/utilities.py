@@ -164,7 +164,7 @@ def load_tf_generator():
         return None
 
 def pip_install_tflite():
-    """Makes sure TFLite is installed
+    """Makes sure TFLite is installed by executing a pip install command from the command line (sub-optimal solution)
 
     Parameters: 
         none
@@ -319,6 +319,20 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     return df
 
 def create_probabilities(duration=600, VT1=320, VT2=460):
+    """Creates the probabilities of being in different intensity domains
+
+    These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
+
+    Parameters:
+        length (int): Length of the output list
+        scale_factor (float): Scale factor to be applied to the whole output
+        variation (float): Local variation of the main signal with the random walk
+
+    Returns:
+        none
+
+    """
+
     import numpy as np
 
     time_length = np.arange(1, duration + 1)
@@ -333,6 +347,18 @@ def create_probabilities(duration=600, VT1=320, VT2=460):
     return p_mF, p_hF, p_sF
 
 def random_walk(length=1, scale_factor=1, variation=1):
+    """Random walk generator
+
+    Parameters:
+        length (int): Length of the output list
+        scale_factor (float): Scale factor to be applied to the whole output
+        variation (float): Local variation of the main signal with the random walk
+
+    Returns:
+        none
+
+    """
+
     from random import seed
     from random import random
 
@@ -346,6 +372,18 @@ def random_walk(length=1, scale_factor=1, variation=1):
     return [i/scale_factor for i in random_walk]
 
 def generate_CPET(generator, plot=False, fitness_group=None):
+    """Actually generates the CPET file
+
+    Parameters:
+        length (int): Length of the output list
+        scale_factor (float): Scale factor to be applied to the whole output
+        variation (float): Local variation of the main signal with the random walk
+
+    Returns:
+        df (pd df): Pandas dataframe with CPET data included and ready to be processed by the model (if needed)
+        data (dict): Data realative to the generated CPET
+
+    """
 
     import random
     import numpy as np
