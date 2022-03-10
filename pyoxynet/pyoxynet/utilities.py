@@ -238,7 +238,7 @@ def load_csv_data(csv_file='data_test.csv'):
     return df
 
 def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
-    """Test if the pyoxynet pipeline is running correclty
+    """Runs the pyoxynet inference
 
     Parameters: 
         n_inputs (int) : Number of inputs (deafult to Oxynet configuration)
@@ -304,11 +304,24 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
         time.append(df.time[i])
 
     import pandas as pd
+
+    tmp_df = pd.DataFrame()
+    tmp_df['time'] = time
+    tmp_df['p_md'] = p_1
+    tmp_df['p_hv'] = p_2
+    tmp_df['p_sv'] = p_3
+
+    mod_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[:20].mean().idxmax()
+    sev_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[-20:].mean().idxmax()
+    for labels_ in ['p_md', 'p_hv', 'p_sv']:
+        if labels_ not in [mod_col, sev_col]:
+            hv_col = labels_
+
     df = pd.DataFrame()
     df['time'] = time
-    df['p_md'] = p_1
-    df['p_hv'] = p_2
-    df['p_sv'] = p_3
+    df['p_md'] = tmp_df[mod_col]
+    df['p_hv'] = tmp_df[hv_col]
+    df['p_sv'] = tmp_df[sev_col]
 
     plot([p_1, p_2, p_3],
          title="Exercise intensity domains",
@@ -317,6 +330,25 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
          legend_labels=['1', '2', '3'])
 
     return df
+
+def return_thresholds(input_df=[]):
+    """Returns VT1 and VT2 from pyoxynet output
+
+    Parameters:
+        input_df (pd df) : Pandas dataframe output from pyoxynet inference
+
+    Returns:
+        dict : VT1 and VT2 in dict
+
+    """
+
+    import pandas as pd
+
+    out_dict = {}
+    out_dict['VT1'] = input_df[(input_df['p_hv'] <= input_df['p_md']) & (input_df['p_hv'] > 0.1)].iloc[-1].to_dict()
+    out_dict['VT2'] = input_df[(input_df['p_sv'] <= input_df['p_hv']) & (input_df['p_sv'] > 0.1)].iloc[-1].to_dict()
+
+    return out_dict
 
 def create_probabilities(duration=600, VT1=320, VT2=460):
     """Creates the probabilities of being in different intensity domains
