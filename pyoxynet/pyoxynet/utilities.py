@@ -237,6 +237,52 @@ def load_csv_data(csv_file='data_test.csv'):
 
     return df
 
+def load_exercise_threshold_app_data(data_dict={}):
+    """Loads data from data dict with format provided by https://www.exercisethresholds.com/
+
+    Parameters:
+        data_dict (dict) : Dictionary with format like test/exercise_threshold_app_test.json
+
+    Returns:
+        df (pandas df) : Pandas data frame with format that can be used by Pyoxynet for inference (columns needed: 'VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I')
+
+    """
+
+    import json
+    import pandas as pd
+
+    time = []
+    VO2_I = []
+    VCO2_I = []
+    VE_I = []
+    PetO2_I = []
+    PetCO2_I = []
+    VEVO2_I = []
+    VEVCO2_I = []
+
+    for data_points_ in data_dict[0]['data']:
+        time.append(data_points_['t'])
+        VO2_I.append(data_points_['VO2'])
+        VCO2_I.append(data_points_['VCO2'])
+        VE_I.append(data_points_['VE'])
+        PetO2_I.append(data_points_['PetO2'])
+        PetCO2_I.append(data_points_['PetCO2'])
+        VEVO2_I.append(data_points_['VE/VO2'])
+        VEVCO2_I.append(data_points_['VE/VCO2'])
+
+    df = pd.DataFrame()
+    df['time'] = [time_ - time[0 ]for time_ in time]
+    df['VO2_I'] = VO2_I
+    df['VCO2_I'] = VCO2_I
+    df['VE_I'] = VE_I
+    df['PetO2_I'] = PetO2_I
+    df['PetCO2_I'] = PetCO2_I
+    df['VEVO2_I'] = VEVO2_I
+    df['VEVCO2_I'] = VEVCO2_I
+
+    return df
+
+
 def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     """Runs the pyoxynet inference
 
@@ -251,13 +297,14 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
 
     import numpy as np
     from uniplot import plot
+    import pandas as pd
 
     import json
 
     tfl_model = load_tf_model(n_inputs=n_inputs, past_points=past_points)
 
     if len(input_df) == 0:
-        print('Using default py-oxynet data')
+        print('Using default pyoxynet data')
         df = load_csv_data()
     else:
         df = input_df
@@ -272,6 +319,16 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     #     data = json.load(json_file)
 
     # df = pd.DataFrame.from_dict(data)
+
+    # some adjustments to input df
+    # TODO: create dedicated function for this
+    df = df.drop_duplicates('time')
+    df['timestamp'] = pd.to_datetime(df['time'], unit='s')
+    df = df.set_index('timestamp')
+    df = df.resample('1S').mean()
+    df = df.interpolate()
+    df = df.reset_index()
+    df = df.drop('timestamp', axis=1)
 
     if n_inputs==7 and past_points==40:
         X = df[['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']]
@@ -290,8 +347,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     p_3 = []
     time = []
 
-    for i in np.arange(len(XN)-time_series_len):
-        XN_array = np.asarray(XN[i:(i+time_series_len)])
+    for i in np.arange(time_series_len, len(XN)):
+        XN_array = np.asarray(XN[(i-time_series_len):i])
         input_data = np.reshape(XN_array, input_details[0]['shape'])
         input_data = input_data.astype(np.float32)
         tfl_model.allocate_tensors()
@@ -302,8 +359,6 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
         p_2.append(output_data[0][1])
         p_3.append(output_data[0][2])
         time.append(df.time[i])
-
-    import pandas as pd
 
     tmp_df = pd.DataFrame()
     tmp_df['time'] = time
@@ -317,11 +372,11 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
         if labels_ not in [mod_col, sev_col]:
             hv_col = labels_
 
-    df = pd.DataFrame()
-    df['time'] = time
-    df['p_md'] = tmp_df[mod_col]
-    df['p_hv'] = tmp_df[hv_col]
-    df['p_sv'] = tmp_df[sev_col]
+    out_df = pd.DataFrame()
+    out_df['time'] = time
+    out_df['p_md'] = tmp_df[mod_col]
+    out_df['p_hv'] = tmp_df[hv_col]
+    out_df['p_sv'] = tmp_df[sev_col]
 
     plot([p_1, p_2, p_3],
          title="Exercise intensity domains",
@@ -329,30 +384,22 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
          color=True,
          legend_labels=['1', '2', '3'])
 
-    return df
-
-def return_thresholds(input_df=[]):
-    """Returns VT1 and VT2 from pyoxynet output
-
-    Parameters:
-        input_df (pd df) : Pandas dataframe output from pyoxynet inference
-
-    Returns:
-        dict : VT1 and VT2 in dict
-
-    """
-
-    import pandas as pd
-
     out_dict = {}
     out_dict['VT1'] = {}
     out_dict['VT2'] = {}
     out_dict['VT1']['time'] = {}
     out_dict['VT2']['time'] = {}
-    out_dict['VT1']['time'] = input_df[(input_df['p_hv'] <= input_df['p_md']) & (input_df['p_hv'] > 0.1)]['time'].iloc[-1]
-    out_dict['VT2']['time'] = input_df[(input_df['p_sv'] <= input_df['p_hv']) & (input_df['p_sv'] > 0.1)]['time'].iloc[-1]
 
-    return out_dict
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md']) & (out_df['p_hv'] > 0.1)].index[-1] + time_series_len)
+    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv']) & (out_df['p_sv'] > 0.1)].index[-1] + time_series_len)
+
+    out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
+    out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
+
+    out_dict['VT1']['VO2'] = df.iloc[VT1_index]['VO2_I']
+    out_dict['VT2']['VO2'] = df.iloc[VT2_index]['VO2_I']
+
+    return out_df, out_dict
 
 def create_probabilities(duration=600, VT1=320, VT2=460):
     """Creates the probabilities of being in different intensity domains
