@@ -17,7 +17,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=setuptools.find_packages(),
-    install_requires=['importlib-resources', 'pandas', 'uniplot'],
+    install_requires=['importlib-resources', 'pandas', 'uniplot', 'scipy'],
     classifiers=[
         "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",

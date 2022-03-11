@@ -12,3 +12,4 @@ uniplot
 werkzeug
 pyoxynet
 sphinx-rtd-theme
+scipy

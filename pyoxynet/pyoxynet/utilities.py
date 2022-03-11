@@ -282,7 +282,6 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     return df
 
-
 def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     """Runs the pyoxynet inference
 
@@ -298,6 +297,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     import numpy as np
     from uniplot import plot
     import pandas as pd
+    from scipy import stats
 
     import json
 
@@ -327,6 +327,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     df = df.set_index('timestamp')
     df = df.resample('1S').mean()
     df = df.interpolate()
+    df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().fillna(method='bfill').fillna(
+        method='ffill')
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
 
@@ -396,8 +398,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
 
-    out_dict['VT1']['VO2'] = df.iloc[VT1_index]['VO2_I']
-    out_dict['VT2']['VO2'] = df.iloc[VT2_index]['VO2_I']
+    out_dict['VT1']['VO2'] = df.iloc[VT1_index]['VO2_20s']
+    out_dict['VT2']['VO2'] = df.iloc[VT2_index]['VO2_20s']
 
     return out_df, out_dict
 
