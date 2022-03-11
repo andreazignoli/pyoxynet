@@ -345,8 +345,12 @@ def return_thresholds(input_df=[]):
     import pandas as pd
 
     out_dict = {}
-    out_dict['VT1'] = input_df[(input_df['p_hv'] <= input_df['p_md']) & (input_df['p_hv'] > 0.1)].iloc[-1].to_dict()
-    out_dict['VT2'] = input_df[(input_df['p_sv'] <= input_df['p_hv']) & (input_df['p_sv'] > 0.1)].iloc[-1].to_dict()
+    out_dict['VT1'] = {}
+    out_dict['VT2'] = {}
+    out_dict['VT1']['time'] = {}
+    out_dict['VT2']['time'] = {}
+    out_dict['VT1']['time'] = input_df[(input_df['p_hv'] <= input_df['p_md']) & (input_df['p_hv'] > 0.1)]['time'].iloc[-1]
+    out_dict['VT2']['time'] = input_df[(input_df['p_sv'] <= input_df['p_hv']) & (input_df['p_sv'] > 0.1)]['time'].iloc[-1]
 
     return out_dict
 
