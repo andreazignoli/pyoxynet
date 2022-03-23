@@ -214,52 +214,51 @@ def CPET_generation():
 
 @app.route('/CPET_plot', methods=['GET', 'POST'])
 def CPET_plot():
-    import random
-    args = request.args
-    fitness_group = args.get("fitness_group", default=None, type=int)
-
-    if random.randint(0, 1) == 1:
-        generator = load_tf_generator()
-        df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group)
-        print('Test was FAKE')
-        session['test_type'] = 'FAKE'
-    else:
-        df, CPET_data = draw_real_test()
-        print('Test was REAL')
-        session['test_type'] = 'REAL'
-
-    VT1 = df.time[df.domain.diff() != 0].iloc[1]
-    VT2 = df.time[df.domain.diff() != 0].iloc[2]
-    df_oxynet, out_dict = test_pyoxynet(input_df=df)
-
-    plot_VO2VCO2 = CPET_var_plot(df, var_list=['VO2_I', 'VCO2_I'], VT=[VT1, VT2])
-    plot_Pet = CPET_var_plot(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VT1, VT2])
-    plot_VERF = CPET_var_plot(df, var_list=['VE_I', 'RF_I'], VT=[VT1, VT2])
-    plot_VEVO2 = CPET_var_plot(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VT1, VT2])
-    plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2])
-    plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'])
-    plot_HRvsVO2 = CPET_var_plot_vs_O2(df, var_list=['HR_I'])
-    plot_VEvsVCO2 = CPET_var_plot_vs_CO2(df, var_list=['VE_I'])
-
-    fake = Faker()
-    fake_address = fake.address()
-    fake_name = fake.name()
-
-    data = [
-        {
-            'name': fake_name.split(' ')[0][0] + '. ' + fake_name.split(' ')[1],
-            'address': fake_address.replace('\n', ', ')
-        }
-    ]
-
-    test_type = session['test_type']
 
     if request.method == 'POST':
-        if request.form.get('action1') == test_type or request.form.get('action2') == test_type:
+        if request.form.get('action1') == session['test_type'] or request.form.get('action2') == session['test_type']:
             reply = 'Very good: your answer was CORRECT :)'
             return render_template('response.html', value=reply)
         else:
             if request.form.get('play') == 'PLAY' or request.form.get('start_over') == 'AGAIN':
+                import random
+                args = request.args
+                fitness_group = args.get("fitness_group", default=None, type=int)
+
+                if random.randint(0, 1) == 1:
+                    generator = load_tf_generator()
+                    df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+                    print('Test was FAKE')
+                    session['test_type'] = 'FAKE'
+                else:
+                    df, CPET_data = draw_real_test()
+                    print('Test was REAL')
+                    session['test_type'] = 'REAL'
+
+                VT1 = df.time[df.domain.diff() != 0].iloc[1]
+                VT2 = df.time[df.domain.diff() != 0].iloc[2]
+                df_oxynet, out_dict = test_pyoxynet(input_df=df)
+
+                plot_VO2VCO2 = CPET_var_plot(df, var_list=['VO2_I', 'VCO2_I'], VT=[VT1, VT2])
+                plot_Pet = CPET_var_plot(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VT1, VT2])
+                plot_VERF = CPET_var_plot(df, var_list=['VE_I', 'RF_I'], VT=[VT1, VT2])
+                plot_VEVO2 = CPET_var_plot(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VT1, VT2])
+                plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2])
+                plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'])
+                plot_HRvsVO2 = CPET_var_plot_vs_O2(df, var_list=['HR_I'])
+                plot_VEvsVCO2 = CPET_var_plot_vs_CO2(df, var_list=['VE_I'])
+
+                fake = Faker()
+                fake_address = fake.address()
+                fake_name = fake.name()
+
+                data = [
+                    {
+                        'name': fake_name.split(' ')[0][0] + '. ' + fake_name.split(' ')[1],
+                        'address': fake_address.replace('\n', ', ')
+                    }
+                ]
+
                 return render_template('index.html',
                                        VCO2vsVO2=plot_VCO2vsVO2,
                                        HRvsVO2=plot_HRvsVO2,
@@ -274,18 +273,6 @@ def CPET_plot():
             else:
                 reply = 'Very bad: your answer was WRONG :('
                 return render_template('response.html', value=reply)
-
-    return render_template('index.html',
-                           VCO2vsVO2=plot_VCO2vsVO2,
-                           HRvsVO2=plot_HRvsVO2,
-                           VEvsVCO2=plot_VEvsVCO2,
-                           VO2VCO2=plot_VO2VCO2,
-                           Pet=plot_Pet,
-                           VERF=plot_VERF,
-                           VEVO2=plot_VEVO2,
-                           oxynet=plot_oxynet,
-                           data=data,
-                           CPET_data=CPET_data)
 
 @app.route("/", methods=['GET', 'POST'])
 def HelloWorld():
