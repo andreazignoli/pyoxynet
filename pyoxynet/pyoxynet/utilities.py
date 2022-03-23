@@ -253,13 +253,47 @@ def draw_real_test():
     import pyoxynet.data_test.real_tests
     import pkgutil
     from io import StringIO
+    import random
+    import numpy as np
 
-    bytes_data = pkgutil.get_data('pyoxynet.data_test.real_tests', 'real_test_1.csv')
+    file_index = str(random.randrange(1, 50))
+    file_name = 'real_test_' + file_index + '.csv'
+
+    print('Loading ', file_name)
+
+    bytes_data = pkgutil.get_data('pyoxynet.data_test.real_tests', file_name)
     s = str(bytes_data, 'utf-8')
     data = StringIO(s)
     df = pd.read_csv(data)
 
-    return df
+    if int(np.mean(df.fitness_group.values)) == 1:
+        fitness_group = 'LOW'
+    if int(np.mean(df.fitness_group.values)) == 2:
+        fitness_group = 'MEDIUM'
+    if int(np.mean(df.fitness_group.values)) == 3:
+        fitness_group = 'HIGH'
+    if int(np.mean(df.gender.values)) == -1:
+        gender = 'MALE'
+    if int(np.mean(df.gender.values)) == 1:
+        gender = 'FEMALE'
+
+    VT1 = df[np.diff(df.domain, prepend=-1) == 1].time.iloc[0]
+    VT2 = df[np.diff(df.domain, prepend=-1) == 1].time.iloc[1]
+
+    print('Data loaded for a ', gender, ' individual with ', fitness_group, ' fitness capacity.')
+    print('Weight: ', int(np.mean(df.weight.values)), ' kg')
+    print('Height: ', np.mean(df.height.values[0]), 'm')
+    print('Age: ', int(np.mean(df.age.values)), 'y')
+
+    data = [{'Age': str(int(np.mean(df.age.values))),
+            'Height': str(np.mean(df.height.values[0])),
+            'Weight': str(int(np.mean(df.weight.values))),
+            'Gender': gender,
+            'Aerobic_fitness_level': fitness_group,
+            'VT1': str(VT1),
+            'VT2': str(VT2)}]
+
+    return df, data
 
 def load_exercise_threshold_app_data(data_dict={}):
     """Loads data from data dict with format provided by https://www.exercisethresholds.com/
