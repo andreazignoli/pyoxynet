@@ -250,7 +250,7 @@ def draw_real_test():
 
     from importlib import resources
     import pandas as pd
-    import pyoxynet.data_test.real_tests
+    import pyoxynet
     import pkgutil
     from io import StringIO
     import random
