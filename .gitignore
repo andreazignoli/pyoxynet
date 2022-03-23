@@ -3,8 +3,9 @@ pyoxynet/models/*
 
 pyoxynet/pyoxynet/data_test/__pycache__
 
-pyoxynet/pyoxynet/data_test/real_tests/*
-!pyoxynet/pyoxynet/data_test/real_tests/.gitkeep
+pyoxynet/pyoxynet/data_test/*.csv
+!pyoxynet/pyoxynet/data_test/data_test.csv
+!pyoxynet/pyoxynet/data_test/database_statistics.csv
 
 pyoxynet.egg-info
 dist
