@@ -237,6 +237,30 @@ def load_csv_data(csv_file='data_test.csv'):
 
     return df
 
+def draw_real_test():
+    """Draw a single data file from the directory containing all the real files
+
+    Parameters:
+        none
+
+    Returns:
+        df (pandas df) : Real data output
+
+    """
+
+    from importlib import resources
+    import pandas as pd
+    import pyoxynet.data_test.real_tests
+    import pkgutil
+    from io import StringIO
+
+    bytes_data = pkgutil.get_data('pyoxynet.data_test.real_tests', 'real_test_1.csv')
+    s = str(bytes_data, 'utf-8')
+    data = StringIO(s)
+    df = pd.read_csv(data)
+
+    return df
+
 def load_exercise_threshold_app_data(data_dict={}):
     """Loads data from data dict with format provided by https://www.exercisethresholds.com/
 

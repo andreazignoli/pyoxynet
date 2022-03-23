@@ -10,7 +10,7 @@ long_description = (this_directory/"README.md").read_text()
 
 setuptools.setup(
     name="pyoxynet",
-    version="0.0.8.2",
+    version="0.0.8.3",
     author="Andrea Zignoli",
     author_email="andrea.zignoli@unitn.it",
     description="Python package of the Oxynet project",
@@ -24,7 +24,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     include_package_data=True,
-    package_data={'': ['models/*', 'data_test/*']},
+    package_data={'': ['models/*', 'data_test/*', 'data_test/real_tests/*']},
     #exclude_package_data={
     #    '': 'debugging.py.c'},
     python_requires='>=3.8',
