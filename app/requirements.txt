@@ -1,5 +1,5 @@
 flask
 --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
-pyoxynet==0.0.8.1
+pyoxynet
 plotly
 faker
