@@ -1,5 +1,9 @@
 pyoxynet/models/*
 !pyoxynet/models/.gitkeep
+
+pyoxynet/pyoxynet/data_test/fake_tests/*
+pyoxynet/pyoxynet/data_test/fake_tests/.gitkeep
+
 pyoxynet.egg-info
 dist
 venv

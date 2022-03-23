@@ -484,6 +484,7 @@ def generate_CPET(generator, plot=False, fitness_group=None):
 
     # extract sample from db
     if fitness_group == None:
+        # if fitness group is not user defined, then a sample is randomly taken
         db_df_sample = db_df.sample()
     else:
         db_df_sample = db_df[db_df['fitness_group'] == fitness_group].sample()
