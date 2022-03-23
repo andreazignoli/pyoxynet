@@ -215,11 +215,14 @@ def CPET_generation():
 def CPET_plot():
     args = request.args
     fitness_group = args.get("fitness_group", default=None, type=int)
-    generator = load_tf_generator()
-    df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+    # generator = load_tf_generator()
+    # df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+
+    df, CPET_data = draw_real_test()
+
     VT1 = df.time[df.domain.diff() != 0].iloc[1]
     VT2 = df.time[df.domain.diff() != 0].iloc[2]
-    df_oxynet = test_pyoxynet(input_df=df)
+    df_oxynet, out_dict = test_pyoxynet(input_df=df)
 
     plot_VO2VCO2 = CPET_var_plot(df, var_list=['VO2_I', 'VCO2_I'], VT=[VT1, VT2])
     plot_Pet = CPET_var_plot(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VT1, VT2])
