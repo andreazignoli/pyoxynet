@@ -250,7 +250,7 @@ def draw_real_test():
 
     from importlib import resources
     import pandas as pd
-    import pyoxynet
+    import pyoxynet.data_test
     import pkgutil
     from io import StringIO
     import random
@@ -261,7 +261,7 @@ def draw_real_test():
 
     print('Loading ', file_name)
 
-    bytes_data = pkgutil.get_data('pyoxynet.data_test.real_tests', file_name)
+    bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
     s = str(bytes_data, 'utf-8')
     data = StringIO(s)
     df = pd.read_csv(data)
