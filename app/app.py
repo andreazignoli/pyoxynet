@@ -1,6 +1,6 @@
 import flask
 import os
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, session, redirect, url_for
 from pyoxynet import *
 import numpy as np
 import pandas as pd
@@ -10,6 +10,7 @@ from faker import Faker
 
 app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9098))
+app.secret_key = "super secret key"
 
 def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
@@ -211,14 +212,21 @@ def CPET_generation():
 
     return flask.jsonify(df.to_dict())
 
-@app.route('/CPET_plot')
+@app.route('/CPET_plot', methods=['GET', 'POST'])
 def CPET_plot():
+    import random
     args = request.args
     fitness_group = args.get("fitness_group", default=None, type=int)
-    # generator = load_tf_generator()
-    # df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group)
 
-    df, CPET_data = draw_real_test()
+    if random.randint(0, 1) == 1:
+        generator = load_tf_generator()
+        df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+        print('Test was FAKE')
+        session['test_type'] = 'FAKE'
+    else:
+        df, CPET_data = draw_real_test()
+        print('Test was REAL')
+        session['test_type'] = 'REAL'
 
     VT1 = df.time[df.domain.diff() != 0].iloc[1]
     VT2 = df.time[df.domain.diff() != 0].iloc[2]
@@ -244,6 +252,29 @@ def CPET_plot():
         }
     ]
 
+    test_type = session['test_type']
+
+    if request.method == 'POST':
+        if request.form.get('action1') == test_type or request.form.get('action2') == test_type:
+            reply = 'Very good: your answer was CORRECT :)'
+            return render_template('response.html', value=reply)
+        else:
+            if request.form.get('play') == 'PLAY' or request.form.get('start_over') == 'AGAIN':
+                return render_template('index.html',
+                                       VCO2vsVO2=plot_VCO2vsVO2,
+                                       HRvsVO2=plot_HRvsVO2,
+                                       VEvsVCO2=plot_VEvsVCO2,
+                                       VO2VCO2=plot_VO2VCO2,
+                                       Pet=plot_Pet,
+                                       VERF=plot_VERF,
+                                       VEVO2=plot_VEVO2,
+                                       oxynet=plot_oxynet,
+                                       data=data,
+                                       CPET_data=CPET_data)
+            else:
+                reply = 'Very bad: your answer was WRONG :('
+                return render_template('response.html', value=reply)
+
     return render_template('index.html',
                            VCO2vsVO2=plot_VCO2vsVO2,
                            HRvsVO2=plot_HRvsVO2,
@@ -256,9 +287,30 @@ def CPET_plot():
                            data=data,
                            CPET_data=CPET_data)
 
-@app.route('/')
-def Hello_World():
-    return 'Hello from Pyoxynet and Oxynet'
+@app.route("/", methods=['GET', 'POST'])
+def HelloWorld():
+
+    if request.method == 'POST':
+        if request.form.get('play') == 'PLAY':
+            return redirect(url_for('CPET_plot'))
+        else:
+            pass
+    else:
+        pass
+
+    return render_template('homepage.html')
+
+def start_over():
+
+    if request.method == 'POST':
+        if request.form.get('start_over') == 'AGAIN':
+            return redirect(url_for('CPET_plot'))
+        else:
+            pass
+    else:
+        pass
+
+    return ''
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port)

@@ -280,6 +280,19 @@ def draw_real_test():
     VT1 = df[np.diff(df.domain, prepend=-1) == 1].time.iloc[0]
     VT2 = df[np.diff(df.domain, prepend=-1) == 1].time.iloc[1]
 
+    duration = len(df)
+
+    df['VO2_I'] = df['VO2_I'] + [random.uniform(-100, 100) for i in np.arange(duration)]
+    df['VCO2_I'] = df['VCO2_I'] + [random.uniform(-100, 100) for i in np.arange(duration)]
+    df['VE_I'] = df['VE_I'] + [random.uniform(-2, 2) for i in np.arange(duration)]
+    df['HR_I'] = df['HR_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
+    df['RF_I'] = df['RF_I'] + [random.uniform(-2, 2) for i in np.arange(duration)]
+    df['PetO2_I'] = df['PetO2_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
+    df['PetCO2_I'] = df['PetCO2_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
+
+    df['VEVO2_I'] = df['VE_I']/df['VO2_I']
+    df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
+
     print('Data loaded for a ', gender, ' individual with ', fitness_group, ' fitness capacity.')
     print('Weight: ', int(np.mean(df.weight.values)), ' kg')
     print('Height: ', np.mean(df.height.values[0]), 'm')
