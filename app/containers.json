@@ -1,6 +1,6 @@
 {
     "flask": {
-        "image": ":flask-service.flask-pyoxynet.15",
+        "image": ":flask-service.flask-pyoxynet.16",
         "ports": {
             "9098": "HTTP"
         }

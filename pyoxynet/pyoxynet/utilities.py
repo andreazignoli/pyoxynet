@@ -620,13 +620,22 @@ def generate_CPET(generator, plot=False, fitness_group=None):
     df = pd.DataFrame()
     df['time'] = np.arange(0, duration)
 
-    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + [random.uniform(-100, 100) for i in np.arange(duration)]
-    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min + [random.uniform(-100, 100) for i in np.arange(duration)]
-    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + [random.uniform(-2, 2) for i in np.arange(duration)]
-    df['HR_I'] = (np.asarray(HR) - np.min(HR))/(np.max((np.asarray(HR) - np.min(HR)))) * (HR_peak - HR_min) + HR_min + [random.uniform(-1, 1) for i in np.arange(duration)]
-    df['RF_I'] = (np.asarray(RF) - np.min(RF))/(np.max((np.asarray(RF) - np.min(RF)))) * (RF_peak - RF_min) + RF_min + [random.uniform(-2, 2) for i in np.arange(duration)]
-    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + [random.uniform(-1, 1) for i in np.arange(duration)]
-    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + [random.uniform(-1, 1) for i in np.arange(duration)]
+    noise_factor = random.randint(2, 4)/2
+
+    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + \
+                  [random.uniform(-100, 100)*noise_factor for i in np.arange(duration)]
+    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + \
+                   VCO2_min + [random.uniform(-100, 100)*noise_factor for i in np.arange(duration)]
+    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + \
+                 [random.uniform(-2, 2)*noise_factor for i in np.arange(duration)]
+    df['HR_I'] = (np.asarray(HR) - np.min(HR))/(np.max((np.asarray(HR) - np.min(HR)))) * (HR_peak - HR_min) + HR_min + \
+                 [random.uniform(-1, 1)*noise_factor for i in np.arange(duration)]
+    df['RF_I'] = (np.asarray(RF) - np.min(RF))/(np.max((np.asarray(RF) - np.min(RF)))) * (RF_peak - RF_min) + RF_min + \
+                 [random.uniform(-2, 2)*noise_factor for i in np.arange(duration)]
+    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + \
+                    [random.uniform(-1, 1)*noise_factor for i in np.arange(duration)]
+    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + \
+                     [random.uniform(-1, 1)*noise_factor for i in np.arange(duration)]
 
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']

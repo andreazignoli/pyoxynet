@@ -277,6 +277,8 @@ def CPET_plot():
 @app.route("/", methods=['GET', 'POST'])
 def HelloWorld():
 
+    session['test_type'] = 'NONE'
+
     if request.method == 'POST':
         if request.form.get('play') == 'PLAY':
             return redirect(url_for('CPET_plot'))
