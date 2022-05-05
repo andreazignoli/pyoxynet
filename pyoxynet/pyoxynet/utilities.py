@@ -468,7 +468,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_dict['VT1']['time'] = {}
     out_dict['VT2']['time'] = {}
 
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md']) & (out_df['p_hv'] > 0.1)].index[-1])
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
     VT2_index = int(out_df[(out_df['p_hv'] <= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
