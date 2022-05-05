@@ -463,8 +463,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_dict['VT1']['time'] = {}
     out_dict['VT2']['time'] = {}
 
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md']) & (out_df['p_hv'] > 0.1)].index[-1] + time_series_len)
-    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv']) & (out_df['p_sv'] > 0.1)].index[-1] + time_series_len)
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md']) & (out_df['p_hv'] > 0.1)].index[-1])
+    VT2_index = int(out_df[(out_df['p_hv'] <= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
@@ -480,25 +480,30 @@ def create_probabilities(duration=600, VT1=320, VT2=460):
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
 
     Parameters:
-        length (int): Length of the output list
-        scale_factor (float): Scale factor to be applied to the whole output
-        variation (float): Local variation of the main signal with the random walk
+        duration (int): Length of the test file
+        VT1 (int): First ventilatory threshold, in time samples from the beginning of the test
+        VT2 (int): Second ventilatory threshold, in time samples from the beginning of the test
 
     Returns:
-        none
+        p_mF (np array): Probability of being in the moderate intensity zone (-1:1)
+        p_hF (np array): Probability of being in the heavy intensity zone (-1:1)
+        p_sF (np array): Probability of being in the severe intensity zone (-1:1)
 
     """
 
     import numpy as np
 
-    time_length = np.arange(1, duration + 1)
-    pm_tanh = -1 * np.tanh(0.005 * np.arange(-duration / 2 + (duration / 2 - VT1), duration / 2 + (duration / 2 - VT1)))
-    ps_tanh = 1 * np.tanh(0.0075 * np.arange(-duration / 2 + (duration / 2 - VT2), duration / 2 + (duration / 2 - VT2)))
-    ph_tanh = 2 * np.exp(-((np.arange(0, duration)-(VT1 + (VT2-VT1)/2))**2)/(1.5*(((VT2-VT1)/2)**2)))-1
+    t = np.arange(1, duration + 1)
+    p_m = np.ones(np.shape(t))
+    p_m[t > VT1] = -1
+    p_h = - np.ones(np.shape(t))
+    p_h[((t > VT1) & (t < VT2))] = 1
+    p_s = -np.ones(np.shape(t))
+    p_s[t > VT2] = 1
 
-    p_mF = pm_tanh + np.flip(random_walk(length=len(time_length), scale_factor=200, variation=0.25))
-    p_sF = ps_tanh + random_walk(length=len(time_length), scale_factor=200, variation=0.25)
-    p_hF = ph_tanh + random_walk(length=len(time_length), scale_factor=200, variation=0.25)
+    p_mF = optimal_filter(t, p_m, 1000) + np.random.randn(len(t))/10
+    p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t))/10
+    p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t))/10
 
     return p_mF, p_hF, p_sF
 
