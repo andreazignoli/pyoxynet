@@ -1,12 +1,17 @@
 import pickle
 
 from pyoxynet import *
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 generator = load_tf_generator()
 
 # real_df, data_dict_real = draw_real_test()
 
-df, data_dict_fake = generate_CPET(generator, plot=False, fitness_group=2)
-# test_pyoxynet(input_df=real_df)
+for i_ in np.arange(10):
+    df, data_dict_fake = generate_CPET(generator)
+    df.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/gen_' + str(i_) + '.csv')
+    # test_pyoxynet(input_df=real_df)
 
 here =0
