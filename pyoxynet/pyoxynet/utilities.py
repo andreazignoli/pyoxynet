@@ -479,7 +479,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460, fake='false'):
+def create_probabilities(duration=600, VT1=320, VT2=460, fake=False):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -506,7 +506,7 @@ def create_probabilities(duration=600, VT1=320, VT2=460, fake='false'):
     p_s = -np.ones(np.shape(t))
     p_s[t > VT2] = 1
 
-    if fake == 'false':
+    if not fake:
         p_mF = optimal_filter(t, p_m, 1000) + np.random.randn(len(t))/10
         p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t))/10
         p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t))/10
