@@ -511,9 +511,12 @@ def create_probabilities(duration=600, VT1=320, VT2=460, fake='false'):
         p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t))/10
         p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t))/10
     else:
-        p_mF = optimal_filter(t, p_m, 1000) + np.random.randn(len(t)) / 10 + random_walk(len(t))
-        p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t)) / 10 + random_walk(len(t))
-        p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t)) / 10 + random_walk(len(t))
+        p_mF = optimal_filter(t, p_m, 1000) + np.random.randn(len(t)) / 10 + np.flip(random_walk(len(t), scale_factor=10, variation=0.25))
+        p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t)) / 10 + random_walk(len(t), scale_factor=10, variation=0.25)
+        p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t)) / 10 + random_walk(len(t), scale_factor=10, variation=0.25)
+        p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
+        p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
+        p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (-1, +1))
 
     return p_mF, p_hF, p_sF
 
