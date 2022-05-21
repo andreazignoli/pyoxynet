@@ -479,7 +479,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460):
+def create_probabilities(duration=600, VT1=320, VT2=460, fake='false'):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -506,9 +506,14 @@ def create_probabilities(duration=600, VT1=320, VT2=460):
     p_s = -np.ones(np.shape(t))
     p_s[t > VT2] = 1
 
-    p_mF = optimal_filter(t, p_m, 1000) + np.random.randn(len(t))/10
-    p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t))/10
-    p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t))/10
+    if fake == 'false':
+        p_mF = optimal_filter(t, p_m, 1000) + np.random.randn(len(t))/10
+        p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t))/10
+        p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t))/10
+    else:
+        p_mF = optimal_filter(t, p_m, 1000) + np.random.randn(len(t)) / 10 + random_walk(len(t))
+        p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t)) / 10 + random_walk(len(t))
+        p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t)) / 10 + random_walk(len(t))
 
     return p_mF, p_hF, p_sF
 
@@ -591,7 +596,7 @@ def generate_CPET(generator, plot=False, fitness_group=None):
     HR_min = int(db_df_sample.HRmin)
 
     # probability definition
-    p_mF, p_hF, p_sF = create_probabilities(duration=duration, VT1=VT1, VT2=VT2)
+    p_mF, p_hF, p_sF = create_probabilities(duration=duration, VT1=VT1, VT2=VT2, fake='true')
 
     # Allocate tensors.
     generator.allocate_tensors()
