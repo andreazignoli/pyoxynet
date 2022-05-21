@@ -511,9 +511,9 @@ def create_probabilities(duration=600, VT1=320, VT2=460, fake='false'):
         p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t))/10
         p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t))/10
     else:
-        p_mF = optimal_filter(t, p_m, 1000) + np.random.randn(len(t)) / 10 + np.flip(random_walk(len(t), scale_factor=10, variation=0.25))
-        p_hF = optimal_filter(t, p_h, 600) + np.random.randn(len(t)) / 10 + random_walk(len(t), scale_factor=10, variation=0.25)
-        p_sF = optimal_filter(t, p_s, 600) + np.random.randn(len(t)) / 10 + random_walk(len(t), scale_factor=10, variation=0.25)
+        p_mF = optimal_filter(t, p_m, 40000) + np.random.randn(len(t)) / 10 # + np.flip(random_walk(len(t), scale_factor=10, variation=0.25))
+        p_hF = optimal_filter(t, p_h, 20000) + np.random.randn(len(t)) / 10 # + random_walk(len(t), scale_factor=10, variation=0.1)
+        p_sF = optimal_filter(t, p_s, 40000) + np.random.randn(len(t)) / 10 # + random_walk(len(t), scale_factor=10, variation=0.1)
         p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
         p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
         p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (-1, +1))
@@ -661,6 +661,12 @@ def generate_CPET(generator, plot=False, fitness_group=None):
     df.loc[df['time'] < VT1, 'domain'] = -1
     df.loc[df['time'] >= VT2, 'domain'] = 1
     df.loc[(df['time'] < VT2) & (df['time'] >= VT1), 'domain'] = 0
+    df['fitness_group'] = db_df_sample['fitness_group'].values[0]
+    df['Age'] = db_df_sample['Age'].values[0]
+    df['age_group'] = db_df_sample['age_group'].values[0]
+    df['gender'] = db_df_sample['gender'].values[0]
+    df['weight'] = db_df_sample['weight'].values[0]
+    df['height'] = db_df_sample['height'].values[0]
 
     if plot:
         terminal_plot([df['VO2_I'], df['VCO2_I']],
