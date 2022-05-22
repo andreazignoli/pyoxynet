@@ -579,8 +579,16 @@ def generate_CPET(generator, plot=False, fitness_group=None):
         db_df_sample = db_df[db_df['fitness_group'] == fitness_group].sample()
 
     duration = int(db_df_sample.duration)
-    VT1 = int(db_df_sample.VT1)
-    VT2 = int(db_df_sample.VT2)
+
+    if db_df_sample['fitness_group'].values[0] == 1:
+        VT1 = int(duration * 0.6)
+        VT2 = int(duration * 0.84)
+    if db_df_sample['fitness_group'].values[0] == 2:
+        VT1 = int(duration * 0.49)
+        VT2 = int(duration * 0.75)
+    if db_df_sample['fitness_group'].values[0] == 3:
+        VT1 = int(duration * 0.54)
+        VT2 = int(duration * 0.79)
 
     VO2_peak = int(db_df_sample.VO2peak)
     VCO2_peak = int(db_df_sample.VCO2peak)
