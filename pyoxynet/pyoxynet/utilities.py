@@ -517,6 +517,10 @@ def create_probabilities(duration=600, VT1=320, VT2=460):
     p_hF = np.interp(t, T_h, p_h) + np.random.randn(len(t)) / 10
     p_sF = np.interp(t, T_s, p_s) + np.random.randn(len(t)) / 10
 
+    p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
+    p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
+    p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (-1, +1))
+
     return p_mF, p_hF, p_sF
 
 def random_walk(length=1, scale_factor=1, variation=1):
