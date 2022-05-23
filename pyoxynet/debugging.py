@@ -12,8 +12,8 @@ generator = load_tf_generator()
 for i_ in np.arange(20):
     df, data_dict_fake = generate_CPET(generator)
     df.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/gen_' + str(i_) + '.csv')
-    # test_pyoxynet(input_df=real_df)
-    plt.plot(normalize(df))
+    test_pyoxynet(input_df=real_df)
+    # plt.plot(normalize(df))
     here=0
 
 here =0
