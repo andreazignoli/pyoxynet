@@ -440,9 +440,9 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
 
     tmp_df = pd.DataFrame()
     tmp_df['time'] = time
-    tmp_df['p_md'] = p_1
-    tmp_df['p_hv'] = p_2
-    tmp_df['p_sv'] = p_3
+    tmp_df['p_md'] = optimal_filter(np.asarray(time), np.asarray(p_1), 100)
+    tmp_df['p_hv'] = optimal_filter(np.asarray(time), np.asarray(p_2), 100)
+    tmp_df['p_sv'] = optimal_filter(np.asarray(time), np.asarray(p_3), 100)
 
     mod_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[:20].mean().idxmax()
     sev_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[-20:].mean().idxmax()
