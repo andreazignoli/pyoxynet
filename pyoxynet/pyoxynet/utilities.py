@@ -506,16 +506,16 @@ def create_probabilities(duration=600, VT1=320, VT2=460):
         T0 = 60
 
     T_m = [0, T0, VT1, VT2, duration]
-    T_h = [0, T0 + (VT1 - T0)/2, VT1, VT1 + (VT2 - VT1)/2, VT2, duration]
-    T_s = [0, T0 + (VT1 - T0)/2, VT1, VT2, duration]
+    T_h = [0, T0 + (VT1 - T0)/3, VT1, VT1 + (VT2 - VT1)/2, VT2, duration]
+    T_s = [0, T0 + (VT1 - T0)/3, VT1, VT2, duration]
 
-    p_m = [1, 1, 0, -1, -1]
+    p_m = [1, 1,   0, -1, -1]
     p_h = [-1, -1, 0, 1, 0, -1]
-    p_s = [-1, -1, -0.5, 0, 1]
+    p_s = [-1, -1, -1, 0, 1]
 
-    p_mF = np.interp(t, T_m, p_m) + np.random.randn(len(t)) / 10
-    p_hF = np.interp(t, T_h, p_h) + np.random.randn(len(t)) / 10
-    p_sF = np.interp(t, T_s, p_s) + np.random.randn(len(t)) / 10
+    p_mF = np.interp(t, T_m, p_m) + np.random.randn(len(t)) / 5
+    p_hF = np.interp(t, T_h, p_h) + np.random.randn(len(t)) / 5
+    p_sF = np.interp(t, T_s, p_s) + np.random.randn(len(t)) / 5
 
     p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
     p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
@@ -548,7 +548,7 @@ def random_walk(length=1, scale_factor=1, variation=1):
 
     return [i/scale_factor for i in random_walk]
 
-def generate_CPET(generator, plot=False, fitness_group=None):
+def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None, duration=None):
     """Actually generates the CPET file
 
     Parameters:
@@ -581,9 +581,12 @@ def generate_CPET(generator, plot=False, fitness_group=None):
     else:
         db_df_sample = db_df[db_df['fitness_group'] == fitness_group].sample()
 
-    duration = int(db_df_sample.duration)
-    VT1 = int(db_df_sample.VT1)
-    VT2 = int(db_df_sample.VT2)
+    if duration == None:
+        duration = int(db_df_sample.duration)
+    if VT1 == None:
+        VT1 = int(db_df_sample.VT1)
+    if VT2 == None:
+        VT2 = int(db_df_sample.VT2)
 
     # TODO: testing this opportunity
     # if db_df_sample['fitness_group'].values[0] == 1:
