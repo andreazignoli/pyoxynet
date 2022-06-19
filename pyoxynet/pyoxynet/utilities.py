@@ -500,22 +500,17 @@ def create_probabilities(duration=600, VT1=320, VT2=460):
 
     t = np.arange(1, duration + 1)
 
-    if VT1 > 500:
-        T0 = 240
-    else:
-        T0 = 60
+    T_m = [0, VT1-1, VT1+1, VT2-1, VT2+1, duration]
+    T_h = [0, VT1-1, VT1+1, VT2-1, VT2+1, duration]
+    T_s = [0, VT1-1, VT1+1, VT2-1, VT2+1, duration]
 
-    T_m = [0, T0, VT1, VT2, duration]
-    T_h = [0, T0 + (VT1 - T0)/3, VT1, VT1 + (VT2 - VT1)/2, VT2, duration]
-    T_s = [0, T0 + (VT1 - T0)/3, VT1, VT2, duration]
+    p_m = [1, 1, -1, -1, -1, -1]
+    p_h = [-1, -1, 1, 1, -1, -1]
+    p_s = [-1, -1, -1, -1, 1, 1]
 
-    p_m = [1, 1,   0, -1, -1]
-    p_h = [-1, -1, 0, 1, 0, -1]
-    p_s = [-1, -1, -1, 0, 1]
-
-    p_mF = np.interp(t, T_m, p_m) + np.random.randn(len(t)) / 5
-    p_hF = np.interp(t, T_h, p_h) + np.random.randn(len(t)) / 5
-    p_sF = np.interp(t, T_s, p_s) + np.random.randn(len(t)) / 5
+    p_mF = optimal_filter(t, np.interp(t, T_m, p_m), 8000) + np.random.randn(len(t)) / 5
+    p_hF = optimal_filter(t, np.interp(t, T_h, p_h), 4000) + np.random.randn(len(t)) / 5
+    p_sF = optimal_filter(t, np.interp(t, T_s, p_s), 4000) + np.random.randn(len(t)) / 5
 
     p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
     p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
