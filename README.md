@@ -87,7 +87,9 @@ There is no need to clone this repo if you don't want to. You can just install t
 
 ### Pip install the package
 
-This is the best solution for those Pyhton users who would like to have Oxynet algorithms always on the tip of their fingers. Assuming you have pip installed on your machine, begin with: 
+☝️ This package was developed under **Python 3.8**, so it might not work properly under older versions.   
+
+This is the best solution for those Python users who would like to have Oxynet algorithms always on the tip of their fingers. Assuming you have pip installed on your machine, begin with: 
 
 ```sh
 pip install pyoxynet
