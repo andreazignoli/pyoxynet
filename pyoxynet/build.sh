@@ -1,8 +1,8 @@
 #!/bin/sh
 rm -rf dist
 rm -rf pyoxynet.egg-info
-python setup.py sdist
- twine upload dist/*
+python3 -m build
+python3 -m twine upload dist/*
 cd ..
 cd docs
 make html

@@ -95,6 +95,12 @@ This is the best solution for those Python users who would like to have Oxynet a
 pip install pyoxynet
 ```
 
+Or, alternatively, 
+
+```sh
+pip install git+https://github.com/andreazignoli/pyoxynet.git#subdirectory=pyoxynet
+```
+
 Packages that require addition extra url cannot be installed via *setuptools*, which letely allows and suggests to use pip when possibile. To workaround this problem, TFLite is automatically installed with the following command the first time pyoxynet is imported:
 
 ```sh
