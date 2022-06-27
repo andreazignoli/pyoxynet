@@ -404,8 +404,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     df = df.drop('timestamp', axis=1)
 
     if n_inputs==7 and past_points==40:
-        # X = df[['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']]
-        filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
+        # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
+        filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
         X = df[filter_vars]
         XN = normalize(X)
         XN = XN.filter(filter_vars, axis=1)
