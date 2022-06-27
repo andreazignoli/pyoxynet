@@ -105,7 +105,7 @@ def load_tf_model(n_inputs=7, past_points=40):
     import importlib_resources
     import pickle
     from io import BytesIO
-    import pyoxynet.models
+    import pyoxynet.tfl_models
 
     # get the model
     pip_install_tflite()
@@ -114,11 +114,11 @@ def load_tf_model(n_inputs=7, past_points=40):
     if n_inputs==7 and past_points==40:
         # load the classic Oxynet model configuration
         print('Classic Oxynet configuration model uploaded')
-        tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'tfl_model.pickle')
+        tfl_model_binaries = importlib_resources.read_binary(pyoxynet.tfl_models, 'tfl_model.pickle')
     if n_inputs==5 and past_points==40:
         # load the 5 input model configuration (e.g. in this case when on CO2 info is included)
         print('Specific configuration model uploaded (no VCO2 available)')
-        tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'tfl_model_5_40.pickle')
+        tfl_model_binaries = importlib_resources.read_binary(pyoxynet.tfl_models, 'tfl_model_5_40.pickle')
 
     try:
         tfl_model_decoded = pickle.loads(tfl_model_binaries)
@@ -144,14 +144,14 @@ def load_tf_generator():
     import importlib_resources
     import pickle
     from io import BytesIO
-    import pyoxynet.models
+    import pyoxynet.tfl_model
 
     # get the model
     pip_install_tflite()
     import tflite_runtime.interpreter as tflite
 
     print('Classic Oxynet configuration model uploaded')
-    tfl_model_binaries = importlib_resources.read_binary(pyoxynet.models, 'generator.pickle')
+    tfl_model_binaries = importlib_resources.read_binary(pyoxynet.tfl_model, 'generator.pickle')
 
     try:
         tfl_model_decoded = pickle.loads(tfl_model_binaries)
