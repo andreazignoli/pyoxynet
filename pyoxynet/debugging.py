@@ -5,7 +5,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-generator = load_tf_generator()
+out_dict = test_pyoxynet()
+
+# generator = load_tf_generator()
 
 # real_df, data_dict_real = draw_real_test()
 
