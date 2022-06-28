@@ -436,7 +436,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
         p_1.append(output_data[0][0])
         p_2.append(output_data[0][1])
         p_3.append(output_data[0][2])
-        time.append(df.time[i])
+        # TODO: here this is hard coded i.e.: -time series length / 2
+        time.append(df.time[i]-20)
 
     tmp_df = pd.DataFrame()
     tmp_df['time'] = time
@@ -456,7 +457,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_df['p_hv'] = tmp_df[hv_col]
     out_df['p_sv'] = tmp_df[sev_col]
 
-    plot([p_1, p_2, p_3],
+    plot([out_df['p_md'], out_df['p_hv'], out_df['p_sv']],
          title="Exercise intensity domains",
          width=120,
          color=True,
@@ -469,7 +470,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_dict['VT2']['time'] = {}
 
     VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
-    VT2_index = int(out_df[(out_df['p_hv'] <= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
+    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
