@@ -11,6 +11,7 @@ Please refer to the extended [documentation](https://pyoxynet.readthedocs.io/en/
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install pyoxynet.
 
 ```bash
+pip install --upgrade pip
 pip install pyoxynet
 ```
 
