@@ -187,7 +187,7 @@ It is possible to check the required keys of the json dictionary in *app/test_da
 To get different examples of random people carrying out a fake test, you just put this address in your browser and you change the fitness group from 1 to 3 (it's 3 in the examples):
 
 ```sh
-https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot?fitness_group=3
+https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com
 ```
 
 Fitness group 1 means LOW fitness level, whilst 2 and 3 means MEDIUM and HIGH respectively. 
