@@ -176,21 +176,17 @@ In the gif below, different epochs/steps of the training process are presented f
 
 A [Flask](https://flask.palletsprojects.com/en/2.0.x/) inference/generation app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
 
-It is possibile therefore to call Flask-Pyoxynet from a terminal, and provide data in json format. If your input data has only 7 variables, then the classic Oxynet configuration can be used by replacing X with 7 (see command below), otherwise if the input variables are only 5, you can replace X with 5:
+It is possible therefore to call Flask-Pyoxynet from a terminal, and provide data in json format. If your input data has only 7 variables, then the classic Oxynet configuration can be used by replacing X with 7 (see command below), otherwise if the input variables are only 5, you can replace X with 5:
 
 ```sh
 curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_json?n_inputs=X -d @test_data.json
 ```
 
-It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possibile to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possbile to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation).
-
-To get different examples of random people carrying out a fake test, you just put this address in your browser and you change the fitness group from 1 to 3 (it's 3 in the examples):
+It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possible to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possible to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation).
 
 ```sh
 https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com
 ```
-
-Fitness group 1 means LOW fitness level, whilst 2 and 3 means MEDIUM and HIGH respectively. 
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -203,8 +199,8 @@ Fitness group 1 means LOW fitness level, whilst 2 and 3 means MEDIUM and HIGH re
     - [x] Implement Generation
 - [x] Develop Flask-app
 - [x] Run Docker on AWS
-- [ ] Develop GUI for generation
-    - [ ] ----
+- [x] Develop GUI for generation
+    - [ ] Improve GUI
     - [ ] ----
 
 See the [open issues](https://github.com/andreazignoli/pyoxynet/issues) for a full list of proposed features (and known issues).
