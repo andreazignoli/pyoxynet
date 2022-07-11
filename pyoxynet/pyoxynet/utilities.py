@@ -674,6 +674,11 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     df['weight'] = db_df_sample['weight'].values[0]
     df['height'] = db_df_sample['height'].values[0]
 
+    # Collect VO2 value at VT1 and VT2
+    VO2VT1 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[0] - 5):(df[df['domain'].diff().fillna(0) == 1].index[0] + 5)]['VO2_I'].mean()
+    VO2VT2 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[1] - 5):(
+                df[df['domain'].diff().fillna(0) == 1].index[1] + 5)]['VO2_I'].mean()
+
     if plot:
         terminal_plot([df['VO2_I'], df['VCO2_I']],
                       title="CPET variables", width=120,
@@ -707,6 +712,9 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
             'Gender': gender,
             'Aerobic_fitness_level': fitness_group,
             'VT1': str(VT1),
-            'VT2': str(VT2)}]
+            'VT2': str(VT2),
+            'VO2VT1': str(int(VO2VT1)),
+            'VO2VT2': str(int(VO2VT2))
+             }]
 
     return df, data
