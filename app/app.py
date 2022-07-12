@@ -53,11 +53,16 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
 
     return graphJSON
 
-def CPET_var_plot_vs_O2(df, var_list=[]):
+def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0]):
     import json
     import plotly.express as px
 
+    VT1 = VT[0]
+    VT2 = VT[1]
+
     fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VO2_I", y=var_list)
+    fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="green", annotation_text="VT1")
+    fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
 
     fig.update_layout(
         xaxis=dict(
@@ -235,17 +240,19 @@ def CPET_plot():
                     print('Test was REAL')
                     session['test_type'] = 'REAL'
 
-                VT1 = df.time[df.domain.diff() != 0].iloc[1]
-                VT2 = df.time[df.domain.diff() != 0].iloc[2]
                 df_oxynet, out_dict = test_pyoxynet(input_df=df)
+                VT1 = out_dict['VT1']['time']
+                VT2 = out_dict['VT2']['time']
+                VO2VT1 = out_dict['VT1']['VO2']
+                VO2VT2 = out_dict['VT2']['VO2']
 
-                plot_VO2VCO2 = CPET_var_plot(df, var_list=['VO2_I', 'VCO2_I'], VT=[VT1, VT2])
-                plot_Pet = CPET_var_plot(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VT1, VT2])
-                plot_VERF = CPET_var_plot(df, var_list=['VE_I', 'RF_I'], VT=[VT1, VT2])
-                plot_VEVO2 = CPET_var_plot(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VT1, VT2])
+                plot_VO2VCO2 = CPET_var_plot_vs_O2(df, var_list=['VO2_I', 'VCO2_I'], VT=[VO2VT1, VO2VT2])
+                plot_Pet = CPET_var_plot_vs_O2(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VO2VT1, VO2VT2])
+                plot_VERF = CPET_var_plot_vs_O2(df, var_list=['VE_I', 'RF_I'], VT=[VO2VT1, VO2VT2])
+                plot_VEVO2 = CPET_var_plot_vs_O2(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VO2VT1, VO2VT2])
                 plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2])
-                plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'])
-                plot_HRvsVO2 = CPET_var_plot_vs_O2(df, var_list=['HR_I'])
+                plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2])
+                plot_HRvsVO2 = CPET_var_plot_vs_O2(df, var_list=['HR_I'], VT=[VO2VT1, VO2VT2])
                 plot_VEvsVCO2 = CPET_var_plot_vs_CO2(df, var_list=['VE_I'])
 
                 fake = Faker()
