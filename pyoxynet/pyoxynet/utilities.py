@@ -501,17 +501,21 @@ def create_probabilities(duration=600, VT1=320, VT2=460):
 
     t = np.arange(1, duration + 1)
 
-    T_m = [0, VT1-1, VT1+1, VT2-1, VT2+1, duration]
-    T_h = [0, VT1-1, VT1+1, VT2-1, VT2+1, duration]
-    T_s = [0, VT1-1, VT1+1, VT2-1, VT2+1, duration]
+    T_m = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
+    T_h = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
+    T_s = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
 
-    p_m = [1, 1, -1, -1, -1, -1]
-    p_h = [-1, -1, 1, 1, -1, -1]
-    p_s = [-1, -1, -1, -1, 1, 1]
+    p_m = [1, 1, 0, -1, -1, -1]
+    p_h = [0, 0, 1, 1, 0, -1]
+    p_s = [-1, -1, -1, 0, 1, 1]
 
-    p_mF = optimal_filter(t, np.interp(t, T_m, p_m), 8000) + np.random.randn(len(t)) / 5
-    p_hF = optimal_filter(t, np.interp(t, T_h, p_h), 4000) + np.random.randn(len(t)) / 5
-    p_sF = optimal_filter(t, np.interp(t, T_s, p_s), 4000) + np.random.randn(len(t)) / 5
+    p_m_noise = [(e / len(t)) * i/4 for e, i in enumerate(np.random.randn(len(t)))]
+    p_h_noise = [(e / len(t)) * i/4 for e, i in enumerate(np.random.randn(len(t)))]
+    p_s_noise = [(e / len(t)) * i/4 for e, i in enumerate(np.random.randn(len(t)))]
+
+    p_mF = optimal_filter(t, np.interp(t, T_m, p_m), 8000) + p_m_noise
+    p_hF = optimal_filter(t, np.interp(t, T_h, p_h), 4000) + p_h_noise
+    p_sF = optimal_filter(t, np.interp(t, T_s, p_s), 4000) + p_s_noise
 
     p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
     p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
@@ -544,13 +548,13 @@ def random_walk(length=1, scale_factor=1, variation=1):
 
     return [i/scale_factor for i in random_walk]
 
-def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None, duration=None):
+def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None, duration=None, noise_factor=0):
     """Actually generates the CPET file
 
     Parameters:
         length (int): Length of the output list
-        scale_factor (float): Scale factor to be applied to the whole output
-        variation (float): Local variation of the main signal with the random walk
+        fitness_group (int): Fitness level: low (1), medium (2), high (3). Default to random.
+        noise_factor (float): Noise factor for white noise. Default to random.
 
     Returns:
         df (pd df): Pandas dataframe with CPET data included and ready to be processed by the model (if needed)
@@ -651,7 +655,10 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     df = pd.DataFrame()
     df['time'] = np.arange(0, duration)
 
-    noise_factor = random.randint(2, 4)/2
+    if noise_factor == None:
+        noise_factor = random.randint(2, 4)/2
+    else:
+        pass
 
     df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + [random.uniform(-100, 100)*noise_factor for i in np.arange(duration)]
     df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min + [random.uniform(-100, 100)*noise_factor for i in np.arange(duration)]
@@ -663,6 +670,11 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
 
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
+
+    df['VCO2VO2_I'] = df['VCO2_I'] / df['VO2_I']
+    df['PetO2VO2_I'] = df['PetO2_I'] / df['VO2_I']
+    df['PetCO2VO2_I'] = df['PetCO2_I'] / df['VO2_I']
+
     df['domain'] = np.NaN
     df.loc[df['time'] < VT1, 'domain'] = -1
     df.loc[df['time'] >= VT2, 'domain'] = 1
