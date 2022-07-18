@@ -248,11 +248,11 @@ def CPET_plot():
 
                 plot_VO2VCO2 = CPET_var_plot_vs_O2(df, var_list=['VO2_I', 'VCO2_I'], VT=[VO2VT1, VO2VT2])
                 plot_Pet = CPET_var_plot_vs_O2(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_VERF = CPET_var_plot_vs_O2(df, var_list=['VE_I', 'RF_I'], VT=[VO2VT1, VO2VT2])
+                plot_VERF = CPET_var_plot_vs_O2(df, var_list=['VE_I'], VT=[VO2VT1, VO2VT2])
                 plot_VEVO2 = CPET_var_plot_vs_O2(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VO2VT1, VO2VT2])
                 plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2])
                 plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_HRvsVO2 = CPET_var_plot_vs_O2(df, var_list=['HR_I'], VT=[VO2VT1, VO2VT2])
+                plot_HRvsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2])
                 plot_VEvsVCO2 = CPET_var_plot_vs_CO2(df, var_list=['VE_I'])
 
                 fake = Faker()
@@ -268,7 +268,7 @@ def CPET_plot():
 
                 return render_template('index.html',
                                        VCO2vsVO2=plot_VCO2vsVO2,
-                                       HRvsVO2=plot_HRvsVO2,
+                                       HRvsVO2=plot_VCO2vsVO2,
                                        VEvsVCO2=plot_VEvsVCO2,
                                        VO2VCO2=plot_VO2VCO2,
                                        Pet=plot_Pet,
