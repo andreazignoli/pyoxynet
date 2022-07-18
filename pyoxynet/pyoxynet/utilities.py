@@ -469,8 +469,9 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_dict['VT1']['time'] = {}
     out_dict['VT2']['time'] = {}
 
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
+    # FIXME: hard coded
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) + 40
+    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) + 40
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
@@ -505,7 +506,7 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=False, normali
     T_h = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
     T_s = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
 
-    p_m = [0.5, 0.5, 0, 0, -0.5, -0.5]
+    p_m = [0.5, 0.5, -0.5, -0.5, -0.5, -0.5]
     p_h = [-0.5, -0.5, 0.5, 0.5, -0.5, -0.5]
     p_s = [-0.5, -0.5, -0.5, -0.5, 0.5, 0.5]
 
@@ -684,6 +685,10 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min
     df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min
     df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min
+
+    df['p_mF'] = p_mF
+    df['p_hF'] = p_hF
+    df['p_sF'] = p_sF
 
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
