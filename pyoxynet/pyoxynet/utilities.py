@@ -437,7 +437,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
         p_2.append(output_data[0][1])
         p_3.append(output_data[0][2])
         # TODO: here this is hard coded i.e.: -time series length / 2
-        time.append(df.time[i]-20)
+        time.append(df.time[i])
 
     tmp_df = pd.DataFrame()
     tmp_df['time'] = time
