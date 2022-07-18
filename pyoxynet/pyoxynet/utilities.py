@@ -480,7 +480,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460):
+def create_probabilities(duration=600, VT1=320, VT2=460, training=False, normalization=False):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -505,21 +505,27 @@ def create_probabilities(duration=600, VT1=320, VT2=460):
     T_h = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
     T_s = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
 
-    p_m = [1, 1, 0, -1, -1, -1]
-    p_h = [0, 0, 1, 1, 0, -1]
-    p_s = [-1, -1, -1, 0, 1, 1]
+    p_m = [0.5, 0.5, 0, 0, -0.5, -0.5]
+    p_h = [-0.5, -0.5, 0.5, 0.5, -0.5, -0.5]
+    p_s = [-0.5, -0.5, -0.5, -0.5, 0.5, 0.5]
 
-    p_m_noise = [(e / len(t)) * i/4 for e, i in enumerate(np.random.randn(len(t)))]
-    p_h_noise = [(e / len(t)) * i/4 for e, i in enumerate(np.random.randn(len(t)))]
-    p_s_noise = [(e / len(t)) * i/4 for e, i in enumerate(np.random.randn(len(t)))]
+    p_mF = optimal_filter(t, np.interp(t, T_m, p_m), 20000)
+    p_hF = optimal_filter(t, np.interp(t, T_h, p_h), 10000)
+    p_sF = optimal_filter(t, np.interp(t, T_s, p_s), 8000)
 
-    p_mF = optimal_filter(t, np.interp(t, T_m, p_m), 8000) + p_m_noise
-    p_hF = optimal_filter(t, np.interp(t, T_h, p_h), 4000) + p_h_noise
-    p_sF = optimal_filter(t, np.interp(t, T_s, p_s), 4000) + p_s_noise
+    if training:
+        p_mF = p_mF + np.random.randn(len(t)) / 10
+        p_hF = p_hF + np.random.randn(len(t)) / 10
+        p_sF = p_sF + np.random.randn(len(t)) / 10
+    else:
+        pass
 
-    p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
-    p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
-    p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (-1, +1))
+    if normalization:
+        p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
+        p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
+        p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (-1, +1))
+    else:
+        pass
 
     return p_mF, p_hF, p_sF
 
@@ -588,17 +594,6 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     if VT2 == None:
         VT2 = int(db_df_sample.VT2)
 
-    # TODO: testing this opportunity
-    # if db_df_sample['fitness_group'].values[0] == 1:
-    #     VT1 = int(duration * 0.6)
-    #     VT2 = int(duration * 0.84)
-    # if db_df_sample['fitness_group'].values[0] == 2:
-    #     VT1 = int(duration * 0.49)
-    #     VT2 = int(duration * 0.75)
-    # if db_df_sample['fitness_group'].values[0] == 3:
-    #     VT1 = int(duration * 0.54)
-    #     VT2 = int(duration * 0.79)
-
     VO2_peak = int(db_df_sample.VO2peak)
     VCO2_peak = int(db_df_sample.VCO2peak)
     VE_peak = int(db_df_sample.VEpeak)
@@ -615,9 +610,6 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     PetCO2_min = int(db_df_sample.PetCO2min)
     HR_min = int(db_df_sample.HRmin)
 
-    # probability definition
-    p_mF, p_hF, p_sF = create_probabilities(duration=duration, VT1=VT1, VT2=VT2)
-
     # Allocate tensors.
     generator.allocate_tensors()
 
@@ -629,44 +621,69 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     input_shape = input_details[0]['shape']
     input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
 
+    # probability definition
+    p_mF, p_hF, p_sF = create_probabilities(duration=duration, VT1=VT1 - 40, VT2=VT2 - 40, training=True)
+
     # initialise
     VO2 = []
     VCO2 = []
     VE = []
-    HR = []
-    RF = []
     PetO2 = []
     PetCO2 = []
+    VEVCO2 = []
+    VEVO2 = []
 
-    for steps_, seconds_ in enumerate(np.arange(0, duration)):
+    time_array = np.arange(0, duration)
+
+    for steps_, seconds_ in enumerate(time_array.astype(int)):
+        # keep the seed
+        # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
         input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
         generator.set_tensor(input_details[0]['index'], input_data)
         generator.invoke()
         output_data = generator.get_tensor(output_details[0]['index'])
-        VO2.append(output_data[0, -1, 0])
-        VCO2.append(output_data[0, -1, 1])
-        VE.append(output_data[0, -1, 2])
-        HR.append(output_data[0, -1, 3])
-        RF.append(output_data[0, -1, 4])
-        PetO2.append(output_data[0, -1, 5])
-        PetCO2.append(output_data[0, -1, 6])
+        VO2.append(np.average(output_data[0, :, 0]))
+        VCO2.append(np.average(output_data[0, :, 1]))
+        VE.append(np.average(output_data[0, :, 2]))
+        PetO2.append(np.average(output_data[0, :, 3]))
+        PetCO2.append(np.average(output_data[0, :, 4]))
+        VEVO2.append(np.average(output_data[0, :, 5]))
+        VEVCO2.append(np.average(output_data[0, :, 6]))
         # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
 
+    VO2 = optimal_filter(time_array, VO2, 10)
+    VCO2 = optimal_filter(time_array, VCO2, 10)
+    PetO2 = optimal_filter(time_array, PetO2, 10)
+    PetCO2 = optimal_filter(time_array, PetCO2, 10)
+    VE = optimal_filter(time_array, VE, 10)
+    VEVO2 = optimal_filter(time_array, VEVO2, 10)
+    VEVCO2 = optimal_filter(time_array, VEVCO2, 10)
+
+    min_norm = -1
+    max_norm = 1
+    VO2 = np.interp(np.asarray(VO2), (np.asarray(VO2).min(), np.asarray(VO2).max()), (min_norm, max_norm))
+    VCO2 = np.interp(np.asarray(VCO2), (np.asarray(VCO2).min(), np.asarray(VCO2).max()), (min_norm, max_norm))
+    PetO2 = np.interp(np.asarray(PetO2), (np.asarray(PetO2).min(), np.asarray(PetO2).max()), (min_norm, max_norm))
+    PetCO2 = np.interp(np.asarray(PetCO2), (np.asarray(PetCO2).min(), np.asarray(PetCO2).max()),
+                       (min_norm, max_norm))
+    VE = np.interp(np.asarray(VE), (np.asarray(VE).min(), np.asarray(VE).max()), (min_norm, max_norm))
+    VEVO2 = np.interp(np.asarray(VEVO2), (np.asarray(VEVO2).min(), np.asarray(VEVO2).max()), (min_norm, max_norm))
+    VEVCO2 = np.interp(np.asarray(VEVCO2), (np.asarray(VEVCO2).min(), np.asarray(VEVCO2).max()),
+                       (min_norm, max_norm))
+
     df = pd.DataFrame()
-    df['time'] = np.arange(0, duration)
+    df['time'] = time_array
 
     if noise_factor == None:
         noise_factor = random.randint(2, 4)/2
     else:
         pass
 
-    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + [random.uniform(-100, 100)*noise_factor for i in np.arange(duration)]
-    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min + [random.uniform(-100, 100)*noise_factor for i in np.arange(duration)]
-    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + [random.uniform(-2, 2)*noise_factor for i in np.arange(duration)]
-    df['HR_I'] = (np.asarray(HR) - np.min(HR))/(np.max((np.asarray(HR) - np.min(HR)))) * (HR_peak - HR_min) + HR_min + [random.uniform(-1, 1)*noise_factor*0.5 for i in np.arange(duration)]
-    df['RF_I'] = (np.asarray(RF) - np.min(RF))/(np.max((np.asarray(RF) - np.min(RF)))) * (RF_peak - RF_min) + RF_min + [random.uniform(-2, 2)*noise_factor for i in np.arange(duration)]
-    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + [random.uniform(-1, 1)*noise_factor for i in np.arange(duration)]
-    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + [random.uniform(-1, 1)*noise_factor for i in np.arange(duration)]
+    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min
+    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min
+    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min
+    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min
+    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min
 
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
@@ -676,9 +693,9 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     df['PetCO2VO2_I'] = df['PetCO2_I'] / df['VO2_I']
 
     df['domain'] = np.NaN
-    df.loc[df['time'] < VT1, 'domain'] = -1
-    df.loc[df['time'] >= VT2, 'domain'] = 1
-    df.loc[(df['time'] < VT2) & (df['time'] >= VT1), 'domain'] = 0
+    df.loc[df['time'] < (VT1 - 40), 'domain'] = -1
+    df.loc[df['time'] >= (VT2 - 40), 'domain'] = 1
+    df.loc[(df['time'] < (VT2 - 40)) & (df['time'] >= (VT1 - 40)), 'domain'] = 0
     df['fitness_group'] = db_df_sample['fitness_group'].values[0]
     df['Age'] = db_df_sample['Age'].values[0]
     df['age_group'] = db_df_sample['age_group'].values[0]
@@ -687,17 +704,17 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     df['height'] = db_df_sample['height'].values[0]
 
     # Collect VO2 value at VT1 and VT2
-    VO2VT1 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[0] - 5):(df[df['domain'].diff().fillna(0) == 1].index[0] + 5)]['VO2_I'].mean()
-    VO2VT2 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[1] - 5):(
-                df[df['domain'].diff().fillna(0) == 1].index[1] + 5)]['VO2_I'].mean()
+    VO2VT1 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[0] - 10):(df[df['domain'].diff().fillna(0) == 1].index[0] + 10)]['VO2_I'].mean()
+    VO2VT2 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[1] - 10):(
+                df[df['domain'].diff().fillna(0) == 1].index[1] + 10)]['VO2_I'].mean()
 
     if plot:
         terminal_plot([df['VO2_I'], df['VCO2_I']],
                       title="CPET variables", width=120,
                       color=True, legend_labels=['VO2_I', 'VCO2_I'])
-        terminal_plot([df['VE_I'], df['HR_I'], df['RF_I']],
+        terminal_plot([df['VE_I']],
                       title="CPET variables", width=120,
-                      color=True, legend_labels=['VE', 'HR', 'RF'])
+                      color=True, legend_labels=['VE'])
         terminal_plot([df['PetO2_I'], df['PetCO2_I']],
                       title="CPET variables", width=120,
                       color=True, legend_labels=['PetO2_I', 'PetCO2_I'])
@@ -723,8 +740,8 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
             'Weight': str(int(db_df_sample.weight.values)),
             'Gender': gender,
             'Aerobic_fitness_level': fitness_group,
-            'VT1': str(VT1),
-            'VT2': str(VT2),
+            'VT1': str(VT1 - 40),
+            'VT2': str(VT2 - 40),
             'VO2VT1': str(int(VO2VT1)),
             'VO2VT2': str(int(VO2VT2))
              }]
