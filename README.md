@@ -23,7 +23,6 @@
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
@@ -59,24 +58,26 @@
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-## The Pyoxynet package
+## The *Pyoxynet* package
 
-Pyoxynet is a collection of the algorithms developed within the Oxynet project. The core algorithms (i.e.models) are mainly deep neural networks, made in the attempt to process cardiopulmonary exercise test data (CPET). 
+*Pyoxynet* is a collection of the algorithms developed within the *Oxynet* project. The core algorithms (i.e.models) are mainly deep neural networks, made in the attempt to process cardiopulmonary exercise test data (CPET). 
 
-All the models have been trained and tested with [Tensorflow](https://www.tensorflow.org/), but they are included in Pyoxynet only in their [TFLite](https://www.tensorflow.org/lite) inference version. TFLite has been intentionally adopted to keep the package light and to promote the use of Oxynet related technologies. 
+All the models have been trained and tested with [Tensorflow](https://www.tensorflow.org/), but they are included in *Pyoxynet* only in their [TFLite](https://www.tensorflow.org/lite) inference version. TFLite has been intentionally adopted to keep the package light and to promote the use of *Oxynet* related technologies. 
 
 To date, mainly two type of models are implemented: 
 
 * The *inference* model: it takes some CPET data as input and it provides an estimation of the exercise intensity domains 
 * The *generator* model: it generates new synthetic CPET data
 
-You can read more about the rationale and the techhnology behind the Oxynet project at the following links: 
+You can read more about the rationale and the technology behind the Oxynet project at the following links: 
 
 * [Review](https://link.springer.com/article/10.1007%2Fs11332-019-00557-x) paper on the AI technologies applied to exercise cardiopulmonary and metabolic data processing
-* [Research](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229466) implementing an LSTM neural netwok to the estimation of VO2 during cycling exercise (regressor)
-* [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2019.1587523?journalCode=tejs20) implementing an LSTM neural netwok to the estimation of the intensity domain during incremental exercise (classifier)
+* [Research](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229466) implementing an LSTM neural networks to the estimation of VO2 during cycling exercise (regressor)
+* [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2019.1587523?journalCode=tejs20) implementing an LSTM neural networks to the estimation of the intensity domain during incremental exercise (classifier)
 * [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2020.1866081?journalCode=tejs20) implementing a crowd sourcing and CNN inference to the problem of determining the intensity domain during incremental exercise (classifier)
+* [Research](https://www.overleaf.com/read/fcmwscvyhtfq) generating synthetic CPET data with conditional GANs
 * [Blog article](https://www.linkedin.com/pulse/oxynet-collective-intelligence-approach-test-andrea-zignoli/) about the Oxynet project
+* [Blog article](https://andreazignoli.github.io/blog-post-5/) about the problem of adopting AI models in the interpretation of CPET data
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -89,7 +90,7 @@ There is no need to clone this repo if you don't want to. You can just install t
 
 ☝️ This package was developed under **Python 3.8**, so it might not work properly under older versions.   
 
-This is the best solution for those Python users who would like to have Oxynet algorithms always on the tip of their fingers. Assuming you have pip installed on your machine, begin with: 
+This is the best solution for those Python users who would like to have *Oxynet* algorithms always on the tip of their fingers. Assuming you have pip installed on your machine, begin with: 
 
 ```sh
 pip install pyoxynet
@@ -101,13 +102,13 @@ Or, alternatively,
 pip install git+https://github.com/andreazignoli/pyoxynet.git#subdirectory=pyoxynet
 ```
 
-Packages that require addition extra url cannot be installed via *setuptools*, which letely allows and suggests to use pip when possibile. To workaround this problem, TFLite is automatically installed with the following command the first time pyoxynet is imported:
+Packages that require addition extra url cannot be installed via *setuptools*, which lately allows and suggests to use *pip* when possible. To workaround this problem, TFLite is automatically installed with the following command the first time *pyoxynet* is imported:
 
 ```sh
 pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
 ```
 
-Currently, The TFLite installation process is completed with a line command inside Python, which is not the best solution. 
+Currently, The TFLite installation process is completed with a line command inside Python, which is not the best solution (I know...). 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -122,7 +123,7 @@ Data required for the *inference* include oxygen uptake (VO2), exhaled CO2 (VCO2
 |     |      |    |       |        |       |        |
 |     |      |    |       |        |       |        |
 
-Oxynet inference models work on data oversampled on a sec-by-sec basis. When dealing with breath-by-breath data, linear interpolation at 1 second is appropriate. When dealing with averaged 5-by-5 second data or 10-by-10 second data, cubic interpolation is more appropriate. Pyoxynet however, can implement a number of interpolation algorithm to process raw data as well as data already processed. 
+*Oxynet* inference models work on data over-sampled on a sec-by-sec basis. When dealing with breath-by-breath data, linear interpolation at 1 second is appropriate. When dealing with averaged 5-by-5 second data or 10-by-10 second data, cubic interpolation is more appropriate. *Pyoxynet* however, can implement a number of interpolation algorithm to process raw data as well as data already processed. 
 
 In case there is no access to VCO2 data, a different solution has been implemented (although validation has not been published) considering the following inputs: 
 
@@ -132,7 +133,7 @@ In case there is no access to VCO2 data, a different solution has been implement
 |     |    |       |    |       |
 |     |    |       |    |       |
 
-If you want to see how Pyoxynet can work on sample data:
+If you want to see how *Pyoxynet* can work on sample data:
 
 ```python
 import pyoxynet
@@ -154,7 +155,7 @@ _For more examples, please refer to the package [Documentation](https://pyoxynet
 <!-- GENERATION -->
 ## Generation
 
-Pyoxynet also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive cardipulmonary exercise test data. As per the *inference* model, the *generator* is saved in a TFLite model file. Calling the related function and obtain a fake CPET data sample can be done as follows: 
+*Pyoxynet* also implements a Conditional Generative Adversarial Network, which has been trained to generate deceptive CPET data. As per the *inference* model, the *generator* is saved in a TFLite model file. Calling the related function and obtain a fake CPET data sample can be done as follows: 
 
 ```python
 from pyoxynet import *
@@ -166,7 +167,7 @@ df = generate_CPET(generator, plot=True)
 test_pyoxynet(input_df=df)
 ```
 
-In the gif below, different epochs/steps of the training process are presented for the Conditional Adversarial Neural Network available in Pyoxynet. 
+In the gif below, different epochs/steps of the training process are presented for the Conditional Adversarial Neural Network available in *Pyoxynet*. 
 
 ![plot](./pics/dcgan_200.gif)
 
@@ -196,7 +197,7 @@ https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com
 - [x] Create website
 - [x] Create Python package
     - [x] Implement inference
-    - [x] Implement Generation
+    - [x] Implement generation
 - [x] Develop Flask-app
 - [x] Run Docker on AWS
 - [x] Develop GUI for generation
@@ -212,17 +213,17 @@ See the [open issues](https://github.com/andreazignoli/pyoxynet/issues) for a fu
 
 There are challenges that transcend both national and continental boundaries and providing people with universal access to good quality health care is one of them. Emerging technologies in the field of AI and the availability of vast amounts of data can offer big opportunities to stimulate innovation and develop solutions.
 
-Oxynet wants to become a tool for a quick and encompassing diagnosis of medical conditions with cardiopulmonary exercise tests (CPET) and promote accurate and timely clinical decisions, ultimately reducing the costs associated with current evaluation errors and delays.
+*Oxynet* wants to become a tool for a quick and encompassing diagnosis of medical conditions with cardiopulmonary exercise tests (CPET) and promote accurate and timely clinical decisions, ultimately reducing the costs associated with current evaluation errors and delays.
 
 The main building blocks of Oxynet are: 
 
 * A network of experts in the field of CPET
-* A large crowdsourced data set
+* A large crowd sourced data set
 * An AI algorithm able to approximate human cognition in the analysis of CPET 
 
-We are interested in creating more research opportunities with other Universities and Departments, hospitals and clinics, medical doctors and physiologists (also operating in intensive care units), companies involved in the development (including patenting and validation) and in the commercialisation of medical devices (e.g. metabolic carts and medical software). 
+We are interested in creating more research opportunities with other Universities and Departments, hospitals and clinics, medical doctors and physiologists (also operating in intensive care units), companies involved in the development (including patenting and validation) and in the commercialization of medical devices (e.g. metabolic carts and medical software). 
 
-We want to bring together key actors from across sectors to jointly implement our R&D road map and: support the research activities financially (including scholarships for research fellows or publication fees for open access journals), provide intellectual contribution for scientific publications or grant application, share data for testing/developing new algorithms, develop web-based applications (e.g. crowdsourcing applications, automatic interpretation of new data, websites for communicating the outcomes of the project), conduct market and patent analyses, and validate the algorithms for clinical settings.
+We want to bring together key actors from across sectors to jointly implement our R&D road map and: support the research activities financially (including scholarships for research fellows or publication fees for open access journals), provide intellectual contribution for scientific publications or grant application, share data for testing/developing new algorithms, develop web-based applications (e.g. crowd sourcing applications, automatic interpretation of new data, websites for communicating the outcomes of the project), conduct market and patent analyses, and validate the algorithms for clinical settings.
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 Don't forget to give Pyoxynet a star! Thanks again!
@@ -254,12 +255,13 @@ Repository project link: [Pyoxynet](https://github.com/andreazignoli/pyoxynet)
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-The following resources are valuable for both the Pyoxynet and Oxynet projects:
+The following resources are valuable for both the *Pyoxynet* and *Oxynet* projects:
 
 * [TFLite inference](https://www.tensorflow.org/lite/guide/inference)
 * [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/)
 * [Flask](https://flask.palletsprojects.com/en/2.0.x/)
 * [Uniplot Python library](https://github.com/olavolav/uniplot)
+* [Machine Learning Mastery cGAN](https://machinelearningmastery.com/how-to-develop-a-conditional-generative-adversarial-network-from-scratch/)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
