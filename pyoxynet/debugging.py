@@ -4,11 +4,20 @@ from pyoxynet import utilities
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import json
+
+# df_out, results_dict = test_pyoxynet()
+# Opening JSON file
+with open('pyoxynet/pyoxynet/test/exercise_threshold_app_test.json') as json_file:
+    data = json.load(json_file)
+
+df_in = utilities.load_exercise_threshold_app_data(data_dict=data)
+df_out, results_dict = utilities.test_pyoxynet(df_in)
 
 # out_dict = test_pyoxynet()
 
 generator = utilities.load_tf_generator()
-
+df_gen, data_gen = utilities.generate_CPET(generator)
 # real_df, data_dict_real = draw_real_test()
 
 for i_ in np.arange(100):
