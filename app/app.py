@@ -232,7 +232,7 @@ def CPET_plot():
 
                 if random.randint(0, 1) == 1:
                     generator = load_tf_generator()
-                    df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+                    df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group, noise_factor=None)
                     print('Test was FAKE')
                     session['test_type'] = 'FAKE'
                 else:
