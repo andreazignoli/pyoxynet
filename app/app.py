@@ -16,7 +16,10 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
     import plotly.express as px
 
-    fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VCO2_I", y=var_list)
+    fig = px.scatter(df.iloc[np.arange(0, len(df), 5)],
+                     x="VCO2_I",
+                     y=var_list, color_discrete_sequence=['white', 'gray'])
+    fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')))
 
     fig.update_layout(
         xaxis=dict(
@@ -28,7 +31,7 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
             ticks='outside',
             tickfont=dict(
                 family='Arial',
-                size=10,
+                size=14,
                 color='rgb(82, 82, 82)',
             ),
         ),
@@ -39,14 +42,14 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
             showticklabels=True,
             tickfont=dict(
                 family='Arial',
-                size=10,
+                size=14,
                 color='rgb(82, 82, 82)',
             ),
         ),
         autosize=True,
         showlegend=True,
-        template='plotly_white',
-        width=600, height=600
+        template='ggplot2',
+        width=800, height=800
     )
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -60,7 +63,9 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0]):
     VT1 = VT[0]
     VT2 = VT[1]
 
-    fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VO2_I", y=var_list)
+    fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VO2_I", y=var_list,
+                     color_discrete_sequence=['white', 'gray'])
+    fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')))
     fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="green", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
 
@@ -74,7 +79,7 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0]):
             ticks='outside',
             tickfont=dict(
                 family='Arial',
-                size=10,
+                size=14,
                 color='rgb(82, 82, 82)',
             ),
         ),
@@ -85,14 +90,14 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0]):
             showticklabels=True,
             tickfont=dict(
                 family='Arial',
-                size=10,
+                size=14,
                 color='rgb(82, 82, 82)',
             ),
         ),
         autosize=True,
         showlegend=True,
-        template='plotly_white',
-        width=600, height=600
+        template='ggplot2',
+        width=800, height=800
     )
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -106,7 +111,9 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     VT1 = VT[0]
     VT2 = VT[1]
 
-    fig = px.line(df.iloc[np.arange(0, len(df), 5)], x="time", y=var_list)
+    fig = px.line(df.iloc[np.arange(0, len(df), 5)], x="time", y=var_list,
+                  color_discrete_sequence=['white', 'gray', 'black'])
+    fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')))
     fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="green", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
 
@@ -120,7 +127,7 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
             ticks='outside',
             tickfont=dict(
                 family='Arial',
-                size=10,
+                size=14,
                 color='rgb(82, 82, 82)',
             ),
         ),
@@ -131,13 +138,13 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
             showticklabels=True,
             tickfont=dict(
                 family='Arial',
-                size=10,
+                size=14,
                 color='rgb(82, 82, 82)',
             ),
         ),
         autosize=True,
         showlegend=True,
-        template='plotly_white',
+        template='ggplot2',
         width=800, height=400
     )
 
@@ -248,11 +255,9 @@ def CPET_plot():
 
                 plot_VO2VCO2 = CPET_var_plot_vs_O2(df, var_list=['VO2_I', 'VCO2_I'], VT=[VO2VT1, VO2VT2])
                 plot_Pet = CPET_var_plot_vs_O2(df, var_list=['PetO2_I', 'PetCO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_VERF = CPET_var_plot_vs_O2(df, var_list=['VE_I'], VT=[VO2VT1, VO2VT2])
                 plot_VEVO2 = CPET_var_plot_vs_O2(df, var_list=['VEVO2_I', 'VEVCO2_I'], VT=[VO2VT1, VO2VT2])
                 plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2])
                 plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_HRvsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2])
                 plot_VEvsVCO2 = CPET_var_plot_vs_CO2(df, var_list=['VE_I'])
 
                 fake = Faker()
@@ -268,11 +273,9 @@ def CPET_plot():
 
                 return render_template('index.html',
                                        VCO2vsVO2=plot_VCO2vsVO2,
-                                       HRvsVO2=plot_VCO2vsVO2,
                                        VEvsVCO2=plot_VEvsVCO2,
                                        VO2VCO2=plot_VO2VCO2,
                                        Pet=plot_Pet,
-                                       VERF=plot_VERF,
                                        VEVO2=plot_VEVO2,
                                        oxynet=plot_oxynet,
                                        data=data,
