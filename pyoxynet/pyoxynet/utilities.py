@@ -491,8 +491,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_dict['VT2']['time'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) + int(time_series_len/2)
+    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) + int(time_series_len/2)
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
@@ -520,32 +520,44 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=False, normali
     """
 
     import numpy as np
+    from scipy.interpolate import interp1d
 
     t = np.arange(1, duration + 1)
 
-    T_m = [0, 240, VT1-20, VT1+20, VT2-20, VT2+20, duration]
-    T_h = [0, 240, VT1-20, VT1+20, VT2-20, VT2+20, duration]
-    T_s = [0, 240, VT1-20, VT1+20, VT2-20, VT2+20, duration]
+    if VT1 < 300:
+        step_1 = 60
+        step_2 = 120
+    else:
+        step_1 = 120
+        step_2 = 240
 
-    p_m = [0.75, 0.75, 0.5, -0.5, -0.5, -0.75, -0.75]
-    p_h = [-0.75, -0.75, -0.5, 0.5, 0.5, -0.5, -0.5]
-    p_s = [-0.75, -0.75, -0.5, -0.5, -0.5, 0.5, 0.75]
+    T_m = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, (duration-VT2)/2+VT2, duration]
+    T_h = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, (duration-VT2)/2+VT2, duration]
+    T_s = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, (duration-VT2)/2+VT2, duration]
 
-    p_mF = optimal_filter(t, np.interp(t, T_m, p_m), 20000)
-    p_hF = optimal_filter(t, np.interp(t, T_h, p_h), 10000)
-    p_sF = optimal_filter(t, np.interp(t, T_s, p_s), 8000)
+    p_m = [0.7, 0.75, 0.75, 0, -0.5, -0.75, -0.75, -0.75]
+    p_h = [-0.75, -0.75, -0.75, 0, 0.75, 0, 0, -0.5]
+    p_s = [-0.75, -0.75, -0.75, -0.75, -0.5, 0, 0.5, 0.75]
+
+    p_m_I = interp1d(T_m, p_m, kind='linear')
+    p_h_I = interp1d(T_h, p_h, kind='linear')
+    p_s_I = interp1d(T_s, p_s, kind='linear')
+
+    p_mF = optimal_filter(t, p_m_I(t), 200)
+    p_hF = optimal_filter(t, p_h_I(t), 200)
+    p_sF = optimal_filter(t, p_s_I(t), 200)
 
     if training:
-        p_mF = p_mF + np.random.randn(len(t)) / 10
-        p_hF = p_hF + np.random.randn(len(t)) / 10
-        p_sF = p_sF + np.random.randn(len(t)) / 10
+        p_mF = p_mF + np.random.randn(len(t)) / 6
+        p_hF = p_hF + np.random.randn(len(t)) / 6
+        p_sF = p_sF + np.random.randn(len(t)) / 6
     else:
         pass
 
     if normalization:
-        p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-1, +1))
-        p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-1, +1))
-        p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (-1, +1))
+        p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-0.75, 0.75))
+        p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-0.75, 0.75))
+        p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (-0.75, 0.75))
     else:
         pass
 
@@ -644,6 +656,7 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
 
     # probability definition
+    # FIXME: hard coded here
     p_mF, p_hF, p_sF = create_probabilities(duration=duration, VT1=VT1 - 40, VT2=VT2 - 40, training=True)
 
     # initialise
@@ -701,11 +714,11 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     else:
         pass
 
-    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min
-    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min
-    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min
-    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min
-    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min
+    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + np.random.randn(len(VO2)) * 40 * noise_factor
+    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min + np.random.randn(len(VO2)) * 40 * noise_factor
+    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + np.random.randn(len(VO2)) * 1 * noise_factor
+    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + np.random.randn(len(VO2)) * 2 * noise_factor
+    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + np.random.randn(len(VO2)) * 2 * noise_factor
 
     df['p_mF'] = p_mF
     df['p_hF'] = p_hF
