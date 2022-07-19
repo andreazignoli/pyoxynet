@@ -321,6 +321,7 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     import json
     import pandas as pd
+    import numpy as np
 
     time = []
     VO2_I = []
@@ -341,8 +342,28 @@ def load_exercise_threshold_app_data(data_dict={}):
         VEVO2_I.append(data_points_['VE/VO2'])
         VEVCO2_I.append(data_points_['VE/VCO2'])
 
+    # transform in array
+    time = np.asarray(time)
+    VO2_I = np.asarray(VO2_I)
+    VCO2_I = np.asarray(VCO2_I)
+    VE_I = np.asarray(VE_I)
+    PetO2_I = np.asarray(PetO2_I)
+    PetCO2_I = np.asarray(PetCO2_I)
+    VEVO2_I = np.asarray(VEVO2_I)
+    VEVCO2_I = np.asarray(VEVCO2_I)
+
+    # filter and interpolate
+    time_I = np.arange(int(time[0]), int(time[-1]))
+    VO2_I = np.interp(time_I, time, VO2_I)
+    VCO2_I = np.interp(time_I, time, VCO2_I)
+    VE_I = np.interp(time_I, time, VE_I)
+    PetO2_I = np.interp(time_I, time, PetO2_I)
+    PetCO2_I = np.interp(time_I, time, PetCO2_I)
+    VEVO2_I = np.interp(time_I, time, VEVO2_I)
+    VEVCO2_I = np.interp(time_I, time, VEVCO2_I)
+
     df = pd.DataFrame()
-    df['time'] = [time_ - time[0 ]for time_ in time]
+    df['time'] = time_I
     df['VO2_I'] = VO2_I
     df['VCO2_I'] = VCO2_I
     df['VE_I'] = VE_I
@@ -425,8 +446,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     p_3 = []
     time = []
 
-    for i in np.arange(time_series_len, len(XN)):
-        XN_array = np.asarray(XN[(i-time_series_len):i])
+    for i in np.arange(time_series_len - int(time_series_len/2), len(XN) - int(time_series_len/2)):
+        XN_array = np.asarray(XN[(i-int(time_series_len/2)):(i+int(time_series_len/2))])
         input_data = np.reshape(XN_array, input_details[0]['shape'])
         input_data = input_data.astype(np.float32)
         tfl_model.allocate_tensors()
@@ -470,8 +491,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_dict['VT2']['time'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) + 40
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) + 40
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
+    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
@@ -502,13 +523,13 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=False, normali
 
     t = np.arange(1, duration + 1)
 
-    T_m = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
-    T_h = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
-    T_s = [0, VT1-20, VT1+20, VT2-20, VT2+20, duration]
+    T_m = [0, 240, VT1-20, VT1+20, VT2-20, VT2+20, duration]
+    T_h = [0, 240, VT1-20, VT1+20, VT2-20, VT2+20, duration]
+    T_s = [0, 240, VT1-20, VT1+20, VT2-20, VT2+20, duration]
 
-    p_m = [0.5, 0.5, -0.5, -0.5, -0.5, -0.5]
-    p_h = [-0.5, -0.5, 0.5, 0.5, -0.5, -0.5]
-    p_s = [-0.5, -0.5, -0.5, -0.5, 0.5, 0.5]
+    p_m = [0.75, 0.75, 0.5, -0.5, -0.5, -0.75, -0.75]
+    p_h = [-0.75, -0.75, -0.5, 0.5, 0.5, -0.5, -0.5]
+    p_s = [-0.75, -0.75, -0.5, -0.5, -0.5, 0.5, 0.75]
 
     p_mF = optimal_filter(t, np.interp(t, T_m, p_m), 20000)
     p_hF = optimal_filter(t, np.interp(t, T_h, p_h), 10000)
@@ -565,7 +586,7 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
 
     Returns:
         df (pd df): Pandas dataframe with CPET data included and ready to be processed by the model (if needed)
-        data (dict): Data realative to the generated CPET
+        data (dict): Data relative to the generated CPET
 
     """
 
