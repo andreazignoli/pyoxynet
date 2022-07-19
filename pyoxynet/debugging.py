@@ -17,12 +17,32 @@ df_out, results_dict = utilities.test_pyoxynet(df_in)
 # out_dict = test_pyoxynet()
 
 generator = utilities.load_tf_generator()
-df_gen, data_gen = utilities.generate_CPET(generator)
 # real_df, data_dict_real = draw_real_test()
 
 for i_ in np.arange(100):
     df, data_dict_fake = utilities.generate_CPET(generator)
     # df.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/gen_' + str(i_) + '.csv')
+    fig = plt.figure()
+    plt.subplot(2, 2, 1)
+    plt.plot(df.time, df.VO2_I)
+    plt.plot(df.time, df.VCO2_I)
+    plt.vlines(x=int(data_dict_fake[0]['VT1']), ymin=0, ymax=3000)
+    plt.vlines(x=int(data_dict_fake[0]['VT2']), ymin=0, ymax=3000)
+    plt.subplot(2, 2, 2)
+    plt.plot(df.time, df.VE_I)
+    plt.vlines(x=int(data_dict_fake[0]['VT1']), ymin=0, ymax=100)
+    plt.vlines(x=int(data_dict_fake[0]['VT2']), ymin=0, ymax=100)
+    plt.subplot(2, 2, 3)
+    plt.plot(df.time, df.VEVO2_I)
+    plt.plot(df.time, df.VEVCO2_I)
+    plt.vlines(x=int(data_dict_fake[0]['VT1']), ymin=0, ymax=0.05)
+    plt.vlines(x=int(data_dict_fake[0]['VT2']), ymin=0, ymax=0.05)
+    plt.subplot(2, 2, 4)
+    plt.plot(df.time, df.PetO2_I, 'o')
+    plt.vlines(x=int(data_dict_fake[0]['VT1']), ymin=100, ymax=120)
+    plt.vlines(x=int(data_dict_fake[0]['VT2']), ymin=100, ymax=120)
+    here=0
+    plt.cla()
     out_df, out_dict = utilities.test_pyoxynet(input_df=df)
     plt.plot(out_df.time, out_df.p_sv)
     plt.plot(out_df.time, out_df.p_md)
@@ -36,5 +56,6 @@ for i_ in np.arange(100):
     plt.vlines(x=out_dict['VT1']['time'], ymin=-1, ymax=1, linestyles='dashed')
     plt.vlines(x=out_dict['VT2']['time'], ymin=-1, ymax=1, linestyles='dashed')
     here=0
+    plt.cla()
 
 here =0
