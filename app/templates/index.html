@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head lang="en">
+    <link rel="stylesheet" href="styles.css">
     <meta charset="UTF-8">
     <title>Hello from Oxynet</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
@@ -11,17 +12,17 @@
     <title>Cardiopulmonary test done by:</title>
     <ul>
         {% for item in data %}
-            <li>Name: {{item.name}}</li>
-            <li>Address: {{item.address}}</li>
+            <h4>Name: {{item.name}}
+            <br>Address: {{item.address}}</h4>
         {% endfor %}
     </ul>
     <ul>
         {% for item in CPET_data %}
-            <li>AGE: {{item.Age}}</li>
-            <li>Height: {{item.Height}} m</li>
-            <li>Weight: {{item.Weight}} kg</li>
-            <li>Gender: {{item.Gender}}</li>
-            <li>Fitness level: {{item.Aerobic_fitness_level}}</li>
+            <h4>AGE: {{item.Age}}
+            <br>Height: {{item.Height}} m
+            <br>Weight: {{item.Weight}} kg
+            <br>Gender: {{item.Gender}}
+            <br>Fitness level: {{item.Aerobic_fitness_level}}</h4>
         {% endfor %}
     </ul>
     <h3>What do you think?<h3/>
@@ -29,26 +30,31 @@
             <input type="submit" value="REAL" name="action1"/>
             <input type="submit" value="FAKE" name="action2" />
         </form>
+</div>
+<div class="container">
     <div class="row">
-        <div class="col-md-6">
-            <div class="chart" id="plot_VCO2vsVO2">
-                <script>
-                    var graphs = {{VCO2vsVO2 | safe}};
-                    Plotly.plot('plot_VCO2vsVO2',graphs,{});
-                </script>
-            </div>
-            <div class="chart" id="plot_VEvsVCO2">
-                <script>
-                    var graphs = {{VEvsVCO2 | safe}};
-                    Plotly.plot('plot_VEvsVCO2',graphs,{});
-                </script>
-            </div>
-            <div class="chart" id="plot_VO2VCO2">
-                <script>
-                    var graphs = {{VO2VCO2 | safe}};
-                    Plotly.plot('plot_VO2VCO2',graphs,{});
-                </script>
-            </div>
+        <div class="chart" id="plot_VCO2vsVO2" style="text-align:center; float:left;">
+            <script>
+                var graphs = {{VCO2vsVO2 | safe}};
+                Plotly.plot('plot_VCO2vsVO2',graphs,{});
+            </script>
+        </div>
+        <div class="chart" id="plot_VEvsVCO2">
+            <script>
+                var graphs = {{VEvsVCO2 | safe}};
+                Plotly.plot('plot_VEvsVCO2',graphs,{});
+            </script>
+        </div>
+        <div class="chart" id="plot_VO2VCO2">
+            <script>
+                var graphs = {{VO2VCO2 | safe}};
+                Plotly.plot('plot_VO2VCO2',graphs,{});
+            </script>
+        </div>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
             <div class="chart" id="plot_Pet">
                 <script>
                     var graphs = {{Pet | safe}};

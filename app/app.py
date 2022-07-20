@@ -16,6 +16,11 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
     import plotly.express as px
 
+    labels_dict = {}
+
+    for lab_ in var_list:
+        labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
+
     fig = px.scatter(df.iloc[np.arange(0, len(df), 5)],
                      x="VCO2_I",
                      y=var_list, color_discrete_sequence=['white', 'gray'])
@@ -23,6 +28,7 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
 
     fig.update_layout(
         xaxis=dict(
+            title='VCO2',
             showline=True,
             showgrid=True,
             showticklabels=True,
@@ -31,7 +37,7 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
             ticks='outside',
             tickfont=dict(
                 family='Arial',
-                size=14,
+                size=16,
                 color='rgb(82, 82, 82)',
             ),
         ),
@@ -42,7 +48,7 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
             showticklabels=True,
             tickfont=dict(
                 family='Arial',
-                size=14,
+                size=16,
                 color='rgb(82, 82, 82)',
             ),
         ),
@@ -51,6 +57,11 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
         template='ggplot2',
         width=800, height=800
     )
+
+    fig.for_each_trace(lambda t: t.update(name=labels_dict[t.name],
+                                          legendgroup=labels_dict[t.name],
+                                          hovertemplate=t.hovertemplate.replace(t.name, labels_dict[t.name])
+                                          ))
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -63,14 +74,20 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0]):
     VT1 = VT[0]
     VT2 = VT[1]
 
+    labels_dict = {}
+
+    for lab_ in var_list:
+        labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
+
     fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VO2_I", y=var_list,
                      color_discrete_sequence=['white', 'gray'])
     fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')))
-    fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="green", annotation_text="VT1")
+    fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
 
     fig.update_layout(
         xaxis=dict(
+            title='VO2',
             showline=True,
             showgrid=True,
             showticklabels=True,
@@ -100,6 +117,11 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0]):
         width=800, height=800
     )
 
+    fig.for_each_trace(lambda t: t.update(name=labels_dict[t.name],
+                                          legendgroup=labels_dict[t.name],
+                                          hovertemplate=t.hovertemplate.replace(t.name, labels_dict[t.name])
+                                          ))
+
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     return graphJSON
@@ -111,14 +133,20 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     VT1 = VT[0]
     VT2 = VT[1]
 
+    labels_dict = {}
+
+    for lab_ in var_list:
+        labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
+
     fig = px.line(df.iloc[np.arange(0, len(df), 5)], x="time", y=var_list,
                   color_discrete_sequence=['white', 'gray', 'black'])
     fig.update_traces(marker=dict(size=10, line=dict(width=2, color='DarkSlateGrey')))
-    fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="green", annotation_text="VT1")
+    fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
 
     fig.update_layout(
         xaxis=dict(
+            title='Time',
             showline=True,
             showgrid=True,
             showticklabels=True,
@@ -147,6 +175,11 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
         template='ggplot2',
         width=800, height=400
     )
+
+    fig.for_each_trace(lambda t: t.update(name=labels_dict[t.name],
+                                          legendgroup=labels_dict[t.name],
+                                          hovertemplate=t.hovertemplate.replace(t.name, labels_dict[t.name])
+                                          ))
 
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -229,7 +262,9 @@ def CPET_plot():
 
     if request.method == 'POST':
         if request.form.get('action1') == session['test_type'] or request.form.get('action2') == session['test_type']:
-            reply = 'Very good: your answer was CORRECT :)'
+            session['correct'] = session['correct'] + 1
+            session['tot_test'] = session['tot_test'] + 1
+            reply = 'Your answer was CORRECT 😀 \n Total tests: ' + str(session['tot_test']) + ' (' + str(np.round(session['correct']/session['tot_test']*100, 2)) + '% correct)'
             return render_template('response.html', value=reply)
         else:
             if request.form.get('play') == 'PLAY' or request.form.get('start_over') == 'AGAIN':
@@ -281,13 +316,20 @@ def CPET_plot():
                                        data=data,
                                        CPET_data=CPET_data)
             else:
-                reply = 'Very bad: your answer was WRONG :('
+                session['wrong'] = session['wrong'] + 1
+                session['tot_test'] = session['tot_test'] + 1
+                reply = 'Your answer was WRONG 🙈 \n Total tests: ' + str(session['tot_test']) + ' (' + str(np.round(session['correct']/session['tot_test']*100, 2)) + '% correct)'
                 return render_template('response.html', value=reply)
 
 @app.route("/", methods=['GET', 'POST'])
 def HelloWorld():
 
     session['test_type'] = 'NONE'
+
+    if 'tot_test' not in session.keys() or not session['tot_test'] > 0:
+        session['tot_test'] = 0
+        session['correct'] = 0
+        session['wrong'] = 0
 
     if request.method == 'POST':
         if request.form.get('play') == 'PLAY':
