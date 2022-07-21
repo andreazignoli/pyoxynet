@@ -1,0 +1,24 @@
+h2 {text-align: center;}
+h3 {text-align: center;}
+p {text-align: center;}
+div {text-align: center;}
+form {text-align: center;}
+container {text-align: center;}
+
+.column {
+  float: left;
+  width: 33.3%;
+}
+
+@media screen and (max-width: 400px) {
+  .column {
+    width: 100%;
+  }
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
