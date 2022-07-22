@@ -271,7 +271,7 @@ def CPET_generation():
     args = request.args
     fitness_group = args.get("fitness_group", default=None, type=int)
     generator = load_tf_generator()
-    df = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+    df, gen_dict = generate_CPET(generator, plot=False, fitness_group=fitness_group)
 
     return flask.jsonify(df.to_dict())
 
