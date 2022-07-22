@@ -5,6 +5,10 @@ div {text-align: center;}
 form {text-align: center;}
 container {text-align: center;}
 
+.p1 {
+  font-family: "Monaco";
+}
+
 input[type=button], input[type=submit], input[type=reset] {
   border: none;
   color: white;
