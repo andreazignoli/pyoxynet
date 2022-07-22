@@ -189,6 +189,8 @@ It is possible to check the required keys of the json dictionary in *app/test_da
 https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com
 ```
 
+The app can also be used as test to check how realistic the fake examples look like at the [app main page](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/).  
+
 <!-- ROADMAP -->
 ## Roadmap
 
