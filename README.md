@@ -167,6 +167,14 @@ df = generate_CPET(generator, plot=True)
 test_pyoxynet(input_df=df)
 ```
 
+Fake data provided during the *generation* include oxygen uptake (VO2), exhaled CO2 (VCO2), minute ventilation (VE), heart rate (HR), respiratory frequency (RF), and end tidal O2 (PetO2) and CO2(PetCO2) (*generation therefore does not provide and ventilatory equivalents*):
+
+| VO2 | VCO2 | VE | HR | RF | PetO2 | PetCO2 |
+|-----|------|----|----|----|-------|--------|
+|     |      |    |    |    |       |        |
+|     |      |    |    |    |       |        |
+|     |      |    |    |    |       |        |
+
 In the gif below, different epochs/steps of the training process are presented for the Conditional Adversarial Neural Network available in *Pyoxynet*. 
 
 ![plot](./pics/dcgan_200.gif)
