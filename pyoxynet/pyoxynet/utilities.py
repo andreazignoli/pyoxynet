@@ -799,9 +799,21 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     data['noise_factor'] = str(noise_factor)
     data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
 
+    df['breaths'] = np.ndarray.astype(np.asarray(1/(df.RF_I/60)), int)
+
     # new: generate breath by breath data
-    df['breath'] = np.ndarray.astype((np.cumsum(1/(df.RF_I.values/60)))/(np.cumsum(1/(df.RF_I.values/60)))[-1]*(duration-1), int)
-    df_breath = df.drop_duplicates('breath')
+    df_breath = pd.DataFrame()
+    n = 0
+    while n < len(df):
+        tmp = df.iloc[n:(n+df['breaths'].iloc[n])].mean()
+        pd.DataFrame(data=np.reshape(tmp.values, [1, 24]), columns=tmp.index.to_list())
+        df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 24]), columns=tmp.index.to_list())])
+
+        n = n + df['breaths'].iloc[n]
+
+    df_breath['time'] = df_breath['time'].astype(int)
+    df_breath = df_breath.drop_duplicates('time')
+
     exercise_threshold_names = {"time": "t",
                                 "VO2_I": "VO2",
                                 "VCO2_I": "VCO2",
