@@ -10,7 +10,7 @@ generator = utilities.load_tf_generator()
 # real_df, data_dict_real = draw_real_test()
 plotting=False
 
-for i_ in np.arange(100):
+for i_ in np.arange(5):
     df, data_dict_fake = utilities.generate_CPET(generator, noise_factor=None)
     file_id = 'generated_#' + str(i_).zfill(3)
     data_dict_fake['id'] = file_id
