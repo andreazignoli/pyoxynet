@@ -606,6 +606,7 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     import numpy as np
     import pandas as pd
     from uniplot import plot as terminal_plot
+    from datetime import datetime
 
     import pkgutil
     from io import StringIO
@@ -632,17 +633,17 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     VCO2_peak = int(db_df_sample.VCO2peak)
     VE_peak = int(db_df_sample.VEpeak)
     RF_peak = int(db_df_sample.RFpeak)
+    HR_peak = int(db_df_sample.HRpeak)
     PetO2_peak = int(db_df_sample.PetO2peak)
     PetCO2_peak = int(db_df_sample.PetCO2peak)
-    HR_peak = int(db_df_sample.HRpeak)
 
     VO2_min = int(db_df_sample.VO2min)
     VCO2_min = int(db_df_sample.VCO2min)
     VE_min = int(db_df_sample.VEmin)
     RF_min = int(db_df_sample.RFmin)
+    HR_min = int(db_df_sample.HRmin)
     PetO2_min = int(db_df_sample.PetO2min)
     PetCO2_min = int(db_df_sample.PetCO2min)
-    HR_min = int(db_df_sample.HRmin)
 
     # Allocate tensors.
     generator.allocate_tensors()
@@ -663,10 +664,10 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     VO2 = []
     VCO2 = []
     VE = []
+    HR = []
+    RF = []
     PetO2 = []
     PetCO2 = []
-    VEVCO2 = []
-    VEVO2 = []
 
     time_array = np.arange(0, duration)
 
@@ -680,45 +681,49 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
         VO2.append(np.average(output_data[0, :, 0]))
         VCO2.append(np.average(output_data[0, :, 1]))
         VE.append(np.average(output_data[0, :, 2]))
-        PetO2.append(np.average(output_data[0, :, 3]))
-        PetCO2.append(np.average(output_data[0, :, 4]))
-        VEVO2.append(np.average(output_data[0, :, 5]))
-        VEVCO2.append(np.average(output_data[0, :, 6]))
-        # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
+        HR.append(np.average(output_data[0, :, 3]))
+        RF.append(np.average(output_data[0, :, 4]))
+        PetO2.append(np.average(output_data[0, :, 5]))
+        PetCO2.append(np.average(output_data[0, :, 6]))
+        # vars -> ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
 
+    # filter before you expand again between min and max
     VO2 = optimal_filter(time_array, VO2, 10)
     VCO2 = optimal_filter(time_array, VCO2, 10)
+    VE = optimal_filter(time_array, VE, 10)
+    HR = optimal_filter(time_array, HR, 10)
+    RF = optimal_filter(time_array, RF, 10)
     PetO2 = optimal_filter(time_array, PetO2, 10)
     PetCO2 = optimal_filter(time_array, PetCO2, 10)
-    VE = optimal_filter(time_array, VE, 10)
-    VEVO2 = optimal_filter(time_array, VEVO2, 10)
-    VEVCO2 = optimal_filter(time_array, VEVCO2, 10)
 
     min_norm = -1
     max_norm = 1
     VO2 = np.interp(np.asarray(VO2), (np.asarray(VO2).min(), np.asarray(VO2).max()), (min_norm, max_norm))
     VCO2 = np.interp(np.asarray(VCO2), (np.asarray(VCO2).min(), np.asarray(VCO2).max()), (min_norm, max_norm))
+    VE = np.interp(np.asarray(VE), (np.asarray(VE).min(), np.asarray(VE).max()), (min_norm, max_norm))
+    HR = np.interp(np.asarray(HR), (np.asarray(HR).min(), np.asarray(HR).max()), (min_norm, max_norm))
+    RF = np.interp(np.asarray(RF), (np.asarray(RF).min(), np.asarray(RF).max()),
+                       (min_norm, max_norm))
     PetO2 = np.interp(np.asarray(PetO2), (np.asarray(PetO2).min(), np.asarray(PetO2).max()), (min_norm, max_norm))
     PetCO2 = np.interp(np.asarray(PetCO2), (np.asarray(PetCO2).min(), np.asarray(PetCO2).max()),
-                       (min_norm, max_norm))
-    VE = np.interp(np.asarray(VE), (np.asarray(VE).min(), np.asarray(VE).max()), (min_norm, max_norm))
-    VEVO2 = np.interp(np.asarray(VEVO2), (np.asarray(VEVO2).min(), np.asarray(VEVO2).max()), (min_norm, max_norm))
-    VEVCO2 = np.interp(np.asarray(VEVCO2), (np.asarray(VEVCO2).min(), np.asarray(VEVCO2).max()),
                        (min_norm, max_norm))
 
     df = pd.DataFrame()
     df['time'] = time_array
 
     if noise_factor == None:
-        noise_factor = random.randint(2, 4)/2
+        noise_factor = random.randint(1, 3)/2
     else:
         pass
 
     df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + np.random.randn(len(VO2)) * 40 * noise_factor
     df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min + np.random.randn(len(VO2)) * 40 * noise_factor
     df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + np.random.randn(len(VO2)) * 1 * noise_factor
-    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + np.random.randn(len(VO2)) * 2 * noise_factor
-    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + np.random.randn(len(VO2)) * 2 * noise_factor
+    df['HR_I'] = np.ndarray.astype((np.asarray(HR) - np.min(HR)) / (np.max((np.asarray(HR) - np.min(HR)))) * (HR_peak - HR_min) + HR_min + np.random.randn(len(VO2)) * 1 * noise_factor, int)
+    df['RF_I'] = (np.asarray(RF) - np.min(RF)) / (np.max((np.asarray(RF) - np.min(RF)))) * (
+                RF_peak - RF_min) + RF_min + np.random.randn(len(VO2)) * 1 * noise_factor
+    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + np.random.randn(len(VO2)) * 1 * noise_factor
+    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + np.random.randn(len(VO2)) * 1 * noise_factor
 
     df['p_mF'] = p_mF
     df['p_hF'] = p_hF
@@ -773,16 +778,45 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     print('Weight: ', int(db_df_sample.weight.values), ' kg')
     print('Height: ', db_df_sample.height.values[0], 'm')
     print('Age: ', int(db_df_sample.Age.values), 'y')
+    print('Noise factor: ', round(noise_factor, 2))
 
-    data = [{'Age': str(int(db_df_sample.Age.values)),
-            'Height': str(db_df_sample.height.values[0]),
-            'Weight': str(int(db_df_sample.weight.values)),
-            'Gender': gender,
-            'Aerobic_fitness_level': fitness_group,
-            'VT1': str(VT1 - 40),
-            'VT2': str(VT2 - 40),
-            'VO2VT1': str(int(VO2VT1)),
-            'VO2VT2': str(int(VO2VT2))
-             }]
+    data = dict()
+    data['Age'] = str(int(db_df_sample.Age.values))
+    data['Height'] = str(db_df_sample.height.values[0])
+    data['Weight'] = str(int(db_df_sample.weight.values))
+    data['Gender'] = gender
+    data['Aerobic_fitness_level'] = fitness_group
+    data['VT1'] = str(VT1 - 40)
+    data['VT2'] = str(VT2 - 40)
+    data['VO2VT1'] = str(int(VO2VT1))
+    data['VO2VT2'] = str(int(VO2VT2))
+    data['VO2max'] = str(int(VO2_peak))
+    data['LT'] = str(int(VO2VT1))
+    data['LT_vo2max'] = str(int((VO2VT1/VO2_peak)*100)) + '%'
+    data['RCP'] = str(int(VO2VT2))
+    data['RCP_vo2max'] = str(int((VO2VT2/VO2_peak) * 100)) + '%'
+    data['id'] = 'fake_#'
+    data['noise_factor'] = str(noise_factor)
+    data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
+
+    # new: generate breath by breath data
+    df['breath'] = np.ndarray.astype((np.cumsum(1/(df.RF_I.values/60)))/(np.cumsum(1/(df.RF_I.values/60)))[-1]*(duration-1), int)
+    df_breath = df.drop_duplicates('breath')
+    exercise_threshold_names = {"time": "t",
+                                "VO2_I": "VO2",
+                                "VCO2_I": "VCO2",
+                                "VE_I": "VE",
+                                "VCO2VO2_I": "R",
+                                "VEVO2_I": "VE/VO2",
+                                "VEVCO2_I": "VE/VCO2",
+                                "PetO2_I": "PetO2",
+                                "PetCO2_I": "PetCO2",
+                                "HR_I": "HR",
+                                "RF_I": "RF"}
+
+    df_breath = df_breath.rename(columns=exercise_threshold_names)
+    # create the dict for the exercise threshold app
+    data['data'] = dict()
+    data['data'] = df_breath.to_dict(orient='records')
 
     return df, data
