@@ -193,7 +193,7 @@ curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail
 
 It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possible to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possible to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation). The app can also be used as test to check how realistic the fake examples.
 
-👉 (TRY THE APP HERE)[https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com] 👈
+👉 [TRY THE APP HERE](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com) 👈
 
 <!-- ROADMAP -->
 ## Roadmap
