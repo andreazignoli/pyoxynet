@@ -8,7 +8,7 @@ Please refer to the extended [documentation](https://pyoxynet.readthedocs.io/en/
 
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install pyoxynet.
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install *pyoxynet*.
 
 ```bash
 pip install --upgrade pip
@@ -37,6 +37,8 @@ Data required for the inference include oxygen uptake (VO2), exhaled CO2 (VCO2),
 |     |      |    |       |        |       |        |
 |     |      |    |       |        |       |        |
 |     |      |    |       |        |       |        |
+
+This structure might evolve with different package version, so please refer to the main [GitHub repository](https://github.com/andreazignoli/pyoxynet) README for the latest structure details. 
 
 ## Contributing
 

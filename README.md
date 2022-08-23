@@ -60,16 +60,16 @@
 
 ## The *Pyoxynet* package
 
-*Pyoxynet* is a collection of the algorithms developed within the *Oxynet* project. The core algorithms (i.e.models) are mainly deep neural networks, made in the attempt to process cardiopulmonary exercise test data (CPET). 
+*Pyoxynet* is a collection of algorithms developed in the context of the *Oxynet* project. All the algorithms are constituted by deep neural networks, i.e. models conceived to process cardiopulmonary exercise test data (CPET). 
 
-All the models have been trained and tested with [Tensorflow](https://www.tensorflow.org/), but they are included in *Pyoxynet* only in their [TFLite](https://www.tensorflow.org/lite) inference version. TFLite has been intentionally adopted to keep the package light and to promote the use of *Oxynet* related technologies. 
+All the models are [Keras](https://keras.io/) models trained and tested with [Tensorflow](https://www.tensorflow.org/), but they are included in *Pyoxynet* only in their [TFLite](https://www.tensorflow.org/lite) inference version. TFLite has been intentionally adopted to keep the package light and fast. 
 
 To date, mainly two type of models are implemented: 
 
 * The *inference* model: it takes some CPET data as input and it provides an estimation of the exercise intensity domains 
 * The *generator* model: it generates new synthetic CPET data
 
-You can read more about the rationale and the technology behind the Oxynet project at the following links: 
+You can read more about the rationale and the technology behind the *Oxynet* project at the following links: 
 
 * [Review](https://link.springer.com/article/10.1007%2Fs11332-019-00557-x) paper on the AI technologies applied to exercise cardiopulmonary and metabolic data processing
 * [Research](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229466) implementing an LSTM neural networks to the estimation of VO2 during cycling exercise (regressor)
@@ -88,9 +88,9 @@ There is no need to clone this repo if you don't want to. You can just install t
 
 ### Pip install the package
 
-☝️ This package was developed under **Python 3.8**, so it might not work properly under older versions.   
+☝️ This package was developed under **Python 3.8**, so it might not work properly under older versions. The reason why the 3.8 version is not updated to more recent versions is related to the way packages are now distributed and installed for versions >3.8.   
 
-This is the best solution for those Python users who would like to have *Oxynet* algorithms always on the tip of their fingers. Assuming you have pip installed on your machine, begin with: 
+To the best of my knowledge, this is the best solution for those Python users who would like to have *Oxynet* algorithms always on the tip of their fingers. Assuming you have pip installed on your machine, begin with: 
 
 ```sh
 pip install pyoxynet
@@ -108,7 +108,7 @@ Packages that require addition extra url cannot be installed via *setuptools*, w
 pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
 ```
 
-Currently, The TFLite installation process is completed with a line command inside Python, which is not the best solution (I know...). 
+Currently, The TFLite installation process is completed with a line command inside Python, *which is not the best solution* (I know...please get in touch if you know how to work around this). 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -123,7 +123,7 @@ Data required for the *inference* include oxygen uptake (VO2), exhaled CO2 (VCO2
 |     |      |    |       |        |       |        |
 |     |      |    |       |        |       |        |
 
-*Oxynet* inference models work on data over-sampled on a sec-by-sec basis. When dealing with breath-by-breath data, linear interpolation at 1 second is appropriate. When dealing with averaged 5-by-5 second data or 10-by-10 second data, cubic interpolation is more appropriate. *Pyoxynet* however, can implement a number of interpolation algorithm to process raw data as well as data already processed. 
+*Oxynet* inference models work on data over-sampled on a sec-by-sec basis. When dealing with breath-by-breath data, linear interpolation at 1 second is appropriate in my experience (little error is introduced). When dealing with averaged 5-by-5 second data or 10-by-10 second data, cubic interpolation is more appropriate in my experience. *Pyoxynet* however, can implement a number of interpolation algorithm to process raw data as well as data already processed. 
 
 In case there is no access to VCO2 data, a different solution has been implemented (although validation has not been published) considering the following inputs: 
 
@@ -191,13 +191,9 @@ It is possible therefore to call Flask-Pyoxynet from a terminal, and provide dat
 curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_json?n_inputs=X -d @test_data.json
 ```
 
-It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possible to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possible to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation).
+It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possible to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possible to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation). The app can also be used as test to check how realistic the fake examples.
 
-```sh
-https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com
-```
-
-The app can also be used as test to check how realistic the fake examples look like at the [app main page](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/).  
+👉 (TRY THE APP HERE)[https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com] 👈
 
 <!-- ROADMAP -->
 ## Roadmap
