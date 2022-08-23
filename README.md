@@ -175,7 +175,7 @@ Fake data provided during the *generation* include oxygen uptake (VO2), exhaled 
 |     |      |    |    |    |       |        |
 |     |      |    |    |    |       |        |
 
-In the gif below, different epochs/steps of the training process are presented for the Conditional Adversarial Neural Network available in *Pyoxynet*. 
+Importantly, given that RF data is generated, a complete breath-by-breath dataset can be generated. In the gif below, different epochs/steps of the training process are presented for the Conditional Adversarial Neural Network available in *Pyoxynet*. 
 
 ![plot](./pics/dcgan_200.gif)
 
