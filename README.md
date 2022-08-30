@@ -261,7 +261,7 @@ Repository project link: [Pyoxynet](https://github.com/andreazignoli/pyoxynet)
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-The following resources are valuable source of knowledge and inspiration for both the *Pyoxynet* and *Oxynet* projects:
+The followings are valuable source of knowledge and inspiration for both the *Pyoxynet* and *Oxynet* projects:
 
 * [TFLite inference](https://www.tensorflow.org/lite/guide/inference)
 * [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/)
