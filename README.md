@@ -261,13 +261,14 @@ Repository project link: [Pyoxynet](https://github.com/andreazignoli/pyoxynet)
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-The following resources are valuable for both the *Pyoxynet* and *Oxynet* projects:
+The following resources are valuable source of knowledge and inspiration for both the *Pyoxynet* and *Oxynet* projects:
 
 * [TFLite inference](https://www.tensorflow.org/lite/guide/inference)
 * [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/)
 * [Flask](https://flask.palletsprojects.com/en/2.0.x/)
 * [Uniplot Python library](https://github.com/olavolav/uniplot)
 * [Machine Learning Mastery cGAN](https://machinelearningmastery.com/how-to-develop-a-conditional-generative-adversarial-network-from-scratch/)
+* [Exercise Threshold](https://www.exercisethresholds.com/)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
