@@ -90,7 +90,7 @@ def optimal_filter(t, y, my_lambda):
 
     return x
 
-def load_tf_model(n_inputs=7, past_points=40):
+def load_tf_model(n_inputs=7, past_points=40, model='CNN'):
     """This function loads the saved tflite models.
 
     Args:
@@ -111,11 +111,16 @@ def load_tf_model(n_inputs=7, past_points=40):
     pip_install_tflite()
     import tflite_runtime.interpreter as tflite
 
-    if n_inputs==7 and past_points==40:
-        # load the classic Oxynet model configuration
-        print('Classic Oxynet configuration model uploaded')
-        tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'tfl_model.pickle')
-    if n_inputs==5 and past_points==40:
+    if n_inputs == 7 and past_points == 40:
+        if model == 'CNN':
+            # load the classic Oxynet model configuration
+            print('Classic Oxynet configuration model uploaded')
+            tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'CNN.pickle')
+        if model == 'transformer':
+            # load the classic Oxynet model configuration
+            print('Classic Oxynet configuration model uploaded')
+            tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'transformer_RMSprop.pickle')
+    if n_inputs == 5 and past_points == 40:
         # load the 5 input model configuration (e.g. in this case when on CO2 info is included)
         print('Specific configuration model uploaded (no VCO2 available)')
         tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'tfl_model_5_40.pickle')
@@ -297,14 +302,16 @@ def draw_real_test():
     print('Weight: ', int(np.mean(df.weight.values)), ' kg')
     print('Height: ', np.mean(df.height.values[0]), 'm')
     print('Age: ', int(np.mean(df.age.values)), 'y')
+    print('VT1: ', str(VT1))
+    print('VT2: ', str(VT2))
 
     data = [{'Age': str(int(np.mean(df.age.values))),
-            'Height': str(np.mean(df.height.values[0])),
-            'Weight': str(int(np.mean(df.weight.values))),
-            'Gender': gender,
-            'Aerobic_fitness_level': fitness_group,
-            'VT1': str(VT1),
-            'VT2': str(VT2)}]
+             'Height': str(np.mean(df.height.values[0])),
+             'Weight': str(int(np.mean(df.weight.values))),
+             'Gender': gender,
+             'Aerobic_fitness_level': fitness_group,
+             'VT1': VT1,
+             'VT2': VT2}]
 
     return df, data
 
@@ -374,7 +381,7 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     return df
 
-def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
+def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=True):
     """Runs the pyoxynet inference
 
     Parameters: 
@@ -393,7 +400,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
 
     import json
 
-    tfl_model = load_tf_model(n_inputs=n_inputs, past_points=past_points)
+    tfl_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
 
     if len(input_df) == 0:
         print('Using default pyoxynet data')
@@ -478,11 +485,12 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
     out_df['p_hv'] = tmp_df[hv_col]
     out_df['p_sv'] = tmp_df[sev_col]
 
-    plot([out_df['p_md'], out_df['p_hv'], out_df['p_sv']],
-         title="Exercise intensity domains",
-         width=120,
-         color=True,
-         legend_labels=['1', '2', '3'])
+    if plot == True:
+        plot([out_df['p_md'], out_df['p_hv'], out_df['p_sv']],
+             title="Exercise intensity domains",
+             width=120,
+             color=True,
+             legend_labels=['1', '2', '3'])
 
     out_dict = {}
     out_dict['VT1'] = {}
@@ -502,7 +510,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40):
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460, training=False, normalization=False):
+def create_probabilities(duration=600, VT1=320, VT2=460, training=False, normalization=False, resting = True):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -524,32 +532,35 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=False, normali
 
     t = np.arange(1, duration + 1)
 
-    if VT1 < 300:
+    if resting == True:
         step_1 = 60
         step_2 = 120
+        smooth_lambda = [2000, 400, 800]
     else:
-        step_1 = 120
-        step_2 = 240
+        # no resting is included
+        step_1 = 1
+        step_2 = 2
+        smooth_lambda = [600, 400, 600]
 
-    T_m = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, (duration-VT2)/2+VT2, duration]
-    T_h = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, (duration-VT2)/2+VT2, duration]
-    T_s = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, (duration-VT2)/2+VT2, duration]
+    T_m = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
+    T_h = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
+    T_s = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
 
-    p_m = [0.7, 0.75, 0.75, 0, -0.5, -0.75, -0.75, -0.75]
-    p_h = [-0.75, -0.75, -0.75, 0, 0.75, 0, 0, -0.5]
-    p_s = [-0.75, -0.75, -0.75, -0.75, -0.5, 0, 0.5, 0.75]
+    p_m = [0.7, 0.75, 0.75, 0, -0.5, -0.75, -0.75]
+    p_h = [-0.75, -0.75, -0.75, 0, 0.75, 0, -0.75]
+    p_s = [-0.75, -0.75, -0.75, -0.75, -0.5, 0, 0.75]
 
     p_m_I = interp1d(T_m, p_m, kind='linear')
     p_h_I = interp1d(T_h, p_h, kind='linear')
     p_s_I = interp1d(T_s, p_s, kind='linear')
 
-    p_mF = optimal_filter(t, p_m_I(t), 200)
-    p_hF = optimal_filter(t, p_h_I(t), 200)
-    p_sF = optimal_filter(t, p_s_I(t), 200)
+    p_mF = optimal_filter(t, p_m_I(t), smooth_lambda[0])
+    p_hF = optimal_filter(t, p_h_I(t), smooth_lambda[1])
+    p_sF = optimal_filter(t, p_s_I(t), smooth_lambda[2])
 
     if training:
         p_mF = p_mF + np.random.randn(len(t)) / 6
-        p_hF = p_hF + np.random.randn(len(t)) / 6
+        p_hF = p_hF + np.random.randn(len(t)) / 8
         p_sF = p_sF + np.random.randn(len(t)) / 6
     else:
         pass
@@ -588,7 +599,15 @@ def random_walk(length=1, scale_factor=1, variation=1):
 
     return [i/scale_factor for i in random_walk]
 
-def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None, duration=None, noise_factor=0):
+def generate_CPET(generator,
+                  plot=False,
+                  fitness_group=None,
+                  VT1=None, VT2=None,
+                  duration=None,
+                  noise_factor=0,
+                  resting=False,
+                  training=False,
+                  normalization=False):
     """Actually generates the CPET file
 
     Parameters:
@@ -610,7 +629,11 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
 
     import pkgutil
     from io import StringIO
-    bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics.csv')
+
+    if resting:
+        bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_resting.csv')
+    else:
+        bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_ramp.csv')
     s = str(bytes_data, 'utf-8')
     data = StringIO(s)
     db_df = pd.read_csv(data)
@@ -658,7 +681,12 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
 
     # probability definition
     # FIXME: hard coded here
-    p_mF, p_hF, p_sF = create_probabilities(duration=duration, VT1=VT1 - 40, VT2=VT2 - 40, training=True)
+    p_mF, p_hF, p_sF = create_probabilities(duration=duration,
+                                            VT1=VT1 - 40,
+                                            VT2=VT2 - 40,
+                                            training=training,
+                                            resting=resting,
+                                            normalization=normalization)
 
     # initialise
     VO2 = []
@@ -712,7 +740,7 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     df['time'] = time_array
 
     if noise_factor == None:
-        noise_factor = random.randint(1, 3)/2
+        noise_factor = random.randint(2, 4)/2
     else:
         pass
 
@@ -779,6 +807,8 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     print('Height: ', db_df_sample.height.values[0], 'm')
     print('Age: ', int(db_df_sample.Age.values), 'y')
     print('Noise factor: ', round(noise_factor, 2))
+    print('VT1: ', str(VT1 - 40))
+    print('VT2: ', str(VT2 - 40))
 
     data = dict()
     data['Age'] = str(int(db_df_sample.Age.values))
@@ -798,17 +828,18 @@ def generate_CPET(generator, plot=False, fitness_group=None, VT1=None, VT2=None,
     data['id'] = 'fake_#'
     data['noise_factor'] = str(noise_factor)
     data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
+    data['resting'] = str(resting)
 
     df['breaths'] = np.ndarray.astype(np.asarray(1/(df.RF_I/60)), int)
+    df = df[df['breaths'] > 0]
 
     # new: generate breath by breath data
     df_breath = pd.DataFrame()
     n = 0
     while n < len(df):
         tmp = df.iloc[n:(n+df['breaths'].iloc[n])].mean()
-        pd.DataFrame(data=np.reshape(tmp.values, [1, 24]), columns=tmp.index.to_list())
-        df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 24]), columns=tmp.index.to_list())])
-
+        df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 24]),
+                                                       columns=tmp.index.to_list())])
         n = n + df['breaths'].iloc[n]
 
     df_breath['time'] = df_breath['time'].astype(int)
