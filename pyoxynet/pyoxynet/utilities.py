@@ -510,7 +510,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=Tru
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460, training=False, normalization=False, resting = True):
+def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=True, resting = True):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -606,8 +606,8 @@ def generate_CPET(generator,
                   duration=None,
                   noise_factor=0,
                   resting=False,
-                  training=False,
-                  normalization=False):
+                  training=True,
+                  normalization=True):
     """Actually generates the CPET file
 
     Parameters:
