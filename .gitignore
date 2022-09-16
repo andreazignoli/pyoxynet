@@ -12,7 +12,7 @@ pyoxynet/pyoxynet/tfl_models/*.pickle
 !pyoxynet/pyoxynet/tfl_models/tfl_model.pickle
 !pyoxynet/pyoxynet/tfl_models/tfl_model_5_40.pickle
 !pyoxynet/pyoxynet/tfl_models/generator.pickle
-!pyoxynet/pyoxynet/tfl_models/transformer_RMSprop.pickle
+!pyoxynet/pyoxynet/tfl_models/transformer.pickle
 
 pyoxynet.egg-info
 dist
