@@ -1,7 +1,8 @@
 import flask
 import os
 from flask import Flask, request, render_template, session, redirect, url_for
-from pyoxynet import *
+# from pyoxynet import *
+from pyoxynet import utilities
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
@@ -221,10 +222,10 @@ def read_json():
 
     # loading the model
     if n_inputs == '5':
-        tfl_model = load_tf_model(n_inputs=int(n_inputs),
+        tfl_model = utilities.load_tf_model(n_inputs=int(n_inputs),
                                   past_points=40)
     else:
-        tfl_model = load_tf_model()
+        tfl_model = utilities.load_tf_model()
 
     input_details = tfl_model.get_input_details()
     output_details = tfl_model.get_output_details()
@@ -238,7 +239,7 @@ def read_json():
         print(df.columns)
         X = df[['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']]
 
-    XN = normalize(X)
+    XN = utilities.normalize(X)
 
     time_series_len = input_details[0]['shape'][1]
     p_1 = []
@@ -270,8 +271,8 @@ def CPET_generation():
 
     args = request.args
     fitness_group = args.get("fitness_group", default=None, type=int)
-    generator = load_tf_generator()
-    df, gen_dict = generate_CPET(generator, plot=False, fitness_group=fitness_group)
+    generator = utilities.load_tf_generator()
+    df, gen_dict = utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group)
 
     return flask.jsonify(df.to_dict())
 
@@ -291,16 +292,16 @@ def CPET_plot():
                 fitness_group = args.get("fitness_group", default=None, type=int)
 
                 if random.randint(0, 1) == 1:
-                    generator = load_tf_generator()
-                    df, CPET_data = generate_CPET(generator, plot=False, fitness_group=fitness_group, noise_factor=None)
+                    generator = utilities.load_tf_generator()
+                    df, CPET_data = utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group, noise_factor=None)
                     print('Test was FAKE')
                     session['test_type'] = 'FAKE'
                 else:
-                    df, CPET_data = draw_real_test()
+                    df, CPET_data = utilities.draw_real_test()
                     print('Test was REAL')
                     session['test_type'] = 'REAL'
 
-                df_oxynet, out_dict = test_pyoxynet(input_df=df)
+                df_oxynet, out_dict = utilities.test_pyoxynet(input_df=df)
                 VT1 = out_dict['VT1']['time']
                 VT2 = out_dict['VT2']['time']
                 VO2VT1 = out_dict['VT1']['VO2']
