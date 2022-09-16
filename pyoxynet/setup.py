@@ -24,7 +24,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     include_package_data=True,
-    package_data={'': ['tfl_models/*', 'data_test/*', 'data_test/real_tests/*']},
+    package_data={'': ['tfl_models/*', 'data_test/*']},
     #exclude_package_data={
     #    '': 'debugging.py.c'},
     python_requires='>=3.8',

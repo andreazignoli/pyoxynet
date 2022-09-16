@@ -8,21 +8,21 @@ import json
 import random
 
 generator = utilities.load_tf_generator()
-plotting = True
+plotting = False
 
 for i_ in np.arange(10):
     resting = random.randint(0, 1)
-    df_fake, data_dict_fake = utilities.generate_CPET(generator,
-                                                      noise_factor=None,
-                                                      plot=False,
-                                                      resting=resting,
-                                                      training=True,
-                                                      normalization=True)
-    # df_real, data_dict_real = utilities.draw_real_test()
-    out_df_CNN, out_dict_CNN = utilities.test_pyoxynet(input_df=df_fake, model='CNN', plot=False)
-    out_df_transf, out_dict_transf = utilities.test_pyoxynet(input_df=df_fake, model='transformer', plot=False)
-    print(out_dict_CNN)
-    print(out_dict_transf)
+    # df_fake, data_dict_fake = utilities.generate_CPET(generator,
+    #                                                   noise_factor=None,
+    #                                                   plot=False,
+    #                                                   resting=resting,
+    #                                                   training=True,
+    #                                                   normalization=True)
+    df_real, data_dict_real = utilities.draw_real_test()
+    # out_df_CNN, out_dict_CNN = utilities.test_pyoxynet(input_df=df_fake, model='CNN', plot=False)
+    # out_df_transf, out_dict_transf = utilities.test_pyoxynet(input_df=df_fake, model='transformer', plot=False)
+    # print(out_dict_CNN)
+    # print(out_dict_transf)
     # file_id = 'generated_#' + str(i_).zfill(3)
     # data_dict_fake['id'] = file_id
     # df.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')

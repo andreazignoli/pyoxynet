@@ -242,7 +242,7 @@ def load_csv_data(csv_file='data_test.csv'):
 
     return df
 
-def draw_real_test():
+def draw_real_test(resting='random'):
     """Draw a single data file from the directory containing all the real files
 
     Parameters:
@@ -261,12 +261,20 @@ def draw_real_test():
     import random
     import numpy as np
 
-    file_index = str(random.randrange(1, 50))
-    file_name = 'real_test_' + file_index + '.csv'
+    if resting == 'random':
+        resting = random.randint(0, 1)
 
-    print('Loading ', file_name)
+    if resting:
+        file_index = str(random.randrange(1, 50))
+        file_name = 'resting_real_test_' + file_index + '.csv'
+        bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
+        print(file_name, ' from resting')
+    else:
+        file_index = str(random.randrange(1, 88))
+        file_name = 'ramp_real_test_' + file_index + '.csv'
+        bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
+        print(file_name, ' from ramp')
 
-    bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
     s = str(bytes_data, 'utf-8')
     data = StringIO(s)
     df = pd.read_csv(data)
