@@ -119,7 +119,7 @@ def load_tf_model(n_inputs=7, past_points=40, model='CNN'):
         if model == 'transformer':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
-            tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'transformer_RMSprop.pickle')
+            tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'transformer.pickle')
     if n_inputs == 5 and past_points == 40:
         # load the 5 input model configuration (e.g. in this case when on CO2 info is included)
         print('Specific configuration model uploaded (no VCO2 available)')
