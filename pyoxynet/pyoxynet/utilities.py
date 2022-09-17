@@ -542,21 +542,21 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
 
     if resting == True:
         step_1 = 60
-        step_2 = 120
-        smooth_lambda = [2000, 400, 800]
+        step_2 = VT1 - (VT1-60)/2
+        smooth_lambda = [1/duration*2e5, 1/duration*2e5, 1/duration*2e5]
     else:
         # no resting is included
         step_1 = 1
         step_2 = 2
-        smooth_lambda = [600, 400, 600]
+        smooth_lambda = [1/duration*2e5, 1/duration*2e5, 1/duration*2e5]
 
     T_m = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
     T_h = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
     T_s = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
 
     p_m = [0.7, 0.75, 0.75, 0, -0.5, -0.75, -0.75]
-    p_h = [-0.75, -0.75, -0.75, 0, 0.75, 0, -0.75]
-    p_s = [-0.75, -0.75, -0.75, -0.75, -0.5, 0, 0.75]
+    p_h = [-0.7, -0.75, -0.75, 0, 0.75, 0, -0.75]
+    p_s = [-0.7, -0.75, -0.75, -0.75, -0.75, 0, 0.75]
 
     p_m_I = interp1d(T_m, p_m, kind='linear')
     p_h_I = interp1d(T_h, p_h, kind='linear')
@@ -567,9 +567,9 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
     p_sF = optimal_filter(t, p_s_I(t), smooth_lambda[2])
 
     if training:
-        p_mF = p_mF + np.random.randn(len(t)) / 6
-        p_hF = p_hF + np.random.randn(len(t)) / 8
-        p_sF = p_sF + np.random.randn(len(t)) / 6
+        p_mF = p_mF + np.random.randn(len(t)) / 4
+        p_hF = p_hF + np.random.randn(len(t)) / 4
+        p_sF = p_sF + np.random.randn(len(t)) / 4
     else:
         pass
 
@@ -748,7 +748,7 @@ def generate_CPET(generator,
     df['time'] = time_array
 
     if noise_factor == None:
-        noise_factor = random.randint(2, 4)/2
+        noise_factor = random.randint(3, 5)/2
     else:
         pass
 
@@ -817,6 +817,7 @@ def generate_CPET(generator,
     print('Noise factor: ', round(noise_factor, 2))
     print('VT1: ', str(VT1 - 40))
     print('VT2: ', str(VT2 - 40))
+    print('Resting:', resting)
 
     data = dict()
     data['Age'] = str(int(db_df_sample.Age.values))
