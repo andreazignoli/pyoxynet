@@ -13,7 +13,7 @@ def PrintHello(hello='hello'):
     
     return
 
-def normalize(df):
+def normalize(df, min_target=-1, max_target=1):
     """Pandas df normalisation
 
     Parameters:
@@ -28,7 +28,7 @@ def normalize(df):
     for feature_name in df.columns:
         max_value = df[feature_name].max()
         min_value = df[feature_name].min()
-        result[feature_name] = 2 * (df[feature_name] - min_value) / (max_value - min_value) - 1
+        result[feature_name] = ((df[feature_name] - min_value) / (max_value - min_value)) * (max_target-min_target) + min_target
     result = result.fillna(0)
 
     return result
@@ -543,20 +543,20 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
     if resting == True:
         step_1 = 60
         step_2 = VT1 - (VT1-60)/2
-        smooth_lambda = [1/duration*2e5, 1/duration*2e5, 1/duration*2e5]
+        smooth_lambda = [VT1, VT2-VT1, duration-VT2]
     else:
         # no resting is included
         step_1 = 1
         step_2 = 2
-        smooth_lambda = [1/duration*2e5, 1/duration*2e5, 1/duration*2e5]
+        smooth_lambda = [VT1, VT2-VT1, duration-VT2]
 
-    T_m = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
-    T_h = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
-    T_s = [0, step_1, step_2, VT1, int((VT2-VT1)/2+VT1), VT2, duration]
+    T_m = [0, step_1, step_2, VT1, int((VT2-VT1)/3+VT1), int((VT2-VT1)*2/3+VT1), VT2, duration]
+    T_h = [0, step_1, step_2, VT1, int((VT2-VT1)/3+VT1), int((VT2-VT1)*2/3+VT1), VT2, duration]
+    T_s = [0, step_1, step_2, VT1, int((VT2-VT1)/3+VT1), int((VT2-VT1)*2/3+VT1), VT2, duration]
 
-    p_m = [0.7, 0.75, 0.75, 0, -0.5, -0.75, -0.75]
-    p_h = [-0.7, -0.75, -0.75, 0, 0.75, 0, -0.75]
-    p_s = [-0.7, -0.75, -0.75, -0.75, -0.75, 0, 0.75]
+    p_m = [0.7, 0.75, 0.75, 0, -0.5, -0.5, -0.75, -0.75]
+    p_h = [-0.7, -0.75, -0.75, 0, 0.75, 0.75, 0, -0.75]
+    p_s = [-0.7, -0.75, -0.75, -0.5, -0.5, -0.5, 0, 0.75]
 
     p_m_I = interp1d(T_m, p_m, kind='linear')
     p_h_I = interp1d(T_h, p_h, kind='linear')
@@ -567,9 +567,9 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
     p_sF = optimal_filter(t, p_s_I(t), smooth_lambda[2])
 
     if training:
-        p_mF = p_mF + np.random.randn(len(t)) / 4
-        p_hF = p_hF + np.random.randn(len(t)) / 4
-        p_sF = p_sF + np.random.randn(len(t)) / 4
+        p_mF = p_mF + np.random.randn(len(t)) / 6
+        p_hF = p_hF + np.random.randn(len(t)) / 6
+        p_sF = p_sF + np.random.randn(len(t)) / 6
     else:
         pass
 
