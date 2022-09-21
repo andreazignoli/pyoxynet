@@ -1,6 +1,6 @@
 import flask
 import os
-from flask import Flask, request, render_template, session, redirect, url_for
+from flask import Flask, flash, request, render_template, session, redirect, url_for
 from pyoxynet import *
 # from pyoxynet import utilities
 import numpy as np
@@ -8,10 +8,26 @@ import pandas as pd
 import plotly.graph_objs as go
 import plotly
 from faker import Faker
+from werkzeug.utils import secure_filename
+import shutil
 
 app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9098))
 app.secret_key = "super secret key"
+UPLOAD_FOLDER = '/tmp/pyoxynet/'
+
+if not os.path.isdir(UPLOAD_FOLDER):
+    os.mkdir(UPLOAD_FOLDER)
+else:
+    shutil.rmtree(UPLOAD_FOLDER)
+    os.mkdir(UPLOAD_FOLDER)
+
+ALLOWED_EXTENSIONS = {'xls', 'txt', 'csv', 'xlsx'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
@@ -213,6 +229,29 @@ def search():
     results['model'] = model
 
     return flask.jsonify(results)
+
+@app.route('/CPET_upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        files = flask.request.files.getlist("file")
+        for file in files:
+            # check if the post request has the file part
+            if 'file' not in request.files:
+                flash('No file part')
+                return redirect(request.url)
+            # file = request.files['file']
+            # If the user does not select a file, the browser submits an
+            # empty file without a filename.
+            if file.filename == '':
+                flash('No selected file')
+                return redirect(request.url)
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                file_name, file_extension = os.path.splitext(filename)
+
+                pass
+    return render_template('uploaded.html')
 
 @app.route('/read_json', methods=['GET', 'POST'])
 def read_json():
