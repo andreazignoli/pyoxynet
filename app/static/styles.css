@@ -34,6 +34,10 @@ input[type=button], input[type=submit], input[type=reset] {
   background-color: #ff5521;
 }
 
+#submitUPLOAD{
+  background-color: #08cf65;
+}
+
 .button_1 {border-radius: 4px;}
 
 .column {
