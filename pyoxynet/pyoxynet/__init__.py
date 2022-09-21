@@ -2,3 +2,6 @@
 
 from . import utilities
 from .utilities import *
+
+from . import testing
+from .testing import *
