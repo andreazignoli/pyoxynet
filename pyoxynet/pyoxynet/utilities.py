@@ -1,3 +1,6 @@
+import numpy as np
+from scipy.signal import savgol_filter
+
 def PrintHello(hello='hello'):
     """This function prints to screen.
 
@@ -115,7 +118,7 @@ def load_tf_model(n_inputs=7, past_points=40, model='CNN'):
         if model == 'CNN':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
-            tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'CNN.pickle')
+            tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'tfl_model_VO2_domain.pickle')
         if model == 'transformer':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
@@ -156,7 +159,7 @@ def load_tf_generator():
     import tflite_runtime.interpreter as tflite
 
     print('Classic Oxynet configuration model uploaded')
-    tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'generator.pickle')
+    tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'generator_VO2_domain.pickle')
 
     try:
         tfl_model_decoded = pickle.loads(tfl_model_binaries)
@@ -232,7 +235,7 @@ def load_csv_data(csv_file='data_test.csv'):
     import pandas as pd
     import pyoxynet.data_test
 
-    if csv_file=='data_test.csv':
+    if csv_file == 'data_test.csv':
         import pkgutil
         from io import StringIO
         bytes_data = pkgutil.get_data('pyoxynet.data_test', csv_file)
@@ -290,8 +293,9 @@ def draw_real_test(resting='random'):
     if int(np.mean(df.gender.values)) == 1:
         gender = 'FEMALE'
 
-    VT1 = df[np.diff(df.domain, prepend=-1) == 1].time.iloc[0]
-    VT2 = df[np.diff(df.domain, prepend=-1) == 1].time.iloc[1]
+    df['VO2_domain'] = create_domain_from_VO2(df)
+    VT1 = df[df['VO2_domain'] > -0.33].time.iloc[0]
+    VT2 = df[df['VO2_domain'] > 0.33].time.iloc[0]
 
     duration = len(df)
 
@@ -439,13 +443,13 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=Tru
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
 
-    if n_inputs==7 and past_points==40:
+    if n_inputs == 7 and past_points == 40:
         # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
         filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
         X = df[filter_vars]
         XN = normalize(X)
         XN = XN.filter(filter_vars, axis=1)
-    if n_inputs==5 and past_points==40:
+    if n_inputs == 5 and past_points == 40:
         filter_vars = ['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']
         X = df[filter_vars]
         XN = normalize(X)
@@ -456,9 +460,7 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=Tru
     output_details = tfl_model.get_output_details()
 
     time_series_len = input_details[0]['shape'][1]
-    p_1 = []
-    p_2 = []
-    p_3 = []
+    p = []
     time = []
 
     for i in np.arange(time_series_len - int(time_series_len/2), len(XN) - int(time_series_len/2)):
@@ -469,36 +471,20 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=Tru
         tfl_model.set_tensor(input_details[0]['index'], input_data)
         tfl_model.invoke()
         output_data = tfl_model.get_tensor(output_details[0]['index'])
-        p_1.append(output_data[0][0])
-        p_2.append(output_data[0][1])
-        p_3.append(output_data[0][2])
+        p.append(output_data[0][0])
         # TODO: here this is hard coded i.e.: -time series length / 2
         time.append(df.time[i])
 
-    tmp_df = pd.DataFrame()
-    tmp_df['time'] = time
-    tmp_df['p_md'] = optimal_filter(np.asarray(time), np.asarray(p_1), 100)
-    tmp_df['p_hv'] = optimal_filter(np.asarray(time), np.asarray(p_2), 100)
-    tmp_df['p_sv'] = optimal_filter(np.asarray(time), np.asarray(p_3), 100)
-
-    mod_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[:20].mean().idxmax()
-    sev_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[-20:].mean().idxmax()
-    for labels_ in ['p_md', 'p_hv', 'p_sv']:
-        if labels_ not in [mod_col, sev_col]:
-            hv_col = labels_
-
     out_df = pd.DataFrame()
     out_df['time'] = time
-    out_df['p_md'] = tmp_df[mod_col]
-    out_df['p_hv'] = tmp_df[hv_col]
-    out_df['p_sv'] = tmp_df[sev_col]
+    out_df['p'] = optimal_filter(np.asarray(time), np.asarray(p), 100)
 
     if plot == True:
-        plot([out_df['p_md'], out_df['p_hv'], out_df['p_sv']],
+        plot([out_df['p']],
              title="Exercise intensity domains",
              width=120,
              color=True,
-             legend_labels=['1', '2', '3'])
+             legend_labels=['p'])
 
     out_dict = {}
     out_dict['VT1'] = {}
@@ -507,8 +493,8 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=Tru
     out_dict['VT2']['time'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) + int(time_series_len/2)
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) + int(time_series_len/2)
+    VT1_index = int(out_df[(out_df['p'] > -0.33)].index[0]) + int(time_series_len/2)
+    VT2_index = int(out_df[(out_df['p'] > 0.33)].index[0]) + int(time_series_len/2)
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
@@ -581,6 +567,102 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         pass
 
     return p_mF, p_hF, p_sF
+
+def create_probabilities_from_VO2(duration=600, VT1=320, VT2=460, training=True, normalization=True, resting=True):
+    """Creates the probabilities of being in different intensity domains for the regression (VO2 domain) version
+
+    Parameters:
+        duration (int): Length of the test file
+        VT1 (int): First ventilatory threshold, in time samples from the beginning of the test
+        VT2 (int): Second ventilatory threshold, in time samples from the beginning of the test
+
+    Returns:
+        domain (np array): (-1:1)
+
+    """
+
+    import numpy as np
+    from scipy.interpolate import interp1d
+
+    t = np.arange(1, duration + 1)
+
+    if resting == True:
+        # adding 60 seconds of resting
+        step_1 = 60
+    else:
+        # no resting is included
+        step_1 = 1
+
+    T_m = [0, step_1, VT1, VT2, duration]
+    p_VO2 = [-1, -1, -0.33, 0.33, 1]
+    p_VO2_I = interp1d(T_m, p_VO2, kind='linear')
+    p_VO2F = savgol_filter(p_VO2_I(t), 20, 3, mode='interp')
+
+    if training:
+        p_VO2F = p_VO2F + np.random.randn(len(t)) / 6
+    else:
+        pass
+
+    if normalization:
+        p_VO2F = np.interp(p_VO2F, (p_VO2F.min(), p_VO2F.max()), (-1, 1))
+    else:
+        pass
+
+    return p_VO2F
+
+def create_domain_from_VO2(data_df=[]):
+    """Creates the probabilities of being in different intensity domains
+
+    Parameters:
+
+    Returns:
+
+    """
+    # you directly use the raw data (filtered already)
+    tmp = normalize_array(np.asarray(data_df.VO2_I),
+                          max_value=data_df.VO2_I.max(),
+                          min_value=data_df.weight.iloc[0] * 3.5,
+                          min_target=-1,
+                          max_target=1)
+
+    tmp_m = normalize_array(tmp[data_df.domain == -1],
+                            min_value=tmp.min(),
+                            max_value=tmp[data_df.domain == -1].max(),
+                            min_target=tmp.min(),
+                            max_target=-0.33)
+
+    tmp_h = normalize_array(tmp[data_df.domain == 0],
+                            min_value=tmp[data_df.domain == 0].min(),
+                            max_value=tmp[data_df.domain == 0].max(),
+                            min_target=-0.33,
+                            max_target=0.33)
+
+    tmp_s = normalize_array(tmp[data_df.domain == 1],
+                            min_value=tmp[data_df.domain == 1].min(),
+                            max_value=tmp[data_df.domain == 1].max(),
+                            min_target=0.33,
+                            max_target=1)
+
+    return np.hstack([tmp_m, tmp_h, tmp_s])
+
+def normalize_array(array=[], max_value=[], min_value=[], min_target=-1, max_target=1):
+    """Array normalization. This will be used to create the new VO2_domain
+
+    Parameters:
+        df (pd df) : input df
+
+    Returns:
+        result (pd df) : output df
+
+    """
+    import numpy as np
+
+    if max_value == []:
+        max_value = array.max()
+    if min_value == []:
+        min_value = array.min()
+
+    return ((array - min_value) / (max_value - min_value)) * (max_target-min_target) + min_target
 
 def random_walk(length=1, scale_factor=1, variation=1):
     """Random walk generator
@@ -656,9 +738,15 @@ def generate_CPET(generator,
     if duration == None:
         duration = int(db_df_sample.duration)
     if VT1 == None:
-        VT1 = int(db_df_sample.VT1)
+        if resting:
+            VT1 = int((duration - 60) / 3 + 60 + random.randint(-10, 10))
+        else:
+            VT1 = int((duration) / 3 + random.randint(-10, 10))
     if VT2 == None:
-        VT2 = int(db_df_sample.VT2)
+        if resting:
+            VT2 = int(2 * (duration - 60) / 3 + 60 + random.randint(-20, 20))
+        else:
+            VT2 = int(2 * (duration) / 3 + random.randint(-20, 20))
 
     VO2_peak = int(db_df_sample.VO2peak)
     VCO2_peak = int(db_df_sample.VCO2peak)
@@ -689,12 +777,11 @@ def generate_CPET(generator,
 
     # probability definition
     # FIXME: hard coded here
-    p_mF, p_hF, p_sF = create_probabilities(duration=duration,
-                                            VT1=VT1 - 40,
-                                            VT2=VT2 - 40,
-                                            training=training,
-                                            resting=resting,
-                                            normalization=normalization)
+    p = create_probabilities_from_VO2(duration=duration,
+                                      VT1=VT1,
+                                      VT2=VT2,
+                                      training=training,
+                                      normalization=normalization)
 
     # initialise
     VO2 = []
@@ -710,7 +797,7 @@ def generate_CPET(generator,
     for steps_, seconds_ in enumerate(time_array.astype(int)):
         # keep the seed
         # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
-        input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
+        input_data[0, -1] = np.array([p[seconds_]])
         generator.set_tensor(input_details[0]['index'], input_data)
         generator.invoke()
         output_data = generator.get_tensor(output_details[0]['index'])
@@ -761,9 +848,7 @@ def generate_CPET(generator,
     df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + np.random.randn(len(VO2)) * 1 * noise_factor
     df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + np.random.randn(len(VO2)) * 1 * noise_factor
 
-    df['p_mF'] = p_mF
-    df['p_hF'] = p_hF
-    df['p_sF'] = p_sF
+    df['VO2_domain'] = p
 
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
@@ -773,9 +858,9 @@ def generate_CPET(generator,
     df['PetCO2VO2_I'] = df['PetCO2_I'] / df['VO2_I']
 
     df['domain'] = np.NaN
-    df.loc[df['time'] < (VT1 - 40), 'domain'] = -1
-    df.loc[df['time'] >= (VT2 - 40), 'domain'] = 1
-    df.loc[(df['time'] < (VT2 - 40)) & (df['time'] >= (VT1 - 40)), 'domain'] = 0
+    df.loc[df['time'] < (VT1), 'domain'] = -1
+    df.loc[df['time'] >= (VT2), 'domain'] = 1
+    df.loc[(df['time'] < (VT2)) & (df['time'] >= (VT1)), 'domain'] = 0
     df['fitness_group'] = db_df_sample['fitness_group'].values[0]
     df['Age'] = db_df_sample['Age'].values[0]
     df['age_group'] = db_df_sample['age_group'].values[0]
@@ -815,8 +900,8 @@ def generate_CPET(generator,
     print('Height: ', db_df_sample.height.values[0], 'm')
     print('Age: ', int(db_df_sample.Age.values), 'y')
     print('Noise factor: ', round(noise_factor, 2))
-    print('VT1: ', str(VT1 - 40))
-    print('VT2: ', str(VT2 - 40))
+    print('VT1: ', str(VT1))
+    print('VT2: ', str(VT2))
     print('Resting:', resting)
 
     data = dict()
@@ -825,8 +910,8 @@ def generate_CPET(generator,
     data['Weight'] = str(int(db_df_sample.weight.values))
     data['Gender'] = gender
     data['Aerobic_fitness_level'] = fitness_group
-    data['VT1'] = str(VT1 - 40)
-    data['VT2'] = str(VT2 - 40)
+    data['VT1'] = str(VT1)
+    data['VT2'] = str(VT2)
     data['VO2VT1'] = str(int(VO2VT1))
     data['VO2VT2'] = str(int(VO2VT2))
     data['VO2max'] = str(int(VO2_peak))
@@ -847,7 +932,7 @@ def generate_CPET(generator,
     n = 0
     while n < len(df):
         tmp = df.iloc[n:(n+df['breaths'].iloc[n])].mean()
-        df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 24]),
+        df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, len(tmp)]),
                                                        columns=tmp.index.to_list())])
         n = n + df['breaths'].iloc[n]
 
