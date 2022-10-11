@@ -90,7 +90,7 @@ def optimal_filter(t, y, my_lambda):
 
     return x
 
-def load_tf_model(n_inputs=7, past_points=40, model='CNN'):
+def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
     """This function loads the saved tflite models.
 
     Args:
@@ -106,16 +106,21 @@ def load_tf_model(n_inputs=7, past_points=40, model='CNN'):
     import pickle
     from io import BytesIO
     from pyoxynet import tfl_models
+    import tensorflow as tf
+    import os
 
     # get the model
-    pip_install_tflite()
-    import tflite_runtime.interpreter as tflite
+    # pip_install_tflite()
+    # import tflite_runtime.interpreter as tflite
 
-    if n_inputs == 7 and past_points == 40:
+    if n_inputs == 6 and past_points == 40:
         if model == 'CNN':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
-            tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'CNN.pickle')
+            saved_model_binaries = importlib_resources.read_binary(tfl_models, 'saved_model.pb')
+            keras_metadata_model_binaries = importlib_resources.read_binary(tfl_models, 'keras_metadata.pb')
+            variables_data_binaries = importlib_resources.read_binary(tfl_models, 'variables.data-00000-of-00001')
+            variables_index_binaries = importlib_resources.read_binary(tfl_models, 'variables.index')
         if model == 'transformer':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
@@ -126,11 +131,19 @@ def load_tf_model(n_inputs=7, past_points=40, model='CNN'):
         tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'tfl_model_5_40.pickle')
 
     try:
-        tfl_model_decoded = pickle.loads(tfl_model_binaries)
-        # save model locally on tmp
-        open('/tmp/tfl_model' + '.tflite', 'wb').write(tfl_model_decoded.getvalue())
-        interpreter = tflite.Interpreter(model_path='/tmp/tfl_model.tflite')
-        return interpreter
+        if not os.path.isdir('/tmp/variables'):
+            os.mkdir('/tmp/variables')
+        open('/tmp/saved_model.pb', 'wb').write(saved_model_binaries)
+        open('/tmp/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
+        open('/tmp/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
+        open('/tmp/variables/variables.index', 'wb').write(variables_index_binaries)
+        model = tf.keras.models.load_model('/tmp/')
+        from .model import Model
+        my_model = Model(n_classes=3, n_input=6)
+        my_model.build(input_shape=(1, 40, 6))
+        my_model.set_weights(model.get_weights())
+
+        return my_model
     except:
         print('Could not find a model that could satisfy the input size required')
         return None  
@@ -389,7 +402,7 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     return df
 
-def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=True):
+def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=True):
     """Runs the pyoxynet inference
 
     Parameters: 
@@ -408,24 +421,13 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=Tru
 
     import json
 
-    tfl_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
+    tf_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
 
     if len(input_df) == 0:
         print('Using default pyoxynet data')
         df = load_csv_data()
     else:
         df = input_df
-
-    # js = df1.to_json(orient='columns')
-
-    # with open('test_data.json', 'w') as f:
-    #    f.write(js)
-
-    # Opening JSON file
-    # with open('test_data.json') as json_file:
-    #     data = json.load(json_file)
-
-    # df = pd.DataFrame.from_dict(data)
 
     # some adjustments to input df
     # TODO: create dedicated function for this
@@ -439,40 +441,31 @@ def test_pyoxynet(input_df=[], n_inputs=7, past_points=40, model='CNN', plot=Tru
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
 
-    if n_inputs==7 and past_points==40:
+    if n_inputs==6 and past_points==40:
         # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
-        filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
+        if 'VCO2VO2_I' not in df.columns:
+            df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
+        filter_vars = ['VCO2VO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
         X = df[filter_vars]
         XN = normalize(X)
         XN = XN.filter(filter_vars, axis=1)
-    if n_inputs==5 and past_points==40:
+    if n_inputs == 5 and past_points == 40:
         filter_vars = ['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']
         X = df[filter_vars]
         XN = normalize(X)
         XN = XN.filter(filter_vars, axis=1)
 
-    # retrieve interpreter details
-    input_details = tfl_model.get_input_details()
-    output_details = tfl_model.get_output_details()
-
-    time_series_len = input_details[0]['shape'][1]
     p_1 = []
     p_2 = []
     p_3 = []
     time = []
 
-    for i in np.arange(time_series_len - int(time_series_len/2), len(XN) - int(time_series_len/2)):
-        XN_array = np.asarray(XN[(i-int(time_series_len/2)):(i+int(time_series_len/2))])
-        input_data = np.reshape(XN_array, input_details[0]['shape'])
-        input_data = input_data.astype(np.float32)
-        tfl_model.allocate_tensors()
-        tfl_model.set_tensor(input_details[0]['index'], input_data)
-        tfl_model.invoke()
-        output_data = tfl_model.get_tensor(output_details[0]['index'])
-        p_1.append(output_data[0][0])
-        p_2.append(output_data[0][1])
-        p_3.append(output_data[0][2])
-        # TODO: here this is hard coded i.e.: -time series length / 2
+    for i in np.arange(int(past_points/2), len(XN) - int(past_points/2)):
+        XN_array = np.asarray(XN[(i-int(past_points/2)):(i+int(past_points/2))])
+        output_data = tf_model(XN_array.reshape(1, 40, 6))
+        p_1.append(output_data.numpy()[0][0])
+        p_2.append(output_data.numpy()[0][1])
+        p_3.append(output_data.numpy()[0][2])
         time.append(df.time[i])
 
     tmp_df = pd.DataFrame()
