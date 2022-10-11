@@ -1,11 +1,10 @@
---extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
+tensorflow
 build
 twine
 sphinx
 myst-parser
 furo
 importlib-resources
-tflite_runtime
 wheel
 pandas
 uniplot
