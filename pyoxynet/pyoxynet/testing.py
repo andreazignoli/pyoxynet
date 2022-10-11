@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 import os
-import utilities
 from pandas import read_csv
 from scipy import interpolate
 

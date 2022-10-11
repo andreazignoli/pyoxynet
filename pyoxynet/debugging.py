@@ -1,11 +1,13 @@
 import pickle
 
-from pyoxynet import utilities
+from pyoxynet import *
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
 import random
+
+utilities.test_pyoxynet()
 
 generator = utilities.load_tf_generator()
 plotting = True
