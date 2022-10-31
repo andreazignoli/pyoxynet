@@ -28,10 +28,109 @@ def normalize(df, min_target=-1, max_target=1):
     for feature_name in df.columns:
         max_value = df[feature_name].max()
         min_value = df[feature_name].min()
-        result[feature_name] = ((df[feature_name] - min_value) / (max_value - min_value)) * (max_target-min_target) + min_target
+        # TODO: pelase check here the normalisation between 0 and 1 or -1 and 1
+        # result[feature_name] = 2 * (df[feature_name] - min_value) / (max_value - min_value) - 1
+        result[feature_name] = (df[feature_name] - min_value) / (max_value - min_value)
     result = result.fillna(0)
 
     return result
+
+def load_explainer(tf_model):
+    """Loads a deep explainer from the shap library and automatically loads the data to train it
+
+    Parameters:
+        tf_model (Model class) : deep learning model that deep explainer needs to explain
+
+    Returns:
+        explainer (deep) : deep explainer SHAP
+
+    """
+
+    import shap
+    from pyoxynet import data_test
+    import importlib_resources
+    import pickle
+    from keras.layers import Input
+    from keras.models import Model as mdl
+    from .model import Model
+
+    train_data_X_binaries = importlib_resources.read_binary(data_test, 'train_data_X.pickle')
+    open('/tmp/train_data_X.pickle', 'wb').write(train_data_X_binaries)
+    with open('/tmp/train_data_X.pickle', 'rb') as f:
+        training_data = pickle.load(f)
+
+    shap.explainers._deep.deep_tf.op_handlers['AddV2'] = shap.explainers._deep.deep_tf.passthrough
+    model = Model(n_classes=3, n_input=6)
+    newInput = Input(batch_shape=(1, 40, 6))
+    newOutputs = model(newInput)
+    newModel = mdl(newInput, newOutputs)
+    newModel.set_weights(tf_model.get_weights())
+    # explainer = shap.DeepExplainer(newModel, training_data)
+    # Gradient explainer faster and perhaps more robust when it comes to TF2 applications
+    explainer = shap.GradientExplainer(newModel, training_data)
+
+    return explainer
+
+def compute_shap(explainer, df, n_inputs=6, past_points=40, shap_stride=20):
+    """Computes SHAP values
+
+    Parameters:
+        explainer (explainer SHAP) : deep explainer that explains the deep learning model
+        data (pd df) : data for the local explanation
+
+    Returns:
+        shap (dict) : SHAP values
+
+    """
+
+    import shap
+    import pandas as pd
+    import numpy as np
+
+    # some adjustments to input df
+    # TODO: create dedicated function for this (duplicated taks)
+    df = df.drop_duplicates('time')
+    df['timestamp'] = pd.to_datetime(df['time'], unit='s')
+    df = df.set_index('timestamp')
+    df = df.resample('1S').mean()
+    df = df.interpolate()
+    df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().fillna(method='bfill').fillna(
+        method='ffill')
+    df = df.reset_index()
+    df = df.drop('timestamp', axis=1)
+
+    if n_inputs == 6 and past_points == 40:
+        if 'VCO2VO2_I' not in df.columns:
+            df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
+        filter_vars = ['VCO2VO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
+        X = df[filter_vars]
+        XN = normalize(X)
+        XN = XN.filter(filter_vars, axis=1)
+    if n_inputs == 5 and past_points == 40:
+        filter_vars = ['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']
+        X = df[filter_vars]
+        XN = normalize(X)
+        XN = XN.filter(filter_vars, axis=1)
+
+    data_X = np.zeros([0, past_points, n_inputs])
+    for i in np.arange(1, XN.shape[0] - past_points, shap_stride):
+        tmp_x = XN[i: i + past_points]
+        tmp_x = np.expand_dims(tmp_x, 0)
+        data_X = np.vstack((data_X, tmp_x))
+
+    print('Computing SHAP values in progress')
+    shap_values = explainer.shap_values(data_X)
+    print('Done computing SHAP values!')
+
+    tmp_hv = pd.DataFrame(np.mean(shap_values[0][:, :, :], axis=1), columns=['hv_shap_v' + str(i) for i in np.arange(0, 6)])
+    tmp_sv = pd.DataFrame(np.mean(shap_values[1][:, :, :], axis=1),
+                          columns=['sv_shap_v' + str(i) for i in np.arange(0, 6)])
+    tmp_md = pd.DataFrame(np.mean(shap_values[2][:, :, :], axis=1),
+                          columns=['md_shap_v' + str(i) for i in np.arange(0, 6)])
+
+    df_tmp = pd.concat([tmp_md, tmp_hv, tmp_sv], axis=1)
+
+    return shap_values, df_tmp
 
 def optimal_filter(t, y, my_lambda):
     """A bad ass optimisation filter
@@ -105,30 +204,26 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
     import importlib_resources
     import pickle
     from io import BytesIO
-    from pyoxynet import tfl_models
+    from pyoxynet import regressor
     import tensorflow as tf
     import os
-
-    # get the model
-    # pip_install_tflite()
-    # import tflite_runtime.interpreter as tflite
 
     if n_inputs == 6 and past_points == 40:
         if model == 'CNN':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
-            saved_model_binaries = importlib_resources.read_binary(tfl_models, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(tfl_models, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(tfl_models, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(tfl_models, 'variables.index')
+            saved_model_binaries = importlib_resources.read_binary(regressor, 'saved_model.pb')
+            keras_metadata_model_binaries = importlib_resources.read_binary(regressor, 'keras_metadata.pb')
+            variables_data_binaries = importlib_resources.read_binary(regressor, 'variables.data-00000-of-00001')
+            variables_index_binaries = importlib_resources.read_binary(regressor, 'variables.index')
         if model == 'transformer':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
-            tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'transformer.pickle')
+            tfl_model_binaries = importlib_resources.read_binary(regressor, 'transformer.pickle')
     if n_inputs == 5 and past_points == 40:
         # load the 5 input model configuration (e.g. in this case when on CO2 info is included)
         print('Specific configuration model uploaded (no VCO2 available)')
-        tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'tfl_model_5_40.pickle')
+        tfl_model_binaries = importlib_resources.read_binary(regressor, 'tfl_model_5_40.pickle')
 
     try:
         if not os.path.isdir('/tmp/variables'):
@@ -162,23 +257,34 @@ def load_tf_generator():
     import importlib_resources
     import pickle
     from io import BytesIO
-    from pyoxynet import tfl_models
+    from pyoxynet import generator
+    import tensorflow as tf
+    import os
 
-    # get the model
-    pip_install_tflite()
-    import tflite_runtime.interpreter as tflite
-
+    # load the classic Oxynet model configuration
     print('Classic Oxynet configuration model uploaded')
-    tfl_model_binaries = importlib_resources.read_binary(tfl_models, 'generator.pickle')
+    saved_model_binaries = importlib_resources.read_binary(generator, 'saved_model.pb')
+    keras_metadata_model_binaries = importlib_resources.read_binary(generator, 'keras_metadata.pb')
+    variables_data_binaries = importlib_resources.read_binary(generator, 'variables.data-00000-of-00001')
+    variables_index_binaries = importlib_resources.read_binary(generator, 'variables.index')
 
     try:
-        tfl_model_decoded = pickle.loads(tfl_model_binaries)
-        # save model locally on tmp
-        open('/tmp/generator' + '.tflite', 'wb').write(tfl_model_decoded.getvalue())
-        generator = tflite.Interpreter(model_path='/tmp/generator.tflite')
-        return generator
+        if not os.path.isdir('/tmp/variables'):
+            os.mkdir('/tmp/variables')
+        open('/tmp/saved_model.pb', 'wb').write(saved_model_binaries)
+        open('/tmp/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
+        open('/tmp/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
+        open('/tmp/variables/variables.index', 'wb').write(variables_index_binaries)
+        model = tf.keras.models.load_model('/tmp/')
+        from .model import Generator
+        my_model = Generator()
+        # TODO: this is hardcoded
+        my_model.build(input_shape=(1, 53))
+        my_model.set_weights(model.get_weights())
+
+        return my_model
     except:
-        print('Could not load the generator')
+        print('Could not find a model that could satisfy the input size required')
         return None
 
 def pip_install_tflite():
@@ -273,6 +379,7 @@ def draw_real_test(resting='random'):
     from io import StringIO
     import random
     import numpy as np
+    from datetime import datetime
 
     if resting == 'random':
         resting = random.randint(0, 1)
@@ -319,20 +426,78 @@ def draw_real_test(resting='random'):
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
 
+    # Collect VO2 value at VT1 and VT2
+    VO2VT1 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[0] - 10):(df[df['domain'].diff().fillna(0) == 1].index[0] + 10)]['VO2_I'].mean()
+    VO2VT2 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[1] - 10):(
+            df[df['domain'].diff().fillna(0) == 1].index[1] + 10)]['VO2_I'].mean()
+
+    VO2_peak = df.VO2_I.rolling(20).mean().max()
+
     print('Data loaded for a ', gender, ' individual with ', fitness_group, ' fitness capacity.')
     print('Weight: ', int(np.mean(df.weight.values)), ' kg')
     print('Height: ', np.mean(df.height.values[0]), 'm')
     print('Age: ', int(np.mean(df.age.values)), 'y')
     print('VT1: ', str(VT1))
     print('VT2: ', str(VT2))
+    print('VO2VT2: ', str(int(VO2VT1)))
+    print('VO2VT2: ', str(int(VO2VT2)))
 
-    data = [{'Age': str(int(np.mean(df.age.values))),
-             'Height': str(np.mean(df.height.values[0])),
-             'Weight': str(int(np.mean(df.weight.values))),
-             'Gender': gender,
-             'Aerobic_fitness_level': fitness_group,
-             'VT1': VT1,
-             'VT2': VT2}]
+    data = dict()
+    data['Age'] = str(int(df.age.values[0]))
+    data['Height'] = str(df.height.values[0])
+    data['Weight'] = str(int(df.weight.values[0]))
+    data['Gender'] = gender
+    data['Aerobic_fitness_level'] = fitness_group
+    data['VT1'] = str(VT1)
+    data['VT2'] = str(VT2)
+    data['VO2VT1'] = str(int(VO2VT1))
+    data['VO2VT2'] = str(int(VO2VT2))
+    data['VO2max'] = str(int(VO2_peak))
+    data['LT'] = str(int(VO2VT1))
+    data['LT_vo2max'] = str(int((VO2VT1/VO2_peak)*100)) + '%'
+    data['RCP'] = str(int(VO2VT2))
+    data['RCP_vo2max'] = str(int((VO2VT2/VO2_peak) * 100)) + '%'
+    data['id'] = 'real_#'
+    data['noise_factor'] = 'NA'
+    data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
+    data['resting'] = str(resting)
+
+    df['breaths'] = (1/(df.RF_I/60))
+    # df['recorded_timestamp'] = pd.to_datetime(df.time, unit='s')
+
+    time_cum_sum = 0
+    df_breath = pd.DataFrame()
+    n = 0
+    while time_cum_sum < (duration-20):
+        try:
+            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].mean()
+            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, len(df.columns)]),
+                                                           columns=tmp.index.to_list())])
+            time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
+            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])
+        except:
+            break
+
+    df_breath = df_breath.dropna()
+    df_breath['time'] = df_breath['time'].astype(int)
+    df_breath = df_breath.drop_duplicates('time')
+
+    exercise_threshold_names = {"time": "t",
+                                "VO2_I": "VO2",
+                                "VCO2_I": "VCO2",
+                                "VE_I": "VE",
+                                "VCO2VO2_I": "R",
+                                "VEVO2_I": "VE/VO2",
+                                "VEVCO2_I": "VE/VCO2",
+                                "PetO2_I": "PetO2",
+                                "PetCO2_I": "PetCO2",
+                                "HR_I": "HR",
+                                "RF_I": "RF"}
+
+    df_breath = df_breath.rename(columns=exercise_threshold_names)
+    # create the dict for the exercise threshold app
+    data['data'] = dict()
+    data['data'] = df_breath.to_dict(orient='records')
 
     return df, data
 
@@ -418,7 +583,6 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     from uniplot import plot
     import pandas as pd
     from scipy import stats
-
     import json
 
     tf_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
@@ -441,7 +605,7 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
 
-    if n_inputs==6 and past_points==40:
+    if n_inputs == 6 and past_points == 40:
         # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
         if 'VCO2VO2_I' not in df.columns:
             df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
@@ -500,8 +664,8 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     out_dict['VT2']['time'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) + int(time_series_len/2)
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) + int(time_series_len/2)
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1] + past_points/2)
+    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1] + past_points/2)
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
@@ -535,41 +699,53 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
 
     if resting == True:
         step_1 = 60
-        step_2 = VT1 - (VT1-60)/2
-        smooth_lambda = [VT1, VT2-VT1, duration-VT2]
+        smooth_lambda = [duration*2, duration*2, duration*2]
     else:
         # no resting is included
         step_1 = 1
-        step_2 = 2
-        smooth_lambda = [VT1, VT2-VT1, duration-VT2]
+        smooth_lambda = [duration*2, duration*2, duration*2]
 
-    T_m = [0, step_1, step_2, VT1, int((VT2-VT1)/3+VT1), int((VT2-VT1)*2/3+VT1), VT2, duration]
-    T_h = [0, step_1, step_2, VT1, int((VT2-VT1)/3+VT1), int((VT2-VT1)*2/3+VT1), VT2, duration]
-    T_s = [0, step_1, step_2, VT1, int((VT2-VT1)/3+VT1), int((VT2-VT1)*2/3+VT1), VT2, duration]
+    y_pm = [1, 1, 0.5, 0, 0, 0]
+    y_ph = [0, 0, 0.5, 1, 0.5, 0]
+    y_ps = [0, 0, 0, 0, 0.5, 1]
+    # linear coefficients
+    x_p = [0, step_1, VT1, ((VT2 - VT1) / 2 + VT1), VT2, duration]
 
-    p_m = [0.7, 0.75, 0.75, 0, -0.5, -0.5, -0.75, -0.75]
-    p_h = [-0.7, -0.75, -0.75, 0, 0.75, 0.75, 0, -0.75]
-    p_s = [-0.7, -0.75, -0.75, -0.5, -0.5, -0.5, 0, 0.75]
+    from scipy.interpolate import UnivariateSpline
+    # build splines
+    # moderate => 2 splines
+    pm_L1 = UnivariateSpline([0, step_1, VT1], [1, 1, 0.5], k=2)
+    # compute additional points
+    pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=2)
+    p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
+    # heavy => 3 splines
+    ph_L1 = UnivariateSpline([0, step_1, VT1], [0, 0, 0.5], k=2)
+    # compute additional points
+    ph_L2 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L1(VT1 + 30), 0.5], k=2)
+    ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=2)
+    p_hF = np.hstack((ph_L1(t[t < VT1]), ph_L2(t[(t >= VT1) & (t < VT2)]), ph_L3(t[t >= VT2])))
+    # severe => 2 splines
+    ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
+    # compute additional points
+    ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
+                             [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
+    p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
 
-    p_m_I = interp1d(T_m, p_m, kind='linear')
-    p_h_I = interp1d(T_h, p_h, kind='linear')
-    p_s_I = interp1d(T_s, p_s, kind='linear')
-
-    p_mF = optimal_filter(t, p_m_I(t), smooth_lambda[0])
-    p_hF = optimal_filter(t, p_h_I(t), smooth_lambda[1])
-    p_sF = optimal_filter(t, p_s_I(t), smooth_lambda[2])
+    p_mF = optimal_filter(t, p_mF, 100)
+    p_hF = optimal_filter(t, p_hF, 50)
+    p_sF = optimal_filter(t, p_sF, 100)
 
     if training:
-        p_mF = p_mF + np.random.randn(len(t)) / 6
-        p_hF = p_hF + np.random.randn(len(t)) / 6
-        p_sF = p_sF + np.random.randn(len(t)) / 6
+        p_mF = p_mF + np.random.randn(len(t)) / 18
+        p_hF = p_hF + np.random.randn(len(t)) / 18
+        p_sF = p_sF + np.random.randn(len(t)) / 18
     else:
         pass
 
     if normalization:
-        p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (-0.75, 0.75))
-        p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (-0.75, 0.75))
-        p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (-0.75, 0.75))
+        p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (0, 1))
+        p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (0, 1))
+        p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (0, 1))
     else:
         pass
 
@@ -648,10 +824,15 @@ def generate_CPET(generator,
 
     if duration == None:
         duration = int(db_df_sample.duration)
-    if VT1 == None:
-        VT1 = int(db_df_sample.VT1)
-    if VT2 == None:
-        VT2 = int(db_df_sample.VT2)
+
+    if VT1 == None and VT2 == None:
+        VT1 = 0
+        VT2 = 0
+        # check if difference in threshold is < 10% of the entire duration
+        while (VT2 - VT1)/duration < 0.1 or (duration - VT2) < 120 or (VT2 - VT1) > 240 or (duration - VT2) > 240 or \
+                (VT2 - VT1)/duration < 0.2:
+            VT1 = int(random.randrange(30, 60) * duration * 0.01)
+            VT2 = int(random.randrange(70, 90) * duration * 0.01)
 
     VO2_peak = int(db_df_sample.VO2peak)
     VCO2_peak = int(db_df_sample.VCO2peak)
@@ -669,22 +850,11 @@ def generate_CPET(generator,
     PetO2_min = int(db_df_sample.PetO2min)
     PetCO2_min = int(db_df_sample.PetCO2min)
 
-    # Allocate tensors.
-    generator.allocate_tensors()
-
-    # Get input and output tensors.
-    input_details = generator.get_input_details()
-    output_details = generator.get_output_details()
-
-    # Test the model on random input data.
-    input_shape = input_details[0]['shape']
-    input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
-
     # probability definition
     # FIXME: hard coded here
     p_mF, p_hF, p_sF = create_probabilities(duration=duration,
-                                            VT1=VT1 - 40,
-                                            VT2=VT2 - 40,
+                                            VT1=VT1,
+                                            VT2=VT2,
                                             training=training,
                                             resting=resting,
                                             normalization=normalization)
@@ -698,22 +868,22 @@ def generate_CPET(generator,
     PetO2 = []
     PetCO2 = []
 
-    time_array = np.arange(0, duration)
+    time_array = np.arange(duration)
+    # TODO: this is hard coded
+    input_data = np.array(np.random.random_sample([1, 53]))
 
-    for steps_, seconds_ in enumerate(time_array.astype(int)):
-        # keep the seed
+    for seconds_ in time_array:
+        # keep the seed?
         # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
         input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
-        generator.set_tensor(input_details[0]['index'], input_data)
-        generator.invoke()
-        output_data = generator.get_tensor(output_details[0]['index'])
-        VO2.append(np.average(output_data[0, :, 0]))
-        VCO2.append(np.average(output_data[0, :, 1]))
-        VE.append(np.average(output_data[0, :, 2]))
-        HR.append(np.average(output_data[0, :, 3]))
-        RF.append(np.average(output_data[0, :, 4]))
-        PetO2.append(np.average(output_data[0, :, 5]))
-        PetCO2.append(np.average(output_data[0, :, 6]))
+        output_data = generator(input_data)
+        VO2.append(np.median(output_data[0, :, 0]))
+        VCO2.append(np.median(output_data[0, :, 1]))
+        VE.append(np.median(output_data[0, :, 2]))
+        HR.append(np.median(output_data[0, :, 3]))
+        RF.append(np.median(output_data[0, :, 4]))
+        PetO2.append(np.median(output_data[0, :, 5]))
+        PetCO2.append(np.median(output_data[0, :, 6]))
         # vars -> ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
 
     # filter before you expand again between min and max
@@ -725,14 +895,14 @@ def generate_CPET(generator,
     PetO2 = optimal_filter(time_array, PetO2, 10)
     PetCO2 = optimal_filter(time_array, PetCO2, 10)
 
-    min_norm = -1
+    min_norm = 0
     max_norm = 1
     VO2 = np.interp(np.asarray(VO2), (np.asarray(VO2).min(), np.asarray(VO2).max()), (min_norm, max_norm))
     VCO2 = np.interp(np.asarray(VCO2), (np.asarray(VCO2).min(), np.asarray(VCO2).max()), (min_norm, max_norm))
     VE = np.interp(np.asarray(VE), (np.asarray(VE).min(), np.asarray(VE).max()), (min_norm, max_norm))
     HR = np.interp(np.asarray(HR), (np.asarray(HR).min(), np.asarray(HR).max()), (min_norm, max_norm))
     RF = np.interp(np.asarray(RF), (np.asarray(RF).min(), np.asarray(RF).max()),
-                       (min_norm, max_norm))
+                   (min_norm, max_norm))
     PetO2 = np.interp(np.asarray(PetO2), (np.asarray(PetO2).min(), np.asarray(PetO2).max()), (min_norm, max_norm))
     PetCO2 = np.interp(np.asarray(PetCO2), (np.asarray(PetCO2).min(), np.asarray(PetCO2).max()),
                        (min_norm, max_norm))
@@ -745,14 +915,15 @@ def generate_CPET(generator,
     else:
         pass
 
+    # TODO: should I compute VEVO2 or VEVCO2 before adding the noise (?)
     df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + np.random.randn(len(VO2)) * 40 * noise_factor
     df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min + np.random.randn(len(VO2)) * 40 * noise_factor
-    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + np.random.randn(len(VO2)) * 1 * noise_factor
+    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + np.random.randn(len(VO2)) * 1.5 * noise_factor
     df['HR_I'] = np.ndarray.astype((np.asarray(HR) - np.min(HR)) / (np.max((np.asarray(HR) - np.min(HR)))) * (HR_peak - HR_min) + HR_min + np.random.randn(len(VO2)) * 1 * noise_factor, int)
     df['RF_I'] = (np.asarray(RF) - np.min(RF)) / (np.max((np.asarray(RF) - np.min(RF)))) * (
-                RF_peak - RF_min) + RF_min + np.random.randn(len(VO2)) * 1 * noise_factor
-    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + np.random.randn(len(VO2)) * 1 * noise_factor
-    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + np.random.randn(len(VO2)) * 1 * noise_factor
+            RF_peak - RF_min) + RF_min + np.random.randn(len(VO2)) * 1 * noise_factor
+    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + np.random.randn(len(VO2)) * 1.5 * noise_factor
+    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + np.random.randn(len(VO2)) * 1.5 * noise_factor
 
     df['p_mF'] = p_mF
     df['p_hF'] = p_hF
@@ -766,9 +937,9 @@ def generate_CPET(generator,
     df['PetCO2VO2_I'] = df['PetCO2_I'] / df['VO2_I']
 
     df['domain'] = np.NaN
-    df.loc[df['time'] < (VT1 - 40), 'domain'] = -1
-    df.loc[df['time'] >= (VT2 - 40), 'domain'] = 1
-    df.loc[(df['time'] < (VT2 - 40)) & (df['time'] >= (VT1 - 40)), 'domain'] = 0
+    df.loc[df['time'] < (VT1), 'domain'] = -1
+    df.loc[df['time'] >= (VT2), 'domain'] = 1
+    df.loc[(df['time'] < (VT2)) & (df['time'] >= (VT1)), 'domain'] = 0
     df['fitness_group'] = db_df_sample['fitness_group'].values[0]
     df['Age'] = db_df_sample['Age'].values[0]
     df['age_group'] = db_df_sample['age_group'].values[0]
@@ -779,7 +950,7 @@ def generate_CPET(generator,
     # Collect VO2 value at VT1 and VT2
     VO2VT1 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[0] - 10):(df[df['domain'].diff().fillna(0) == 1].index[0] + 10)]['VO2_I'].mean()
     VO2VT2 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[1] - 10):(
-                df[df['domain'].diff().fillna(0) == 1].index[1] + 10)]['VO2_I'].mean()
+            df[df['domain'].diff().fillna(0) == 1].index[1] + 10)]['VO2_I'].mean()
 
     if plot:
         terminal_plot([df['VO2_I'], df['VCO2_I']],
@@ -808,18 +979,22 @@ def generate_CPET(generator,
     print('Height: ', db_df_sample.height.values[0], 'm')
     print('Age: ', int(db_df_sample.Age.values), 'y')
     print('Noise factor: ', round(noise_factor, 2))
-    print('VT1: ', str(VT1 - 40))
-    print('VT2: ', str(VT2 - 40))
+    print('VT1: ', str(VT1))
+    print('VT2: ', str(VT2))
+    print('VO2VT2: ', str(int(VO2VT1)))
+    print('VO2VT2: ', str(int(VO2VT2)))
     print('Resting:', resting)
 
+    # TODO: create a function to generate this dict, as it is the same that we should use when drawing real data files
+    # create dict fro Exercise Threshold App
     data = dict()
     data['Age'] = str(int(db_df_sample.Age.values))
     data['Height'] = str(db_df_sample.height.values[0])
     data['Weight'] = str(int(db_df_sample.weight.values))
     data['Gender'] = gender
     data['Aerobic_fitness_level'] = fitness_group
-    data['VT1'] = str(VT1 - 40)
-    data['VT2'] = str(VT2 - 40)
+    data['VT1'] = str(VT1)
+    data['VT2'] = str(VT2)
     data['VO2VT1'] = str(int(VO2VT1))
     data['VO2VT2'] = str(int(VO2VT2))
     data['VO2max'] = str(int(VO2_peak))
@@ -832,18 +1007,24 @@ def generate_CPET(generator,
     data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
     data['resting'] = str(resting)
 
-    df['breaths'] = np.ndarray.astype(np.asarray(1/(df.RF_I/60)), int)
-    df = df[df['breaths'] > 0]
+    df['breaths'] = (1/(df.RF_I/60))
+    # df['recorded_timestamp'] = pd.to_datetime(df.time, unit='s')
 
-    # new: generate breath by breath data
+    time_cum_sum = 0
     df_breath = pd.DataFrame()
     n = 0
-    while n < len(df):
-        tmp = df.iloc[n:(n+df['breaths'].iloc[n])].mean()
-        df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 24]),
-                                                       columns=tmp.index.to_list())])
-        n = n + df['breaths'].iloc[n]
+    while time_cum_sum < (duration-6):
+        try:
+            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].mean()
+            # TODO: this 25 is hardcoded, you should have len(df.columns)
+            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 24]),
+                                                           columns=tmp.index.to_list())])
+            time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
+            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])
+        except:
+            break
 
+    df_breath = df_breath.dropna()
     df_breath['time'] = df_breath['time'].astype(int)
     df_breath = df_breath.drop_duplicates('time')
 
