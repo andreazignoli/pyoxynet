@@ -7,22 +7,47 @@ import matplotlib.pyplot as plt
 import json
 import random
 
-utilities.test_pyoxynet()
+my_model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
+generator = load_tf_generator()
 
-generator = utilities.load_tf_generator()
+# df_real, data_dict_real = utilities.draw_real_test()
+
+# df_fake, data_dict_fake = generate_CPET(my_generator)
+
+# explainer = load_explainer(my_model)
+# df_real, data_dict_real = utilities.draw_real_test()
+# df_real.to_csv('../oxynet-interpreter-tf2/output/df_CPET.csv')
+#
+# out_df_CNN, out_dict_CNN = utilities.test_pyoxynet(input_df=df_real, model='CNN', plot=True)
+# out_df_CNN.to_csv('../oxynet-interpreter-tf2/output/df_CNN.csv')
+#
+# # Serializing json
+# json_object = json.dumps(out_dict_CNN, indent=4)
+#
+# # Writing to sample.json
+# with open("../oxynet-interpreter-tf2/output/out_dict_CNN.json", "w") as outfile:
+#     outfile.write(json_object)
+#
+# shap_values, df_shap = compute_shap(explainer, df_real, shap_stride=2)
+# df_shap.to_csv('../oxynet-interpreter-tf2/output/df_shap.csv')
+#
+# df_all = pd.read_csv('pyoxynet/pyoxynet/data_test/database_statistics_resting.csv')
+# df_all.to_csv('../oxynet-interpreter-tf2/output/df_all.csv')
+#
+# generator = utilities.load_tf_generator()
 plotting = True
 
 for i_ in np.arange(10):
     resting = random.randint(0, 1)
-    # df_fake, data_dict_fake = utilities.generate_CPET(generator,
-    #                                                   noise_factor=None,
-    #                                                   plot=False,
-    #                                                   resting=resting,
-    #                                                   training=True,
-    #                                                   normalization=True)
-    df_real, data_dict_real = utilities.draw_real_test()
-    out_df_CNN, out_dict_CNN = utilities.test_pyoxynet(input_df=df_real, model='CNN', plot=False)
-    out_df_transf, out_dict_transf = utilities.test_pyoxynet(input_df=df_real, model='transformer', plot=False)
+    df_fake, data_dict_fake = generate_CPET(generator,
+                                                      noise_factor=None,
+                                                      plot=False,
+                                                      resting=resting,
+                                                      training=True,
+                                                      normalization=False)
+    # df_real, data_dict_real = utilities.draw_real_test()
+    out_df_CNN, out_dict_CNN = test_pyoxynet(input_df=df_fake, model='CNN', plot=False)
+    # out_df_transf, out_dict_transf = test_pyoxynet(input_df=df_fake, model='transformer', plot=False)
     # print(out_dict_CNN)
     # print(out_dict_transf)
     # file_id = 'generated_#' + str(i_).zfill(3)
@@ -46,8 +71,8 @@ for i_ in np.arange(10):
         plt.vlines(x=VT2, ymin=20, ymax=100)
         plt.vlines(x=out_dict_CNN['VT1']['time'], ymin=20, ymax=100, colors='k')
         plt.vlines(x=out_dict_CNN['VT2']['time'], ymin=20, ymax=100, colors='k')
-        plt.vlines(x=out_dict_transf['VT1']['time'], ymin=20, ymax=100, colors='m')
-        plt.vlines(x=out_dict_transf['VT2']['time'], ymin=20, ymax=100, colors='m')
+        # plt.vlines(x=out_dict_transf['VT1']['time'], ymin=20, ymax=100, colors='m')
+        # plt.vlines(x=out_dict_transf['VT2']['time'], ymin=20, ymax=100, colors='m')
         plt.subplot(3, 2, 3)
         plt.plot(df.time, df.VEVO2_I, 'b')
         plt.plot(df.time, df.VEVCO2_I, 'r')
@@ -55,8 +80,8 @@ for i_ in np.arange(10):
         plt.vlines(x=VT2, ymin=0.02, ymax=0.05)
         plt.vlines(x=out_dict_CNN['VT1']['time'], ymin=0.02, ymax=0.05, colors='k')
         plt.vlines(x=out_dict_CNN['VT2']['time'], ymin=0.02, ymax=0.05, colors='k')
-        plt.vlines(x=out_dict_transf['VT1']['time'], ymin=0.02, ymax=0.05, colors='m')
-        plt.vlines(x=out_dict_transf['VT2']['time'], ymin=0.02, ymax=0.05, colors='m')
+        # plt.vlines(x=out_dict_transf['VT1']['time'], ymin=0.02, ymax=0.05, colors='m')
+        # plt.vlines(x=out_dict_transf['VT2']['time'], ymin=0.02, ymax=0.05, colors='m')
         plt.subplot(3, 2, 4)
         plt.plot(df.time, df.PetO2_I, 'b')
         plt.plot(df.time, df.PetCO2_I, 'r')
@@ -64,8 +89,8 @@ for i_ in np.arange(10):
         plt.vlines(x=VT2, ymin=20, ymax=120)
         plt.vlines(x=out_dict_CNN['VT1']['time'], ymin=20, ymax=120, colors='k')
         plt.vlines(x=out_dict_CNN['VT2']['time'], ymin=20, ymax=120, colors='k')
-        plt.vlines(x=out_dict_transf['VT1']['time'], ymin=20, ymax=120, colors='m')
-        plt.vlines(x=out_dict_transf['VT2']['time'], ymin=20, ymax=120, colors='m')
+        # plt.vlines(x=out_dict_transf['VT1']['time'], ymin=20, ymax=120, colors='m')
+        # plt.vlines(x=out_dict_transf['VT2']['time'], ymin=20, ymax=120, colors='m')
         plt.subplot(3, 2, 5)
         plt.plot(df.time, df.VO2_I, 'b')
         plt.plot(df.time, df.VCO2_I, 'r')
@@ -73,11 +98,10 @@ for i_ in np.arange(10):
         plt.vlines(x=VT2, ymin=1200, ymax=3000)
         plt.vlines(x=out_dict_CNN['VT1']['time'], ymin=350, ymax=2600, colors='k')
         plt.vlines(x=out_dict_CNN['VT2']['time'], ymin=1200, ymax=3000, colors='k')
-        plt.vlines(x=out_dict_transf['VT1']['time'], ymin=350, ymax=2600, colors='m')
-        plt.vlines(x=out_dict_transf['VT2']['time'], ymin=1200, ymax=3000, colors='m')
+        # plt.vlines(x=out_dict_transf['VT1']['time'], ymin=350, ymax=2600, colors='m')
+        # plt.vlines(x=out_dict_transf['VT2']['time'], ymin=1200, ymax=3000, colors='m')
         plt.subplot(3, 2, 6)
         plt.scatter(df.VCO2_I, df.VE_I, 2)
-        plt.cla()
         # out_df, out_dict = utilities.test_pyoxynet(input_df=df)
         # plt.plot(out_df.time, out_df.p_sv)
         # plt.plot(out_df.time, out_df.p_md)
@@ -90,7 +114,7 @@ for i_ in np.arange(10):
         # plt.vlines(x=int(data_dict_fake['VT2']), ymin=-1, ymax=1)
         # plt.vlines(x=out_dict['VT1']['time'], ymin=-1, ymax=1, linestyles='dashed')
         # plt.vlines(x=out_dict['VT2']['time'], ymin=-1, ymax=1, linestyles='dashed')
-        # here=0
+        here=0
         # plt.cla()
 
 here =0
