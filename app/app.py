@@ -13,6 +13,8 @@ app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9098))
 app.secret_key = "super secret key"
 
+generator = utilities.load_tf_generator()
+
 def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
     import plotly.express as px
@@ -271,7 +273,6 @@ def CPET_generation():
 
     args = request.args
     fitness_group = args.get("fitness_group", default=None, type=int)
-    generator = utilities.load_tf_generator()
     df, gen_dict = utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group)
 
     return flask.jsonify(df.to_dict())

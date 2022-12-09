@@ -10,14 +10,15 @@ long_description = (this_directory/"README.md").read_text()
 
 setuptools.setup(
     name="pyoxynet",
-    version="0.0.11.7",
+    version="0.0.11.8",
     author="Andrea Zignoli",
     author_email="andrea.zignoli@unitn.it",
     description="Python package of the Oxynet project",
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=setuptools.find_packages(),
-    install_requires=['importlib-resources', 'pandas', 'uniplot', 'scipy'],
+    install_requires=['importlib-resources', 'pandas', 
+    'uniplot', 'scipy', 'tensorflow', 'shap'],
     classifiers=[
         "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
