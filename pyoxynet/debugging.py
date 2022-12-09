@@ -7,8 +7,25 @@ import matplotlib.pyplot as plt
 import json
 import random
 
-my_model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
-generator = load_tf_generator()
+for i_ in np.arange(200):
+
+    print('--------------------')
+    print('--------------------')
+    print('GENERATING =>>', str(i_))
+    print('--------------------')
+    print('--------------------')
+
+    df_real, data_dict_real = utilities.draw_real_test()
+    file_id = 'real_#' + str(i_).zfill(3)
+    data_dict_real['id'] = file_id
+    # df_real.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
+    json_object = json.dumps([data_dict_real])
+    # Writing to sample.json
+    with open('/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/' + file_id + '.json', "w") as outfile:
+        outfile.write(json_object)
+
+# my_model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
+# generator = load_tf_generator()
 
 # df_real, data_dict_real = utilities.draw_real_test()
 
