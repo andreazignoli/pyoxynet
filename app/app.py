@@ -76,12 +76,14 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
 
     return graphJSON
 
-def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0]):
+def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0, 0, 0]):
     import json
     import plotly.express as px
 
     VT1 = VT[0]
     VT2 = VT[1]
+    VT1_oxynet = VT[2]
+    VT2_oxynet = VT[3]
 
     labels_dict = {}
 
@@ -93,6 +95,8 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0]):
     fig.update_traces(marker=dict(size=8, line=dict(width=2, color='DarkSlateGrey')))
     fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
+    fig.add_vline(x=VT1_oxynet, line_width=1, line_color="dodgerblue")
+    fig.add_vline(x=VT2_oxynet, line_width=1, line_color="red")
 
     fig.update_layout(
         xaxis=dict(
@@ -147,6 +151,8 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
 
     VT1 = VT[0]
     VT2 = VT[1]
+    VT1_oxynet = VT[2]
+    VT2_oxynet = VT[3]
 
     labels_dict = {}
 
@@ -158,6 +164,8 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     fig.update_traces(marker=dict(size=8, line=dict(width=2, color='DarkSlateGrey')))
     fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
     fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
+    fig.add_vline(x=VT1_oxynet, line_width=1, line_color="dodgerblue")
+    fig.add_vline(x=VT2_oxynet, line_width=1, line_color="red")
 
     fig.update_layout(
         xaxis=dict(
@@ -303,18 +311,24 @@ def CPET_plot():
                     session['test_type'] = 'REAL'
 
                 df_oxynet, out_dict = utilities.test_pyoxynet(input_df=df)
-                VT1 = out_dict['VT1']['time']
-                VT2 = out_dict['VT2']['time']
-                VO2VT1 = out_dict['VT1']['VO2']
-                VO2VT2 = out_dict['VT2']['VO2']
+
+                VT1 = int(float(CPET_data['VT1']))
+                VT2 = int(float(CPET_data['VT2']))
+                VO2VT1 = int(float(CPET_data['VO2VT1']))
+                VO2VT2 = int(float(CPET_data['VO2VT2']))
+
+                VT1_oxynet = out_dict['VT1']['time']
+                VT2_oxynet = out_dict['VT2']['time']
+                VO2VT1_oxynet = out_dict['VT1']['VO2']
+                VO2VT2_oxynet = out_dict['VT2']['VO2']
 
                 plot_VEvsVCO2 = CPET_var_plot_vs_CO2(df, var_list=['VE_I'])
-                plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_PetO2 = CPET_var_plot_vs_O2(df, var_list=['PetO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_PetCO2 = CPET_var_plot_vs_O2(df, var_list=['PetCO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_VEVO2 = CPET_var_plot_vs_O2(df, var_list=['VEVO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_VEVCO2 = CPET_var_plot_vs_O2(df, var_list=['VEVCO2_I'], VT=[VO2VT1, VO2VT2])
-                plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2])
+                plot_VCO2vsVO2 = CPET_var_plot_vs_O2(df, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+                plot_PetO2 = CPET_var_plot_vs_O2(df, var_list=['PetO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+                plot_PetCO2 = CPET_var_plot_vs_O2(df, var_list=['PetCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+                plot_VEVO2 = CPET_var_plot_vs_O2(df, var_list=['VEVO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+                plot_VEVCO2 = CPET_var_plot_vs_O2(df, var_list=['VEVCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+                plot_oxynet = CPET_var_plot(df_oxynet, var_list=['p_md', 'p_hv', 'p_sv'], VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
 
                 fake = Faker()
                 fake_address = fake.address()

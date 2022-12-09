@@ -13,3 +13,7 @@ werkzeug
 pyoxynet
 sphinx-rtd-theme
 scipy
+flask
+matplotlib
+plotly
+faker
