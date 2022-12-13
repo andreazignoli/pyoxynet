@@ -1,9 +1,6 @@
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
-import os
 from pandas import read_csv
-from scipy import interpolate
 
 class Test:
 
@@ -1114,47 +1111,6 @@ class Test:
         if self.gender == "F":
             print("The name of the participant is: " + self.name + '.\n'    "She is " + str(
                 self.age) + ' years old.\nWeight: ' + str(self.weight) + ' kg\nHeight: ' + str(self.height) + ' cm')
-
-    def plot_data(self, saving_flag):
-        fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(14, 6))
-        # VO2
-        ax1.set_title('VO2, VCO2')
-        ax1.plot(self.time,
-                 self.VO2, 'b', label='VO2')
-        ax1.plot(self.time,
-                 self.VCO2, 'r', label='VCO2')
-        # ax2.scatter(df.time_s.values[2:], df.VCO2.values[2:], facecolors='none', edgecolors='b')
-        ax2.set_title('HR')
-        ax2.plot(self.time,
-                 self.HR, 'k', label='HR')
-        ax3.set_title('VO2/VCO2')
-        ax3.scatter(self.VO2,
-                    self.VCO2, marker='.', s=1,
-                    edgecolors='k')
-        ax4.set_title('VE, RF')
-        ax4.plot(self.time,
-                 self.VE, 'g', label='VE')
-        ax4.plot(self.time,
-                 self.Rf, 'b', label='RF')
-        ax5.set_title('PetO2, PetCO2')
-        ax5.plot(self.time,
-                 self.PetO2, 'b', label='PetO2')
-        ax5.plot(self.time,
-                 self.PetCO2, 'r',
-                 label='PetCO2')
-        ax6.set_title('Load')
-        ax6.plot(self.time,
-                 self.load, 'k',
-                 label='load')
-        plt.suptitle(self.filename)
-
-        # plt.show()
-
-        if saving_flag:
-            plt.savefig('out_fig/' + self.filename + '_test' + '.png')
-            plt.close()
-
-        plt.close()
 
     def create_data_frame(self):
 
