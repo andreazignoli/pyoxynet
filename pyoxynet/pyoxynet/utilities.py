@@ -829,10 +829,9 @@ def generate_CPET(generator,
         VT1 = 0
         VT2 = 0
         # check if difference in threshold is < 10% of the entire duration
-        while (VT2 - VT1)/duration < 0.1 or (duration - VT2) < 120 or (VT2 - VT1) > 240 or (duration - VT2) > 240 or \
-                (VT2 - VT1)/duration < 0.2:
-            VT1 = int(random.randrange(30, 60) * duration * 0.01)
-            VT2 = int(random.randrange(70, 90) * duration * 0.01)
+        while (duration - VT2) < 60 or (VT2 - VT1) > 240 or (VT2 - VT1) < 60 or (duration - VT2) > 240 or (VT2 - VT1)/duration < 0.2:
+            VT1 = int(random.randrange(25, 65) * duration * 0.01)
+            VT2 = int(random.randrange(70, 96) * duration * 0.01)
 
     VO2_peak = int(db_df_sample.VO2peak)
     VCO2_peak = int(db_df_sample.VCO2peak)
