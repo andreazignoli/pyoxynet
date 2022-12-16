@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 import json
 import random
 
-for i_ in np.arange(200):
+generator = load_tf_generator()
+
+for i_ in np.arange(100):
 
     print('--------------------')
     print('--------------------')
@@ -15,14 +17,17 @@ for i_ in np.arange(200):
     print('--------------------')
     print('--------------------')
 
-    df_real, data_dict_real = utilities.draw_real_test()
-    file_id = 'real_#' + str(i_).zfill(3)
-    data_dict_real['id'] = file_id
-    # df_real.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
-    json_object = json.dumps([data_dict_real])
+    # df_real, data_dict_real = utilities.draw_real_test()
+    df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
+    file_id = 'fake_#' + str(i_).zfill(3)
+    data_dict_fake['id'] = file_id
+    df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
+    json_object = json.dumps([data_dict_fake])
     # Writing to sample.json
     with open('/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/' + file_id + '.json', "w") as outfile:
         outfile.write(json_object)
+
+here=0
 
 # my_model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
 # generator = load_tf_generator()
