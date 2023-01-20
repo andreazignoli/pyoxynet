@@ -17,3 +17,4 @@ flask
 matplotlib
 plotly
 faker
+chardet

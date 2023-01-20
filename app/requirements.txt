@@ -2,3 +2,4 @@ flask
 pyoxynet
 plotly
 faker
+chardet
