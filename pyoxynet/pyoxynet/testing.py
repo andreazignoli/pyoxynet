@@ -136,25 +136,9 @@ class Test:
             pass
 
     def load_file(self):
-        import utilities
-        from utilities import get_sec
-        import chardet
-        import gender_guesser.detector as gender
-        # try:
-        #     with open(self.filename + self.data_extension, 'rb') as f:
-        #         result = chardet.detect(f.read())  # or readline if the file is large
-        #     df = read_csv(self.filename + self.data_extension, encoding=result['encoding'], header=1)
-        # except:
-        #     try:
-        #         df = read_csv(self.filename + self.data_extension)
-        #     except:
-        #         f = open(self.filename + self.data_extension, encoding="utf8", errors="ignore")
-        #         df = read_csv(f, header=1)
+        from . import utilities
 
         df = self.df
-
-        # load additional data from unisbz
-        DF_add = pd.read_csv('additional_data/participant_characteristics.csv')
 
         if self.metabolimeter == 'vintus':
 
@@ -498,19 +482,7 @@ class Test:
             # print('Height')
             self.height = float(0)
 
-            try:
-                # print('Reading age')
-                self.age = DF_add[DF_add.Id == int(self.filename.split('/')[1])].Age.values[0]
-                # print('Gender')
-                self.gender = DF_add[DF_add.Id == int(self.filename.split('/')[1])].Sex.values[0].capitalize()
-                # print('Weight')
-                self.weight = DF_add[DF_add.Id == int(self.filename.split('/')[1])].Weight.values[0]
-                # print('Height')
-                self.height = DF_add[DF_add.Id == int(self.filename.split('/')[1])].Height.values[0]/100
-            except:
-                pass
-
-            # print('Reading data')
+            # print('Reading data')
             n_rows = len(df.index)
             self.time = np.zeros((n_rows - 2,), dtype=np.float32)
             self.VO2 = np.zeros((n_rows - 2,), dtype=np.float32)
@@ -553,7 +525,10 @@ class Test:
             # print('Reading age')
             self.age = float(df.values[3, 1])
             # print('Gender')
-            self.gender = df.values[2, 1][0]
+            try:
+                self.gender = df.values[2, 1][0]
+            except:
+                self.gender = 'M' # default to male
             # print('Weight')
             self.weight = float(df.values[5, 1])
             # print('Height')
