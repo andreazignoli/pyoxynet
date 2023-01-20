@@ -6,6 +6,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import json
 import random
+import os
+
+test_file = '/Users/andreazignoli/Downloads/Oxynet sample/03.csv'
+filename, file_extension = os.path.splitext(test_file)
+
+t = Test(filename)
+t.set_data_extension(file_extension)
+t.infer_metabolimeter()
+t.load_file()
+t.clear_file_name()
+t.create_data_frame()
+
+t.generate_csv()
 
 generator = load_tf_generator()
 
