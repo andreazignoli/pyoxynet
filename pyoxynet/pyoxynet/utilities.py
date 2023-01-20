@@ -13,6 +13,29 @@ def PrintHello(hello='hello'):
     
     return
 
+def get_sec(time_str):
+    """This function converts strings to time.
+
+    Args:
+       time_str (str):  The time str.
+
+    Returns:
+       total seconds (int)
+
+    """
+
+    my_time_str = time_str.replace('.', ':')
+    try:
+        h, m, s = my_time_str.split(':')
+        return int(h) * 3600 + int(m) * 60 + int(s)
+    except:
+        try:
+            h, m, s, ms = my_time_str.split(':')
+            return int(h) * 3600 + int(m) * 60 + int(s)
+        except:
+            m, s = my_time_str.split(':')
+            return int(m) * 60 + int(s)
+
 def normalize(df, min_target=-1, max_target=1):
     """Pandas df normalisation
 
