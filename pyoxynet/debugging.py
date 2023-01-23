@@ -8,21 +8,23 @@ import json
 import random
 import os
 
-test_file = '/Users/andreazignoli/Downloads/Oxynet sample/03.csv'
-filename, file_extension = os.path.splitext(test_file)
-
-t = Test(filename)
-t.set_data_extension(file_extension)
-t.infer_metabolimeter()
-t.load_file()
-t.clear_file_name()
-t.create_data_frame()
-
-t.generate_csv()
+# test_file = '/Users/andreazignoli/Downloads/Oxynet sample/03.csv'
+# filename, file_extension = os.path.splitext(test_file)
+#
+# model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
+#
+# t = Test(filename)
+# t.set_data_extension(file_extension)
+# t.infer_metabolimeter()
+# t.load_file()
+# t.clear_file_name()
+# t.create_data_frame()
+#
+# t.generate_csv()
 
 generator = load_tf_generator()
 
-for i_ in np.arange(100):
+for i_ in np.arange(500):
 
     print('--------------------')
     print('--------------------')
@@ -31,7 +33,7 @@ for i_ in np.arange(100):
     print('--------------------')
 
     # df_real, data_dict_real = utilities.draw_real_test()
-    df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
+    df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None, resting=random.randint(0, 1))
     file_id = 'fake_#' + str(i_).zfill(3)
     data_dict_fake['id'] = file_id
     df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
