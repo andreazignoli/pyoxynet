@@ -758,17 +758,17 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
     p_hF = optimal_filter(t, p_hF, 50)
     p_sF = optimal_filter(t, p_sF, 100)
 
-    if training:
-        p_mF = p_mF + np.random.randn(len(t)) / 18
-        p_hF = p_hF + np.random.randn(len(t)) / 18
-        p_sF = p_sF + np.random.randn(len(t)) / 18
-    else:
-        pass
-
     if normalization:
         p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (0, 1))
         p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (0, 1))
         p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (0, 1))
+    else:
+        pass
+
+    if training:
+        p_mF = p_mF + np.random.randn(len(t)) / 18
+        p_hF = p_hF + np.random.randn(len(t)) / 18
+        p_sF = p_sF + np.random.randn(len(t)) / 18
     else:
         pass
 
