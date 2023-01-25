@@ -7,9 +7,23 @@ import matplotlib.pyplot as plt
 import json
 import random
 import os
+from pyoxynet import testing
+from pyoxynet import utilities
 
 # test_file = '/Users/andreazignoli/Downloads/Oxynet sample/03.csv'
 # filename, file_extension = os.path.splitext(test_file)
+
+test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/Caligione.xlsx'
+filename, file_extension = os.path.splitext(test_file)
+t = testing.Test(filename)
+t.set_data_extension(file_extension)
+t.infer_metabolimeter()
+t.load_file()
+t.create_data_frame()
+
+df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
+
+here=0
 #
 # model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
 #
