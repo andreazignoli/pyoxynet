@@ -33,6 +33,9 @@ class Test:
                 df = read_csv(self.filename + self.data_extension, sep="\t", header=None, skiprows=3)
                 print('Just reading a txt file')
                 self.metabolimeter = 'vyiare'
+            if self.data_extension == '.xlsx' or self.data_extension == '.xls':
+                print('Attempting to read an Excel file')
+                df = pd.read_excel(self.filename + self.data_extension)
         except:
             f = open(self.filename + self.data_extension, encoding="utf8", errors="ignore")
             df = read_csv(f, header=0)
