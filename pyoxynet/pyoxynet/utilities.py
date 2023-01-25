@@ -693,6 +693,12 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
 
+    out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
+    out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
+
+    out_dict['VT1']['VE'] = df.iloc[VT1_index]['VE_I']
+    out_dict['VT2']['VE'] = df.iloc[VT2_index]['VE_I']
+
     out_dict['VT1']['VO2'] = df.iloc[VT1_index]['VO2_20s']
     out_dict['VT2']['VO2'] = df.iloc[VT2_index]['VO2_20s']
 
