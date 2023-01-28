@@ -62,7 +62,7 @@
 
 *Pyoxynet* is a collection of algorithms developed in the context of the *Oxynet* project. All the algorithms are constituted by deep neural networks, i.e. models conceived to process cardiopulmonary exercise test data (CPET). 
 
-All the models are [Keras](https://keras.io/) models trained and tested with [Tensorflow](https://www.tensorflow.org/), but they are included in *Pyoxynet* only in their [TFLite](https://www.tensorflow.org/lite) inference version. TFLite has been intentionally adopted to keep the package light and fast. 
+All the models are [Keras](https://keras.io/) models trained and tested with [Tensorflow](https://www.tensorflow.org/), and they are included in *Pyoxynet* only in their [TFLite](https://www.tensorflow.org/lite) inference version in versions <11.6. TFLite has been intentionally adopted to keep the package light and fast. However, after version 11.6 the [Tensorflow](https://www.tensorflow.org/) models are directly used.
 
 To date, mainly two type of models are implemented: 
 
@@ -76,6 +76,7 @@ You can read more about the rationale and the technology behind the *Oxynet* pro
 * [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2019.1587523?journalCode=tejs20) implementing an LSTM neural networks to the estimation of the intensity domain during incremental exercise (classifier)
 * [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2020.1866081?journalCode=tejs20) implementing a crowd sourcing and CNN inference to the problem of determining the intensity domain during incremental exercise (classifier)
 * [Research](https://www.overleaf.com/read/fcmwscvyhtfq) generating synthetic CPET data with conditional GANs
+* [Research](https://www.mdpi.com/1424-8220/23/2/826) from regression to generation to explanation
 * [Blog article](https://www.linkedin.com/pulse/oxynet-collective-intelligence-approach-test-andrea-zignoli/) about the Oxynet project
 * [Blog article](https://andreazignoli.github.io/blog-post-5/) about the problem of adopting AI models in the interpretation of CPET data
 
@@ -108,7 +109,7 @@ Packages that require addition extra url cannot be installed via *setuptools*, w
 pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
 ```
 
-Currently, The TFLite installation process is completed with a line command inside Python, *which is not the best solution* (I know...please get in touch if you know how to work around this). 
+Currently, The TFLite installation process is completed with a line command inside Python, *which is not the best solution* (I know...please get in touch if you know how to work around this). However, this is not a problem anymore after version 11.6 (TFLite is no longer adopted).
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
