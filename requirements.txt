@@ -18,3 +18,5 @@ matplotlib
 plotly
 faker
 chardet
+openpyxl
+xlrd
