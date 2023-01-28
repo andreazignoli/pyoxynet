@@ -3,3 +3,5 @@ pyoxynet
 plotly
 faker
 chardet
+openpyxl
+xlrd
