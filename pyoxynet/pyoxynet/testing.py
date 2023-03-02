@@ -1,10 +1,6 @@
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
-import os
-import utilities
 from pandas import read_csv
-from scipy import interpolate
 
 class Test:
 
@@ -37,6 +33,9 @@ class Test:
                 df = read_csv(self.filename + self.data_extension, sep="\t", header=None, skiprows=3)
                 print('Just reading a txt file')
                 self.metabolimeter = 'vyiare'
+            if self.data_extension == '.xlsx' or self.data_extension == '.xls':
+                print('Attempting to read an Excel file')
+                df = pd.read_excel(self.filename + self.data_extension)
         except:
             f = open(self.filename + self.data_extension, encoding="utf8", errors="ignore")
             df = read_csv(f, header=0)
@@ -140,25 +139,9 @@ class Test:
             pass
 
     def load_file(self):
-        import utilities
-        from utilities import get_sec
-        import chardet
-        import gender_guesser.detector as gender
-        # try:
-        #     with open(self.filename + self.data_extension, 'rb') as f:
-        #         result = chardet.detect(f.read())  # or readline if the file is large
-        #     df = read_csv(self.filename + self.data_extension, encoding=result['encoding'], header=1)
-        # except:
-        #     try:
-        #         df = read_csv(self.filename + self.data_extension)
-        #     except:
-        #         f = open(self.filename + self.data_extension, encoding="utf8", errors="ignore")
-        #         df = read_csv(f, header=1)
+        from . import utilities
 
         df = self.df
-
-        # load additional data from unisbz
-        DF_add = pd.read_csv('additional_data/participant_characteristics.csv')
 
         if self.metabolimeter == 'vintus':
 
@@ -502,19 +485,7 @@ class Test:
             # print('Height')
             self.height = float(0)
 
-            try:
-                # print('Reading age')
-                self.age = DF_add[DF_add.Id == int(self.filename.split('/')[1])].Age.values[0]
-                # print('Gender')
-                self.gender = DF_add[DF_add.Id == int(self.filename.split('/')[1])].Sex.values[0].capitalize()
-                # print('Weight')
-                self.weight = DF_add[DF_add.Id == int(self.filename.split('/')[1])].Weight.values[0]
-                # print('Height')
-                self.height = DF_add[DF_add.Id == int(self.filename.split('/')[1])].Height.values[0]/100
-            except:
-                pass
-
-            # print('Reading data')
+            # print('Reading data')
             n_rows = len(df.index)
             self.time = np.zeros((n_rows - 2,), dtype=np.float32)
             self.VO2 = np.zeros((n_rows - 2,), dtype=np.float32)
@@ -557,7 +528,10 @@ class Test:
             # print('Reading age')
             self.age = float(df.values[3, 1])
             # print('Gender')
-            self.gender = df.values[2, 1][0]
+            try:
+                self.gender = df.values[2, 1][0]
+            except:
+                self.gender = 'M' # default to male
             # print('Weight')
             self.weight = float(df.values[5, 1])
             # print('Height')
@@ -1115,47 +1089,6 @@ class Test:
         if self.gender == "F":
             print("The name of the participant is: " + self.name + '.\n'    "She is " + str(
                 self.age) + ' years old.\nWeight: ' + str(self.weight) + ' kg\nHeight: ' + str(self.height) + ' cm')
-
-    def plot_data(self, saving_flag):
-        fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(2, 3, figsize=(14, 6))
-        # VO2
-        ax1.set_title('VO2, VCO2')
-        ax1.plot(self.time,
-                 self.VO2, 'b', label='VO2')
-        ax1.plot(self.time,
-                 self.VCO2, 'r', label='VCO2')
-        # ax2.scatter(df.time_s.values[2:], df.VCO2.values[2:], facecolors='none', edgecolors='b')
-        ax2.set_title('HR')
-        ax2.plot(self.time,
-                 self.HR, 'k', label='HR')
-        ax3.set_title('VO2/VCO2')
-        ax3.scatter(self.VO2,
-                    self.VCO2, marker='.', s=1,
-                    edgecolors='k')
-        ax4.set_title('VE, RF')
-        ax4.plot(self.time,
-                 self.VE, 'g', label='VE')
-        ax4.plot(self.time,
-                 self.Rf, 'b', label='RF')
-        ax5.set_title('PetO2, PetCO2')
-        ax5.plot(self.time,
-                 self.PetO2, 'b', label='PetO2')
-        ax5.plot(self.time,
-                 self.PetCO2, 'r',
-                 label='PetCO2')
-        ax6.set_title('Load')
-        ax6.plot(self.time,
-                 self.load, 'k',
-                 label='load')
-        plt.suptitle(self.filename)
-
-        # plt.show()
-
-        if saving_flag:
-            plt.savefig('out_fig/' + self.filename + '_test' + '.png')
-            plt.close()
-
-        plt.close()
 
     def create_data_frame(self):
 

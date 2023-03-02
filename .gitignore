@@ -22,6 +22,8 @@ app/__pycache__
 .idea
 *.pyc
 
+*.h5
+
 docs/_build
 docs/*
 !docs/conf.py
