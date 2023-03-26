@@ -71,6 +71,7 @@ To date, mainly two type of models are implemented:
 
 You can read more about the rationale and the technology behind the *Oxynet* project at the following links: 
 
+* [Research](https://www.sciencedirect.com/science/article/abs/pii/S1746809423002690) paper about the application of the collective intelligence concept to the automatic interpretation of CPET with AI techniques
 * [Review](https://link.springer.com/article/10.1007%2Fs11332-019-00557-x) paper on the AI technologies applied to exercise cardiopulmonary and metabolic data processing
 * [Research](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229466) implementing an LSTM neural networks to the estimation of VO2 during cycling exercise (regressor)
 * [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2019.1587523?journalCode=tejs20) implementing an LSTM neural networks to the estimation of the intensity domain during incremental exercise (classifier)
