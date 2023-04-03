@@ -78,8 +78,9 @@ You can read more about the rationale and the technology behind the *Oxynet* pro
 * [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2020.1866081?journalCode=tejs20) implementing a crowd sourcing and CNN inference to the problem of determining the intensity domain during incremental exercise (classifier)
 * [Research](https://www.overleaf.com/read/fcmwscvyhtfq) generating synthetic CPET data with conditional GANs
 * [Research](https://www.mdpi.com/1424-8220/23/2/826) from regression to generation to explanation
-* [Blog article](https://www.linkedin.com/pulse/oxynet-collective-intelligence-approach-test-andrea-zignoli/) about the Oxynet project
+* [LinkedIn article](https://www.linkedin.com/pulse/oxynet-collective-intelligence-approach-test-andrea-zignoli/) about the Oxynet project
 * [Blog article](https://andreazignoli.github.io/blog-post-5/) about the problem of adopting AI models in the interpretation of CPET data
+* [Medium Story](https://medium.com/@andrea.zignoli/automatic-interpretation-of-cardiopulmonary-exercise-tests-with-deep-learning-2c9b3920ad51) about how to use the Python package with a generic CPET file
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
