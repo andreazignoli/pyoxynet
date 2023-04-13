@@ -1067,22 +1067,23 @@ class Test:
 
         if self.metabolimeter != 'low':
 
-            self.Rf_F = utilities.optimal_filter(self.time, self.Rf, 200)
-            self.PetO2_F = utilities.optimal_filter(self.time, self.PetO2, 200)
-            self.PetCO2_F = utilities.optimal_filter(self.time, self.PetCO2, 200)
+            self.Rf_F = utilities.optimal_filter(self.time, self.Rf, 4)
+            self.PetO2_F = utilities.optimal_filter(self.time, self.PetO2, 4)
+            self.PetCO2_F = utilities.optimal_filter(self.time, self.PetCO2, 4)
 
         if self.metabolimeter == 'low':
             self.Rf_F = np.zeros((n_rows - 2,), dtype=np.float32)
             self.PetO2_F = np.zeros((n_rows - 2,), dtype=np.float32)
             self.PetCO2_F = np.zeros((n_rows - 2,), dtype=np.float32)
 
-        self.VO2_F = utilities.optimal_filter(self.time, self.VO2, 200)
-        self.VCO2_F = utilities.optimal_filter(self.time, self.VCO2, 200)
-        self.HR_F = utilities.optimal_filter(self.time, self.HR, 200)
-        self.VE_F = utilities.optimal_filter(self.time, self.VE, 200)
+        self.VO2_F = utilities.optimal_filter(self.time, self.VO2, 4)
+        self.VCO2_F = utilities.optimal_filter(self.time, self.VCO2, 4)
+        self.HR_F = utilities.optimal_filter(self.time, self.HR, 4)
+        self.VE_F = utilities.optimal_filter(self.time, self.VE, 4)
+        self.VE_FF = utilities.optimal_filter(self.time, self.VE, 200)
 
         # maximal VE value (cutting after)
-        max_VE_idx = max([(v, i) for i, v in enumerate(self.VE_F)])[1]
+        max_VE_idx = max([(v, i) for i, v in enumerate(self.VE_FF)])[1]
         self.time_F = self.time[:max_VE_idx]
         self.VO2_F = self.VO2_F[:max_VE_idx]
         self.VCO2_F = self.VCO2_F[:max_VE_idx]
