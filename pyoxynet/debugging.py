@@ -13,7 +13,7 @@ from pyoxynet import utilities
 # test_file = '/Users/andreazignoli/Downloads/Oxynet sample/03.csv'
 # filename, file_extension = os.path.splitext(test_file)
 
-test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/Caligione.xlsx'
+test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/test_4_paper/converted/tmp.csv'
 filename, file_extension = os.path.splitext(test_file)
 t = testing.Test(filename)
 t.set_data_extension(file_extension)
