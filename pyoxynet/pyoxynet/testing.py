@@ -135,6 +135,10 @@ class Test:
                 print('Most probably we have an French file')
                 self.metabolimeter = 'mourot_COPD'
 
+            if 'VE/VO2' in df.columns and 'VE/VCO2' in df.columns and 'R' in df.columns:
+                print('Most probably we have an file coming from the Exercise Threshold App')
+                self.metabolimeter = 'exercise_threshold_app'
+
         except:
             pass
 
@@ -1035,6 +1039,22 @@ class Test:
             self.weight = df.weight.mean()
             # print('Height')
             self.height = df.height.mean()
+
+        if self.metabolimeter == 'exercise_threshold_app':
+            self.time = df.t
+            self.VO2 = df.VO2
+            self.VCO2 = df.VCO2
+            self.HR = df.HR
+            self.Rf = df.RF
+            self.VE = df.VE
+            self.PetO2 = df.PetO2
+            self.PetCO2 = df.PetCO2
+            self.age = 45 # default to 45
+            self.gender = 'N' # default to N
+            # print('Weight')
+            self.weight = 70 # default to 70
+            # print('Height')
+            self.height = 170 # default to 170
 
         self.time = np.nan_to_num(self.time)
         self.VO2 = np.nan_to_num(self.VO2)
