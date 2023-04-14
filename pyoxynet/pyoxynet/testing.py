@@ -135,7 +135,7 @@ class Test:
                 print('Most probably we have an French file')
                 self.metabolimeter = 'mourot_COPD'
 
-            if 'VE/VO2' in df.columns and 'VE/VCO2' in df.columns and 'R' in df.columns:
+            if 'RF' in df.columns and 't' in df.columns and 'VE/VO2' in df.columns and 'VE/VCO2' in df.columns and 'R' in df.columns:
                 print('Most probably we have an file coming from the Exercise Threshold App')
                 self.metabolimeter = 'exercise_threshold_app'
 
