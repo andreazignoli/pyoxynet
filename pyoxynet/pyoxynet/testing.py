@@ -1049,12 +1049,16 @@ class Test:
             self.VE = df.VE
             self.PetO2 = df.PetO2
             self.PetCO2 = df.PetCO2
-            self.age = 45 # default to 45
-            self.gender = 'N' # default to N
+            # default to 45
+            self.age = 45
+            # default to N
+            self.gender = 'N'
             # print('Weight')
-            self.weight = 70 # default to 70
+            # default to 70
+            self.weight = 70
             # print('Height')
-            self.height = 170 # default to 170
+            # default to 170
+            self.height = 170
 
         self.time = np.nan_to_num(self.time)
         self.VO2 = np.nan_to_num(self.VO2)
@@ -1065,25 +1069,27 @@ class Test:
         self.PetO2 = np.nan_to_num(self.PetO2)
         self.PetCO2 = np.nan_to_num(self.PetCO2)
 
+        # rolling averages
+        from scipy.ndimage import uniform_filter1d
+
         if self.metabolimeter != 'low':
 
-            self.Rf_F = utilities.optimal_filter(self.time, self.Rf, 4)
-            self.PetO2_F = utilities.optimal_filter(self.time, self.PetO2, 4)
-            self.PetCO2_F = utilities.optimal_filter(self.time, self.PetCO2, 4)
+            self.Rf_F = uniform_filter1d(self.Rf, size=20)
+            self.PetO2_F = uniform_filter1d(self.PetO2, size=20)
+            self.PetCO2_F = uniform_filter1d(self.PetCO2, size=20)
 
         if self.metabolimeter == 'low':
             self.Rf_F = np.zeros((n_rows - 2,), dtype=np.float32)
             self.PetO2_F = np.zeros((n_rows - 2,), dtype=np.float32)
             self.PetCO2_F = np.zeros((n_rows - 2,), dtype=np.float32)
 
-        self.VO2_F = utilities.optimal_filter(self.time, self.VO2, 4)
-        self.VCO2_F = utilities.optimal_filter(self.time, self.VCO2, 4)
-        self.HR_F = utilities.optimal_filter(self.time, self.HR, 4)
-        self.VE_F = utilities.optimal_filter(self.time, self.VE, 4)
-        self.VE_FF = utilities.optimal_filter(self.time, self.VE, 200)
+        self.VO2_F = uniform_filter1d(self.VO2, size=20)
+        self.VCO2_F = uniform_filter1d(self.VCO2, size=20)
+        self.HR_F = uniform_filter1d(self.HR, size=20)
+        self.VE_F = uniform_filter1d(self.VE, size=20)
 
         # maximal VE value (cutting after)
-        max_VE_idx = max([(v, i) for i, v in enumerate(self.VE_FF)])[1]
+        max_VE_idx = max([(v, i) for i, v in enumerate(self.VE_F)])[1]
         self.time_F = self.time[:max_VE_idx]
         self.VO2_F = self.VO2_F[:max_VE_idx]
         self.VCO2_F = self.VCO2_F[:max_VE_idx]
