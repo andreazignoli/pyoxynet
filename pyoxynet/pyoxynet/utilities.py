@@ -1043,7 +1043,7 @@ def generate_CPET(generator,
     n = 0
     while time_cum_sum < (duration-6):
         try:
-            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].mean()
+            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
             # TODO: this 25 is hardcoded, you should have len(df.columns)
             df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 24]),
                                                            columns=tmp.index.to_list())])
