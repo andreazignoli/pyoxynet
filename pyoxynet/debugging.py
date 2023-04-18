@@ -13,17 +13,17 @@ from pyoxynet import utilities
 # test_file = '/Users/andreazignoli/Downloads/Oxynet sample/03.csv'
 # filename, file_extension = os.path.splitext(test_file)
 
-test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/test_4_paper/converted/tmp.csv'
-filename, file_extension = os.path.splitext(test_file)
-t = testing.Test(filename)
-t.set_data_extension(file_extension)
-t.infer_metabolimeter()
-t.load_file()
-t.create_data_frame()
-
-df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
-
-here=0
+# test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/test_4_paper/converted/tmp.csv'
+# filename, file_extension = os.path.splitext(test_file)
+# t = testing.Test(filename)
+# t.set_data_extension(file_extension)
+# t.infer_metabolimeter()
+# t.load_file()
+# t.create_data_frame()
+#
+# df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
+#
+# here=0
 #
 # model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
 #
@@ -38,7 +38,7 @@ here=0
 
 generator = load_tf_generator()
 
-for i_ in np.arange(500):
+for i_ in np.arange(50):
 
     print('--------------------')
     print('--------------------')
