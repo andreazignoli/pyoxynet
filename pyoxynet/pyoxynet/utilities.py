@@ -840,6 +840,7 @@ def generate_CPET(generator,
         bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_resting.csv')
     else:
         bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_ramp.csv')
+
     s = str(bytes_data, 'utf-8')
     data = StringIO(s)
     db_df = pd.read_csv(data)
