@@ -286,7 +286,7 @@ The followings are valuable source of knowledge and inspiration for both the *Py
 [issues-shield]: https://img.shields.io/github/issues/andreazignoli/pyoxynet.svg?style=for-the-badge
 [issues-url]: https://github.com/andreazignoli/pyoxynet/issues
 [license-shield]: https://img.shields.io/github/license/andreazignoli/pyoxynet.svg?style=for-the-badge
-[license-url]: https://github.com/andreazignoli/pyoxynet/blob/master/LICENSE.txt
+[license-url]: https://github.com/andreazignoli/pyoxynet/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://www.linkedin.com/in/andrea-zignoli-8080a438/
 [product-screenshot]: images/screenshot.png
