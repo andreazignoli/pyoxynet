@@ -46,17 +46,43 @@ for i_ in np.arange(50):
     print('--------------------')
     print('--------------------')
 
-    # df_real, data_dict_real = utilities.draw_real_test()
-    df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None, resting=random.randint(0, 1))
+    # GENERATE THE FAKE ONES
+    df_fake, data_dict_fake = generate_CPET(generator,
+                                            noise_factor=None,
+                                            resting=0)
+    df_breath_fake = pd.DataFrame.from_dict(data_dict_fake['data'])
+    df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
+
+    data_dict_fake['oxynet'] = {}
+    data_dict_fake['oxynet']['LT'] = dict_est_fake['VT1']['VO2']
+    data_dict_fake['oxynet']['RCP'] = dict_est_fake['VT2']['VO2']
+
     file_id = 'fake_#' + str(i_).zfill(3)
     data_dict_fake['id'] = file_id
-    df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
-    json_object = json.dumps([data_dict_fake])
+    df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/test_4_paper/csv/fake/' + file_id + '.csv')
+    json_object_fake = json.dumps([data_dict_fake])
     # Writing to sample.json
-    with open('/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/' + file_id + '.json', "w") as outfile:
-        outfile.write(json_object)
+    with open('/Users/andreazignoli/oxynet-interpreter-tf2/test_4_paper/json/fake/' + file_id + '.json', "w") as outfile:
+        outfile.write(json_object_fake)
 
-here=0
+    # # GENERATE THE REAL ONES
+    # df_real, data_dict_real = draw_real_test(resting=False)
+    # df_breath_real = pd.DataFrame.from_dict(data_dict_real['data'])
+    # df_est_real, dict_est_real = test_pyoxynet(df_real)
+    #
+    # data_dict_real['oxynet'] = {}
+    # data_dict_real['oxynet']['LT'] = dict_est_real['VT1']['VO2']
+    # data_dict_real['oxynet']['RCP'] = dict_est_real['VT2']['VO2']
+    #
+    # file_id = 'real_#' + str(i_).zfill(3)
+    # data_dict_real['id'] = file_id
+    # df_real.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/test_4_paper/csv/real/' + file_id + '.csv')
+    # json_object_real = json.dumps([data_dict_real])
+    # # Writing to sample.json
+    # with open('/Users/andreazignoli/oxynet-interpreter-tf2/test_4_paper/json/real/' + file_id + '.json', "w") as outfile:
+    #     outfile.write(json_object_real)
+
+    here=0
 
 # my_model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
 # generator = load_tf_generator()
