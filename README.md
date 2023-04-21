@@ -22,6 +22,7 @@
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
+[![pyoxynet](/advisor/python/pyoxynet/badge.svg)](/advisor/python/pyoxynet)
 
 <!-- PROJECT LOGO -->
 <br />
