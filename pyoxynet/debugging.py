@@ -10,16 +10,16 @@ import os
 from pyoxynet import testing
 from pyoxynet import utilities
 
-# test_file = '/Users/andreazignoli/Downloads/Oxynet sample/03.csv'
-# filename, file_extension = os.path.splitext(test_file)
+# test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/data_test/Oxynet_Test.xlsx'
+#filename, file_extension = os.path.splitext(test_file)
 
-# test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/test_4_paper/converted/tmp.csv'
-# filename, file_extension = os.path.splitext(test_file)
-# t = testing.Test(filename)
-# t.set_data_extension(file_extension)
-# t.infer_metabolimeter()
-# t.load_file()
-# t.create_data_frame()
+test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/data_test/Oxynet_Test.xlsx'
+filename, file_extension = os.path.splitext(test_file)
+t = testing.Test(filename)
+t.set_data_extension(file_extension)
+t.infer_metabolimeter()
+t.load_file()
+t.create_data_frame()
 #
 # df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
 #
@@ -37,6 +37,9 @@ from pyoxynet import utilities
 # t.generate_csv()
 
 generator = load_tf_generator()
+df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
+
+
 
 for i_ in np.arange(50):
 
