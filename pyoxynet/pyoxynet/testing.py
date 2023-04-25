@@ -139,12 +139,16 @@ class Test:
                 print('Most probably we have an file coming from the Exercise Threshold App')
                 self.metabolimeter = 'exercise_threshold_app'
 
+            if " V'O2   " in df.columns and " V'CO2  " in df.columns:
+                print('Most probably we have an file coming from the Uni of Ess')
+                self.metabolimeter = 'uni_of_essex'
+
         except:
             pass
 
     def load_file(self):
-        from . import utilities
 
+        from . import utilities
         df = self.df
 
         if self.metabolimeter == 'vintus':
@@ -927,14 +931,14 @@ class Test:
 
             # print('Reading age')
             self.age = float(30)
-            # print('Gender')
+            # print('Gender')
             self.gender = 'N'
             # print('Weight')
             self.weight = float(50)
             # print('Height')
             self.height = float(180)
 
-            # print('Reading data')
+            # print('Reading data')
             n_rows = len(df.index)
             self.time = np.zeros((n_rows - 2,), dtype=np.float32)
             self.VO2 = np.zeros((n_rows - 2,), dtype=np.float32)
@@ -1059,6 +1063,50 @@ class Test:
             # print('Height')
             # default to 170
             self.height = 170
+
+        if self.metabolimeter == 'uni_of_essex':
+
+            # print('Reading age')
+            self.age = float(30)
+            # print('Gender')
+            self.gender = 'N'
+            # print('Weight')
+            self.weight = float(60)
+            # print('Height')
+            self.height = float(170)
+
+            # print('Reading data')
+            n_rows = len(df.index)
+            self.time = np.zeros((n_rows - 2,), dtype=np.float32)
+            self.VO2 = np.zeros((n_rows - 2,), dtype=np.float32)
+            self.VCO2 = np.zeros((n_rows - 2,), dtype=np.float32)
+            self.HR = np.zeros((n_rows - 2,), dtype=np.float32)
+            self.Rf = np.zeros((n_rows - 2,), dtype=np.float32)
+            self.VE = np.zeros((n_rows - 2,), dtype=np.float32)
+            self.PetO2 = np.zeros((n_rows - 2,), dtype=np.float32)
+            self.PetCO2 = np.zeros((n_rows - 2,), dtype=np.float32)
+            self.load = np.zeros((n_rows - 2,), dtype=np.float32)
+
+            # get the time in seconds
+            # convert time data from "HH:MM:SS" to seconds
+            for i in df.index[2:n_rows]:
+                try:
+                    self.time[i - 2] = utilities.get_sec(df[df.columns[0]].values[i])
+                    self.VO2[i - 2] = float(df[df.columns[1]].values[i])
+                    self.VCO2[i - 2] = float(df[df.columns[2]].values[i])
+                    self.VE[i - 2] = float(df[df.columns[3]].values[i])
+                    self.PetO2[i - 2] = float(df[df.columns[4]].values[i]) * 7.50062
+                    self.PetCO2[i - 2] = float(df[df.columns[5]].values[i]) * 7.50062
+                    self.Rf[i - 2] = float(df[df.columns[9]].values[i])
+                except:
+                    self.time[i - 2] = np.nan
+                    self.VO2[i - 2] = np.nan
+                    self.VCO2[i - 2] = np.nan
+                    self.VE[i - 2] = np.nan
+                    self.HR[i - 2] = np.nan
+                    self.PetO2[i - 2] = np.nan
+                    self.PetCO2[i - 2] = np.nan
+                    self.Rf[i - 2] = np.nan
 
         self.time = np.nan_to_num(self.time)
         self.VO2 = np.nan_to_num(self.VO2)
