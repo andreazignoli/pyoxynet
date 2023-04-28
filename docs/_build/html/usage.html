@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage &mdash; pyoxynet 0.0.8.1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to pyoxynet’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> pyoxynet
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.PrintHello"><code class="docutils literal notranslate"><span class="pre">PrintHello()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#every-day-functions">Every-day functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.optimal_filter"><code class="docutils literal notranslate"><span class="pre">optimal_filter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.normalize"><code class="docutils literal notranslate"><span class="pre">normalize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.random_walk"><code class="docutils literal notranslate"><span class="pre">random_walk()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cpet-data-functions">CPET data functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.load_csv_data"><code class="docutils literal notranslate"><span class="pre">load_csv_data()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#tflite-model">TFLite model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.test_tfl_model"><code class="docutils literal notranslate"><span class="pre">test_tfl_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.load_tf_model"><code class="docutils literal notranslate"><span class="pre">load_tf_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.load_tf_generator"><code class="docutils literal notranslate"><span class="pre">load_tf_generator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.pip_install_tflite"><code class="docutils literal notranslate"><span class="pre">pip_install_tflite()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#production-functions">Production functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.test_pyoxynet"><code class="docutils literal notranslate"><span class="pre">test_pyoxynet()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.create_probabilities"><code class="docutils literal notranslate"><span class="pre">create_probabilities()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities.generate_CPET"><code class="docutils literal notranslate"><span class="pre">generate_CPET()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyoxynet</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h1>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
+<p>To use <code class="docutils literal notranslate"><span class="pre">pyoxynet</span></code>, first install it using pip:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(.venv)</span> <span class="gp">$ </span>pip install pyoxynet
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Packages that require addition extra url cannot be installed via <em>setuptools</em>, which letely allows and suggests to use <code class="docutils literal notranslate"><span class="pre">pip</span></code> when possible. Therefore, as a work-around, TFLite is automatically installed with the following command the first time <code class="docutils literal notranslate"><span class="pre">pyoxynet</span></code> is imported.</p>
+</div>
+<p>The executed commend is:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp gp-VirtualEnv">(.venv)</span> <span class="gp">$ </span>pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
+</pre></div>
+</div>
+<p>Currently, The TFLite installation process is completed with a line command inside Python, which i know is not the best solution.</p>
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this heading"></a></h2>
+<p>To test the presence of the package you can use the <code class="docutils literal notranslate"><span class="pre">utilities.PrintHello()</span></code> function:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.PrintHello">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">PrintHello</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utilities.PrintHello" title="Permalink to this definition"></a></dt>
+<dd><p>This function prints to screen.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>name (str):  The name to use.</p>
+</dd>
+<dt>Returns:</dt><dd><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="every-day-functions">
+<h2>Every-day functions<a class="headerlink" href="#every-day-functions" title="Permalink to this heading"></a></h2>
+<p>The optimal filter adopted for the project <code class="docutils literal notranslate"><span class="pre">utilities.optimal_filter(t,</span> <span class="pre">y,</span> <span class="pre">my_lambda)</span></code> function:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.optimal_filter">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">optimal_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">my_lambda</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utilities.optimal_filter" title="Permalink to this definition"></a></dt>
+<dd><p>A bad ass optimisation filter</p>
+<dl class="simple">
+<dt>Parameters: </dt><dd><dl class="simple">
+<dt>t<span class="classifier">array</span></dt><dd><p>Independent coord array</p>
+</dd>
+<dt>y<span class="classifier">array</span></dt><dd><p>Dependent coord array</p>
+</dd>
+<dt>my_lambda<span class="classifier">float</span></dt><dd><p>Smoothing factor</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>x<span class="classifier">array</span></dt><dd><p>Filtered variable</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.normalize">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utilities.normalize" title="Permalink to this definition"></a></dt>
+<dd><p>Pandas df normalisation</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>df (pd df) : input df</p>
+</dd>
+<dt>Returns:</dt><dd><p>result (pd df) : output df</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.random_walk">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">random_walk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utilities.random_walk" title="Permalink to this definition"></a></dt>
+<dd><p>Random walk generator</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>length (int): Length of the output list
+scale_factor (float): Scale factor to be applied to the whole output
+variation (float): Local variation of the main signal with the random walk</p>
+</dd>
+<dt>Returns:</dt><dd><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="cpet-data-functions">
+<h2>CPET data functions<a class="headerlink" href="#cpet-data-functions" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.load_csv_data">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">load_csv_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">csv_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data_test.csv'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utilities.load_csv_data" title="Permalink to this definition"></a></dt>
+<dd><p>Loads data from csv file (returns test data if no arguments)</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>n_inputs (int) :  Number of input variables.
+past_points (int) :  Number of past inputs in the time-series.</p>
+</dd>
+<dt>Returns:</dt><dd><p>df (pandas df) : Model output example</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tflite-model">
+<h2>TFLite model<a class="headerlink" href="#tflite-model" title="Permalink to this heading"></a></h2>
+<p>To test if the TFLite model has been correctly initiated you can use <code class="docutils literal notranslate"><span class="pre">utilities.test_tfl_model(interpreter)</span></code> function:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.test_tfl_model">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">test_tfl_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utilities.test_tfl_model" title="Permalink to this definition"></a></dt>
+<dd><p>Test if the model is running correclty</p>
+<dl class="simple">
+<dt>Parameters: </dt><dd><p>interpreter (loaded tf.lite.Interpreter) : Loaded interpreter TFLite model</p>
+</dd>
+<dt>Returns:</dt><dd><p>x (array) : Model output example</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.load_tf_model">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">load_tf_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">past_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utilities.load_tf_model" title="Permalink to this definition"></a></dt>
+<dd><p>This function loads the saved tflite models.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>n_inputs (int):  Number of input variables.
+past_points (int):  Number of past inputs in the time-series.</p>
+</dd>
+<dt>Returns:</dt><dd><p>interpreter (tflite interpreter) : handle on the TFLite interpreter</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.load_tf_generator">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">load_tf_generator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utilities.load_tf_generator" title="Permalink to this definition"></a></dt>
+<dd><p>This function loads the saved tflite generator model.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>None</p>
+</dd>
+<dt>Returns:</dt><dd><p>generator (tflite generator) : handle on the TFLite generator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.pip_install_tflite">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">pip_install_tflite</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#utilities.pip_install_tflite" title="Permalink to this definition"></a></dt>
+<dd><p>Makes sure TFLite is installed by executing a pip install command from the command line (sub-optimal solution)</p>
+<dl class="simple">
+<dt>Parameters: </dt><dd><p>none</p>
+</dd>
+<dt>Returns:</dt><dd><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="production-functions">
+<h2>Production functions<a class="headerlink" href="#production-functions" title="Permalink to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.test_pyoxynet">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">test_pyoxynet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_df</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">past_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">40</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utilities.test_pyoxynet" title="Permalink to this definition"></a></dt>
+<dd><p>Runs the pyoxynet inference</p>
+<dl class="simple">
+<dt>Parameters: </dt><dd><p>n_inputs (int) : Number of inputs (deafult to Oxynet configuration)
+past_points (int) : Number of past points in the time series (deafult to Oxynet configuration)</p>
+</dd>
+<dt>Returns:</dt><dd><p>x (array) : Model output example</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.create_probabilities">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">create_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">VT1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">320</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">VT2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">460</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utilities.create_probabilities" title="Permalink to this definition"></a></dt>
+<dd><p>Creates the probabilities of being in different intensity domains</p>
+<p>These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>duration (int): Length of the test file
+VT1 (int): First ventilatory threshold, in time samples from the beginning of the test
+VT2 (int): Second ventilatory threshold, in time samples from the beginning of the test</p>
+</dd>
+<dt>Returns:</dt><dd><p>p_mF (np array): Probability of being in the moderate intensity zone (-1:1)
+p_hF (np array): Probability of being in the heavy intensity zone (-1:1)
+p_sF (np array): Probability of being in the severe intensity zone (-1:1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utilities.generate_CPET">
+<span class="sig-prename descclassname"><span class="pre">utilities.</span></span><span class="sig-name descname"><span class="pre">generate_CPET</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitness_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#utilities.generate_CPET" title="Permalink to this definition"></a></dt>
+<dd><p>Actually generates the CPET file</p>
+<dl class="simple">
+<dt>Parameters:</dt><dd><p>length (int): Length of the output list
+fitness_group (int): Fitness level: low (1), medium (2), high (3). Default to random.
+noise_factor (float): Noise factor for white noise. Default to random.</p>
+</dd>
+<dt>Returns:</dt><dd><p>df (pd df): Pandas dataframe with CPET data included and ready to be processed by the model (if needed)
+data (dict): Data relative to the generated CPET</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to pyoxynet’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Andrea Zignoli.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
