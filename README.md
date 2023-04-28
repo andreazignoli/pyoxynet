@@ -69,22 +69,6 @@ To date, mainly two type of models are implemented:
 * The *inference* model: it takes some CPET data as input and it provides an estimation of the exercise intensity domains 
 * The *generator* model: it generates new synthetic CPET data
 
-You can read more about the rationale and the technology behind the *Oxynet* project at the following links: 
-
-* [Research](https://www.sciencedirect.com/science/article/abs/pii/S1746809423002690) paper about the application of the collective intelligence concept to the automatic interpretation of CPET with AI techniques
-* [Review](https://link.springer.com/article/10.1007%2Fs11332-019-00557-x) paper on the AI technologies applied to exercise cardiopulmonary and metabolic data processing
-* [Research](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229466) implementing an LSTM neural networks to the estimation of VO2 during cycling exercise (regressor)
-* [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2019.1587523?journalCode=tejs20) implementing an LSTM neural networks to the estimation of the intensity domain during incremental exercise (classifier)
-* [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2020.1866081?journalCode=tejs20) implementing a crowd sourcing and CNN inference to the problem of determining the intensity domain during incremental exercise (classifier)
-* [Research](https://www.overleaf.com/read/fcmwscvyhtfq) generating synthetic CPET data with conditional GANs
-* [Research](https://www.mdpi.com/1424-8220/23/2/826) from regression to generation to explanation
-* [LinkedIn article](https://www.linkedin.com/pulse/oxynet-collective-intelligence-approach-test-andrea-zignoli/) about the Oxynet project
-* [Blog article](https://andreazignoli.github.io/blog-post-5/) about the problem of adopting AI models in the interpretation of CPET data
-* [Medium Story](https://medium.com/@andrea.zignoli/automatic-interpretation-of-cardiopulmonary-exercise-tests-with-deep-learning-2c9b3920ad51) about how to use the Python package to make an inference on a generic CPET file
-* [Medium Story](https://medium.com/@andrea.zignoli/automatic-generation-of-cardiopulmonary-exercise-tests-with-deep-learning-d1f2cab4e765) about how to use the Python package with a generic CPET file about how to use the Python package to generate a fake-but-realistic CPET file
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 <!-- GETTING STARTED -->
 ## Getting Started
 
@@ -259,6 +243,25 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 Andrea Zignoli - [@andrea_zignoli](https://twitter.com/andrea_zignoli) - andrea.zignoli@unitn.it
 
 Repository project link: [Pyoxynet](https://github.com/andreazignoli/pyoxynet)
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+<!-- ACKNOWLEDGMENTS -->
+## Additional reading
+
+You can read more about the rationale and the technology behind the *Oxynet* project at the following links: 
+
+* [Research](https://www.sciencedirect.com/science/article/abs/pii/S1746809423002690) paper about the application of the collective intelligence concept to the automatic interpretation of CPET with AI techniques
+* [Review](https://link.springer.com/article/10.1007%2Fs11332-019-00557-x) paper on the AI technologies applied to exercise cardiopulmonary and metabolic data processing
+* [Research](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0229466) implementing an LSTM neural networks to the estimation of VO2 during cycling exercise (regressor)
+* [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2019.1587523?journalCode=tejs20) implementing an LSTM neural networks to the estimation of the intensity domain during incremental exercise (classifier)
+* [Research](https://www.tandfonline.com/doi/abs/10.1080/17461391.2020.1866081?journalCode=tejs20) implementing a crowd sourcing and CNN inference to the problem of determining the intensity domain during incremental exercise (classifier)
+* [Research](https://www.overleaf.com/read/fcmwscvyhtfq) generating synthetic CPET data with conditional GANs
+* [Research](https://www.mdpi.com/1424-8220/23/2/826) from regression to generation to explanation
+* [LinkedIn article](https://www.linkedin.com/pulse/oxynet-collective-intelligence-approach-test-andrea-zignoli/) about the Oxynet project
+* [Blog article](https://andreazignoli.github.io/blog-post-5/) about the problem of adopting AI models in the interpretation of CPET data
+* [Medium Story](https://medium.com/@andrea.zignoli/automatic-interpretation-of-cardiopulmonary-exercise-tests-with-deep-learning-2c9b3920ad51) about how to use the Python package to make an inference on a generic CPET file
+* [Medium Story](https://medium.com/@andrea.zignoli/automatic-generation-of-cardiopulmonary-exercise-tests-with-deep-learning-d1f2cab4e765) about how to use the Python package with a generic CPET file about how to use the Python package to generate a fake-but-realistic CPET file
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
