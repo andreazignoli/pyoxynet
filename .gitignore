@@ -4,4 +4,6 @@ _site
 .jekyll-metadata
 vendor
 venv
-
+pyoxynet
+docs
+app

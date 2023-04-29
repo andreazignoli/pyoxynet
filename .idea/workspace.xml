@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="045d503d-2acc-47da-a84b-84e2534b1ec9" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="23PDIXVZZfUdi8p58ted1GORedm" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="DefaultHtmlFileTemplate" value="HTML File" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/pyoxynet" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.debugging">
+    <configuration name="__init__" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pyoxynet" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pyoxynet/pyoxynet" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pyoxynet/pyoxynet/__init__.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pyoxynet" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/app.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="conf" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pyoxynet" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/docs" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/docs/conf.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="debugging" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pyoxynet" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pyoxynet/debugging.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="testing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pyoxynet" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pyoxynet/pyoxynet/test" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pyoxynet/pyoxynet/test/testing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.debugging" />
+        <item itemvalue="Python.app" />
+        <item itemvalue="Python.testing" />
+        <item itemvalue="Python.conf" />
+        <item itemvalue="Python.__init__" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="045d503d-2acc-47da-a84b-84e2534b1ec9" name="Default Changelist" comment="" />
+      <created>1641626749035</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1641626749035</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1417" height="192" key="GridCell.Tab.0.bottom" timestamp="1682429564210">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state width="1419" height="219" key="GridCell.Tab.0.bottom/0.25.1440.794@0.25.1440.794" timestamp="1674228029478" />
+    <state width="1419" height="155" key="GridCell.Tab.0.bottom/0.25.1440.797@0.25.1440.797" timestamp="1674545181165" />
+    <state width="1419" height="392" key="GridCell.Tab.0.bottom/0.25.1440.799@0.25.1440.799" timestamp="1674472561433" />
+    <state width="1419" height="255" key="GridCell.Tab.0.bottom/0.25.1440.801@0.25.1440.801" timestamp="1674475719030" />
+    <state width="1419" height="195" key="GridCell.Tab.0.bottom/0.25.1440.804@0.25.1440.804" timestamp="1674630293447" />
+    <state width="1417" height="192" key="GridCell.Tab.0.bottom/0.25.1440.805@0.25.1440.805" timestamp="1682429564210" />
+    <state width="1417" height="204" key="GridCell.Tab.0.bottom/0.25.1440.811@0.25.1440.811" timestamp="1681908655148" />
+    <state width="1417" height="229" key="GridCell.Tab.0.bottom/0.25.1440.813@0.25.1440.813" timestamp="1679903661238" />
+    <state width="1417" height="192" key="GridCell.Tab.0.center" timestamp="1682429564209">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state width="1419" height="219" key="GridCell.Tab.0.center/0.25.1440.794@0.25.1440.794" timestamp="1674228029477" />
+    <state width="1419" height="155" key="GridCell.Tab.0.center/0.25.1440.797@0.25.1440.797" timestamp="1674545181164" />
+    <state width="1419" height="392" key="GridCell.Tab.0.center/0.25.1440.799@0.25.1440.799" timestamp="1674472561431" />
+    <state width="1419" height="255" key="GridCell.Tab.0.center/0.25.1440.801@0.25.1440.801" timestamp="1674475719029" />
+    <state width="1419" height="195" key="GridCell.Tab.0.center/0.25.1440.804@0.25.1440.804" timestamp="1674630293447" />
+    <state width="1417" height="192" key="GridCell.Tab.0.center/0.25.1440.805@0.25.1440.805" timestamp="1682429564209" />
+    <state width="1417" height="204" key="GridCell.Tab.0.center/0.25.1440.811@0.25.1440.811" timestamp="1681908655148" />
+    <state width="1417" height="229" key="GridCell.Tab.0.center/0.25.1440.813@0.25.1440.813" timestamp="1679903661237" />
+    <state width="1417" height="192" key="GridCell.Tab.0.left" timestamp="1682429564209">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state width="1419" height="219" key="GridCell.Tab.0.left/0.25.1440.794@0.25.1440.794" timestamp="1674228029477" />
+    <state width="1419" height="155" key="GridCell.Tab.0.left/0.25.1440.797@0.25.1440.797" timestamp="1674545181164" />
+    <state width="1419" height="392" key="GridCell.Tab.0.left/0.25.1440.799@0.25.1440.799" timestamp="1674472561431" />
+    <state width="1419" height="255" key="GridCell.Tab.0.left/0.25.1440.801@0.25.1440.801" timestamp="1674475719023" />
+    <state width="1419" height="195" key="GridCell.Tab.0.left/0.25.1440.804@0.25.1440.804" timestamp="1674630293447" />
+    <state width="1417" height="192" key="GridCell.Tab.0.left/0.25.1440.805@0.25.1440.805" timestamp="1682429564209" />
+    <state width="1417" height="204" key="GridCell.Tab.0.left/0.25.1440.811@0.25.1440.811" timestamp="1681908655147" />
+    <state width="1417" height="229" key="GridCell.Tab.0.left/0.25.1440.813@0.25.1440.813" timestamp="1679903661236" />
+    <state width="1417" height="192" key="GridCell.Tab.0.right" timestamp="1682429564209">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state width="1419" height="219" key="GridCell.Tab.0.right/0.25.1440.794@0.25.1440.794" timestamp="1674228029477" />
+    <state width="1419" height="155" key="GridCell.Tab.0.right/0.25.1440.797@0.25.1440.797" timestamp="1674545181164" />
+    <state width="1419" height="392" key="GridCell.Tab.0.right/0.25.1440.799@0.25.1440.799" timestamp="1674472561432" />
+    <state width="1419" height="255" key="GridCell.Tab.0.right/0.25.1440.801@0.25.1440.801" timestamp="1674475719030" />
+    <state width="1419" height="195" key="GridCell.Tab.0.right/0.25.1440.804@0.25.1440.804" timestamp="1674630293447" />
+    <state width="1417" height="192" key="GridCell.Tab.0.right/0.25.1440.805@0.25.1440.805" timestamp="1682429564209" />
+    <state width="1417" height="204" key="GridCell.Tab.0.right/0.25.1440.811@0.25.1440.811" timestamp="1681908655148" />
+    <state width="1417" height="229" key="GridCell.Tab.0.right/0.25.1440.813@0.25.1440.813" timestamp="1679903661237" />
+    <state width="1417" height="192" key="GridCell.Tab.1.bottom" timestamp="1682429564211">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state width="1419" height="219" key="GridCell.Tab.1.bottom/0.25.1440.794@0.25.1440.794" timestamp="1674228020867" />
+    <state width="1419" height="155" key="GridCell.Tab.1.bottom/0.25.1440.797@0.25.1440.797" timestamp="1674545181165" />
+    <state width="1419" height="392" key="GridCell.Tab.1.bottom/0.25.1440.799@0.25.1440.799" timestamp="1674472561198" />
+    <state width="1419" height="255" key="GridCell.Tab.1.bottom/0.25.1440.801@0.25.1440.801" timestamp="1674475614074" />
+    <state width="1419" height="195" key="GridCell.Tab.1.bottom/0.25.1440.804@0.25.1440.804" timestamp="1674630293448" />
+    <state width="1417" height="192" key="GridCell.Tab.1.bottom/0.25.1440.805@0.25.1440.805" timestamp="1682429564211" />
+    <state width="1417" height="204" key="GridCell.Tab.1.bottom/0.25.1440.811@0.25.1440.811" timestamp="1681908655148" />
+    <state width="1417" height="229" key="GridCell.Tab.1.bottom/0.25.1440.813@0.25.1440.813" timestamp="1679903661240" />
+    <state width="1417" height="192" key="GridCell.Tab.1.center" timestamp="1682429564210">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state width="1419" height="219" key="GridCell.Tab.1.center/0.25.1440.794@0.25.1440.794" timestamp="1674228020866" />
+    <state width="1419" height="155" key="GridCell.Tab.1.center/0.25.1440.797@0.25.1440.797" timestamp="1674545181165" />
+    <state width="1419" height="392" key="GridCell.Tab.1.center/0.25.1440.799@0.25.1440.799" timestamp="1674472561195" />
+    <state width="1419" height="255" key="GridCell.Tab.1.center/0.25.1440.801@0.25.1440.801" timestamp="1674475614073" />
+    <state width="1419" height="195" key="GridCell.Tab.1.center/0.25.1440.804@0.25.1440.804" timestamp="1674630293448" />
+    <state width="1417" height="192" key="GridCell.Tab.1.center/0.25.1440.805@0.25.1440.805" timestamp="1682429564210" />
+    <state width="1417" height="204" key="GridCell.Tab.1.center/0.25.1440.811@0.25.1440.811" timestamp="1681908655148" />
+    <state width="1417" height="229" key="GridCell.Tab.1.center/0.25.1440.813@0.25.1440.813" timestamp="1679903661239" />
+    <state width="1417" height="192" key="GridCell.Tab.1.left" timestamp="1682429564210">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state width="1419" height="219" key="GridCell.Tab.1.left/0.25.1440.794@0.25.1440.794" timestamp="1674228020866" />
+    <state width="1419" height="155" key="GridCell.Tab.1.left/0.25.1440.797@0.25.1440.797" timestamp="1674545181165" />
+    <state width="1419" height="392" key="GridCell.Tab.1.left/0.25.1440.799@0.25.1440.799" timestamp="1674472561195" />
+    <state width="1419" height="255" key="GridCell.Tab.1.left/0.25.1440.801@0.25.1440.801" timestamp="1674475614073" />
+    <state width="1419" height="195" key="GridCell.Tab.1.left/0.25.1440.804@0.25.1440.804" timestamp="1674630293447" />
+    <state width="1417" height="192" key="GridCell.Tab.1.left/0.25.1440.805@0.25.1440.805" timestamp="1682429564210" />
+    <state width="1417" height="204" key="GridCell.Tab.1.left/0.25.1440.811@0.25.1440.811" timestamp="1681908655148" />
+    <state width="1417" height="229" key="GridCell.Tab.1.left/0.25.1440.813@0.25.1440.813" timestamp="1679903661239" />
+    <state width="1417" height="192" key="GridCell.Tab.1.right" timestamp="1682429564211">
+      <screen x="0" y="25" width="1440" height="805" />
+    </state>
+    <state width="1419" height="219" key="GridCell.Tab.1.right/0.25.1440.794@0.25.1440.794" timestamp="1674228020867" />
+    <state width="1419" height="155" key="GridCell.Tab.1.right/0.25.1440.797@0.25.1440.797" timestamp="1674545181165" />
+    <state width="1419" height="392" key="GridCell.Tab.1.right/0.25.1440.799@0.25.1440.799" timestamp="1674472561195" />
+    <state width="1419" height="255" key="GridCell.Tab.1.right/0.25.1440.801@0.25.1440.801" timestamp="1674475614074" />
+    <state width="1419" height="195" key="GridCell.Tab.1.right/0.25.1440.804@0.25.1440.804" timestamp="1674630293448" />
+    <state width="1417" height="192" key="GridCell.Tab.1.right/0.25.1440.805@0.25.1440.805" timestamp="1682429564211" />
+    <state width="1417" height="204" key="GridCell.Tab.1.right/0.25.1440.811@0.25.1440.811" timestamp="1681908655148" />
+    <state width="1417" height="229" key="GridCell.Tab.1.right/0.25.1440.813@0.25.1440.813" timestamp="1679903661239" />
+    <state x="350" y="89" key="SettingsEditor" timestamp="1674480210787">
+      <screen x="0" y="25" width="1440" height="807" />
+    </state>
+    <state x="350" y="89" key="SettingsEditor/0.25.1440.807@0.25.1440.807" timestamp="1674480210787" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pyoxynet/pyoxynet/test/testing.py</url>
+          <line>8</line>
+          <option name="timeStamp" value="69" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pyoxynet/pyoxynet/test/testing.py</url>
+          <line>3</line>
+          <option name="timeStamp" value="72" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pyoxynet/debugging.py</url>
+          <line>196</line>
+          <option name="timeStamp" value="161" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/venv/lib/python3.8/site-packages/pyoxynet/testing.py</url>
+          <line>1160</line>
+          <option name="timeStamp" value="179" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pyoxynet/debugging.py</url>
+          <line>117</line>
+          <option name="timeStamp" value="182" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pyoxynet/debugging.py</url>
+          <line>43</line>
+          <option name="timeStamp" value="183" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
