@@ -6,3 +6,5 @@ vendor
 venv
 pyoxynet
 app
+creative-theme-jekyll/_site/
+creative-theme-jekyll/.sass-cache/
