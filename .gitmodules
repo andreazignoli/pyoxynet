@@ -1,3 +1,6 @@
 [submodule "pyoxynet-website/themes/hugo-toha"]
 	path = pyoxynet-website/themes/hugo-toha
 	url = https://github.com/hugo-toha/hugo-toha.github.io.git
+[submodule "themes/hugo-toha"]
+	path = themes/hugo-toha
+	url = https://github.com/hugo-toha/toha.git
