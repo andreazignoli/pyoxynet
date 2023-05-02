@@ -1,7 +1,7 @@
 ---
 layout: default
-title: Another page
-description: This is just another page
+title: pyoxynet
+description: The Oxynet Python module
 ---
 
 ## Welcome to another page
