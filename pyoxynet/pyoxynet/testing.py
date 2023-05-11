@@ -14,14 +14,14 @@ class Test:
         self.data_extension = data_extension
 
     def clear_file_name(self):
-        if '.' in self.filename and self.filename.split('.')[-1]=='.csv':
+        if '.' in self.filename and self.filename.split('.')[-1] == '.csv':
             self.filename_cleared = self.filename.split('.')[0]
         else:
             self.filename_cleared = self.filename
 
         self.filename_cleared = self.filename_cleared.rpartition('/')[-1]
 
-    def infer_metabolimeter(self):
+    def infer_metabolimeter(self, optional_data=[]):
 
         import chardet
 
@@ -37,8 +37,11 @@ class Test:
                 print('Attempting to read an Excel file')
                 df = pd.read_excel(self.filename + self.data_extension)
         except:
-            f = open(self.filename + self.data_extension, encoding="utf8", errors="ignore")
-            df = read_csv(f, header=0)
+            try:
+                f = open(self.filename + self.data_extension, encoding="utf8", errors="ignore")
+                df = read_csv(f, header=0)
+            except:
+                df = optional_data
 
         self.df = df
 
