@@ -23,6 +23,7 @@ app/__pycache__
 *.pyc
 
 *.h5
+*.lock
 
 docs/_build
 docs/*
