@@ -548,6 +548,7 @@ def load_exercise_threshold_app_data(data_dict={}):
     PetCO2_I = []
     VEVO2_I = []
     VEVCO2_I = []
+    HR_I = []
 
     for data_points_ in data_dict[0]['data']:
         time.append(data_points_['t'])
@@ -592,6 +593,7 @@ def load_exercise_threshold_app_data(data_dict={}):
     df['VEVO2_I'] = VEVO2_I
     df['VEVCO2_I'] = VEVCO2_I
     df['VCO2VO2_I'] = VCO2VO2_I
+    df['HR_I'] = 0
 
     return df
 
