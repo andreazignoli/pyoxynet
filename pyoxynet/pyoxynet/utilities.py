@@ -542,6 +542,7 @@ def load_exercise_threshold_app_data(data_dict={}):
     time = []
     VO2_I = []
     VCO2_I = []
+    VCO2VO2_I = []
     VE_I = []
     PetO2_I = []
     PetCO2_I = []
@@ -557,6 +558,7 @@ def load_exercise_threshold_app_data(data_dict={}):
         PetCO2_I.append(data_points_['PetCO2'])
         VEVO2_I.append(data_points_['VE/VO2'])
         VEVCO2_I.append(data_points_['VE/VCO2'])
+        VCO2VO2_I.append(data_points_['VCO2']/data_points_['VO2'])
 
     # transform in array
     time = np.asarray(time)
@@ -567,6 +569,7 @@ def load_exercise_threshold_app_data(data_dict={}):
     PetCO2_I = np.asarray(PetCO2_I)
     VEVO2_I = np.asarray(VEVO2_I)
     VEVCO2_I = np.asarray(VEVCO2_I)
+    VCO2VO2_I = np.asarray(VCO2VO2_I)
 
     # filter and interpolate
     time_I = np.arange(int(time[0]), int(time[-1]))
@@ -577,6 +580,7 @@ def load_exercise_threshold_app_data(data_dict={}):
     PetCO2_I = np.interp(time_I, time, PetCO2_I)
     VEVO2_I = np.interp(time_I, time, VEVO2_I)
     VEVCO2_I = np.interp(time_I, time, VEVCO2_I)
+    VCO2VO2_I = np.interp(time_I, time, VCO2VO2_I)
 
     df = pd.DataFrame()
     df['time'] = time_I
@@ -587,6 +591,7 @@ def load_exercise_threshold_app_data(data_dict={}):
     df['PetCO2_I'] = PetCO2_I
     df['VEVO2_I'] = VEVO2_I
     df['VEVCO2_I'] = VEVCO2_I
+    df['VCO2VO2_I'] = VCO2VO2_I
 
     return df
 
