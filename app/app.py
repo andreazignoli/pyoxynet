@@ -1,7 +1,7 @@
 import flask
 import os
 from flask import Flask, request, render_template, session, redirect, url_for
-from pyoxynet import *
+import pyoxynet
 # from pyoxynet import utilities
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9098))
 app.secret_key = "super secret key"
 
-generator = utilities.load_tf_generator()
+generator = pyoxynet.utilities.load_tf_generator()
 
 def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
@@ -228,53 +228,22 @@ def search():
 def read_json():
 
     args = request.args
-    n_inputs = args.get('n_inputs')
 
-    # loading the model
-    if n_inputs == '5':
-        tfl_model = utilities.load_tf_model(n_inputs=int(n_inputs),
-                                  past_points=40)
-    else:
-        tfl_model = utilities.load_tf_model()
+    try:
+        request_data = request.get_json(force=True)
+        df = pd.DataFrame.from_dict(request_data)
+        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=df)
+    except:
+        try:
+            request_data = request.get_json(force=True)
+            df = pyoxynet.utilities.load_exercise_threshold_app_data(data_dict=request_data)
+            df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=df)
+        except:
+            request_data = request.get_json(force=True)
+            df = pyoxynet.utilities.load_exercise_threshold_app_data(data_dict=request_data)
+            dict_estimates = {}
 
-    input_details = tfl_model.get_input_details()
-    output_details = tfl_model.get_output_details()
-
-    request_data = request.get_json(force=True)
-    df = pd.DataFrame.from_dict(request_data)
-
-    if n_inputs == '7':
-        X = df[['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']]
-    if n_inputs == '5':
-        print(df.columns)
-        X = df[['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']]
-
-    XN = utilities.normalize(X)
-
-    time_series_len = input_details[0]['shape'][1]
-    p_1 = []
-    p_2 = []
-    p_3 = []
-
-    for i in np.arange(len(XN) - time_series_len):
-        XN_array = np.asarray(XN[i:(i + time_series_len)])
-        input_data = np.reshape(XN_array, input_details[0]['shape'])
-        input_data = input_data.astype(np.float32)
-
-        tfl_model.allocate_tensors()
-        tfl_model.set_tensor(input_details[0]['index'], input_data)
-        tfl_model.invoke()
-        output_data = tfl_model.get_tensor(output_details[0]['index'])
-        p_1.append(output_data[0][0])
-        p_2.append(output_data[0][1])
-        p_3.append(output_data[0][2])
-
-    results = {}
-    results['p_1'] = str(p_1)
-    results['p_2'] = str(p_2)
-    results['p_3'] = str(p_3)
-
-    return flask.jsonify(results)
+    return flask.jsonify(dict_estimates)
 
 @app.route('/CPET_generation', methods=['GET', 'POST'])
 def CPET_generation():
@@ -376,6 +345,11 @@ def HelloWorld():
         pass
 
     return render_template('homepage.html')
+
+@app.route('/say_hello')
+def say_hello():
+    # A very polite end point that says hello!
+    return 'Hello World!'
 
 def start_over():
 
