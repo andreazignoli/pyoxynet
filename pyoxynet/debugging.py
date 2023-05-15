@@ -21,7 +21,7 @@ t.infer_metabolimeter()
 t.load_file()
 t.create_data_frame()
 #
-# df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
+df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
 #
 # here=0
 #
