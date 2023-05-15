@@ -169,14 +169,20 @@ Importantly, given that RF data is generated, a complete breath-by-breath datase
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-## Flask-Pyoxynet inference app
+## Flask-Pyoxynet inference app and API
 
 A [Flask](https://flask.palletsprojects.com/en/2.0.x/) inference/generation app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
 
-It is possible therefore to call Flask-Pyoxynet from a terminal, and provide data in json format. If your input data has only 7 variables, then the classic Oxynet configuration can be used by replacing X with 7 (see command below), otherwise if the input variables are only 5, you can replace X with 5:
+It is possible therefore to call Flask-Pyoxynet from a terminal, and provide data in json format or in csv format. In case of json format you can have:
 
 ```sh
-curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_json?n_inputs=X -d @test_data.json
+curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_json_ET -d @test_data.json
+```
+
+But if you have your file in csv format you can type:
+
+```sh
+curl -X POST -F 'file=@my_cool_CPET_file.csv' https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_csv
 ```
 
 It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possible to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possible to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation). The app can also be used as test to check how realistic the fake examples.
