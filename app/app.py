@@ -226,7 +226,7 @@ def search():
 
 @app.route('/read_json', methods=['GET', 'POST'])
 def read_json():
-
+    # Reads from json in the Oxynet recommended format
     args = request.args
 
     try:
@@ -234,14 +234,40 @@ def read_json():
         df = pd.DataFrame.from_dict(request_data)
         df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=df)
     except:
-        try:
-            request_data = request.get_json(force=True)
-            df = pyoxynet.utilities.load_exercise_threshold_app_data(data_dict=request_data)
-            df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=df)
-        except:
-            request_data = request.get_json(force=True)
-            df = pyoxynet.utilities.load_exercise_threshold_app_data(data_dict=request_data)
-            dict_estimates = {}
+        dict_estimates = {}
+
+    return flask.jsonify(dict_estimates)
+
+@app.route('/read_json_ET', methods=['GET', 'POST'])
+def read_json_ET():
+    # Reads from json in ET formats
+    args = request.args
+
+    try:
+        request_data = request.get_json(force=True)
+        df = pyoxynet.utilities.load_exercise_threshold_app_data(data_dict=request_data)
+        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=df)
+    except:
+        dict_estimates = {}
+
+    return flask.jsonify(dict_estimates)
+
+@app.route('/read_csv', methods=['GET', 'POST'])
+def read_csv():
+    # Reads from csv and uses the pyoxynet parser
+    args = request.args
+
+    try:
+        file = request.files['file']
+        data = pd.read_csv(file)
+        t = pyoxynet.Test('')
+        t.set_data_extension('.csv')
+        t.infer_metabolimeter(optional_data=data)
+        t.load_file()
+        t.create_data_frame()
+        df_estimates, dict_estimates = pyoxynet.test_pyoxynet(input_df=t.data_frame)
+    except:
+        dict_estimates = {}
 
     return flask.jsonify(dict_estimates)
 
