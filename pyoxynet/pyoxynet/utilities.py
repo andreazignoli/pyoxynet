@@ -680,8 +680,8 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     kde_1 = stats.gaussian_kde(time, weights=tmp_df['p_sv_N'] * tmp_df['p_md_N'])
     kde_2 = stats.gaussian_kde(time, weights=tmp_df['p_md_N'] * tmp_df['p_hv_N'])
 
-    overlap_ci_1 = [int(np.percentile(kde_1.resample(4000)[0], 5)), int(np.percentile(kde_1.resample(4000)[0], 95))]
-    overlap_ci_2 = [int(np.percentile(kde_2.resample(4000)[0], 5)), int(np.percentile(kde_2.resample(4000)[0], 95))]
+    overlap_ci_1 = [int(np.percentile(kde_1.resample(4000)[0], 25)), int(np.percentile(kde_1.resample(4000)[0], 75))]
+    overlap_ci_2 = [int(np.percentile(kde_2.resample(4000)[0], 25)), int(np.percentile(kde_2.resample(4000)[0], 75))]
 
     mod_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[:20].mean().idxmax()
     sev_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[-20:].mean().idxmax()
