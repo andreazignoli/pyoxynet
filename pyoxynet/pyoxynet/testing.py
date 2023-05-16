@@ -361,7 +361,7 @@ class Test:
 
         if self.metabolimeter == 'cortex':
 
-            df = read_csv(self.filename + self.data_extension)
+            df = self.df
 
             try:
                 starting_index = df.loc[df['Unnamed: 0'] == 't'].index
@@ -467,26 +467,32 @@ class Test:
 
                 i += 1
 
-            # self.time = self.time - self.time[0]
-            if use_WR:
-                VT1_index = np.where(self.load == int(WRVT1))[0][0]
-                try:
-                    VT2_index = np.where(self.load == int(WRVT2))[0][0]
-                except:
-                    VT2_index = -1
-            elif use_HR:
-                VT1_index = np.where(self.HR == int(HRVT1))[0][0]
-                try:
-                    VT2_index = np.where(self.HR == int(HRVT2))[0][0]
-                except:
-                    VT2_index = -1
+            VT1_index = 0
+            VT2_index = 0
+
+            try:
+                # self.time = self.time - self.time[0]
+                if use_WR:
+                    VT1_index = np.where(self.load == int(WRVT1))[0][0]
+                    try:
+                        VT2_index = np.where(self.load == int(WRVT2))[0][0]
+                    except:
+                        VT2_index = -1
+                elif use_HR:
+                    VT1_index = np.where(self.HR == int(HRVT1))[0][0]
+                    try:
+                        VT2_index = np.where(self.HR == int(HRVT2))[0][0]
+                    except:
+                        VT2_index = -1
+            except:
+                pass
 
             self.VT1 = self.time[VT1_index]
             self.VT2 = self.time[VT2_index]
 
         if self.metabolimeter == 'unisbz':
 
-            df = read_csv(self.filename + self.data_extension)
+            df = self.df
 
             self.age = float(0)
             # print('Gender')
@@ -594,7 +600,8 @@ class Test:
                 self.PetCO2[i - 2] = float(df.PetCO2.values[i])
 
         if self.metabolimeter == 'cortex_bruce':
-            df = read_csv(self.filename + self.data_extension)
+
+            df = self.df
             print('Reading data Bruce file!!!!')
 
             starting_index = df.loc[df[df.columns[0]] == 'Messzeit'].index+2
@@ -655,7 +662,8 @@ class Test:
                     self.PetCO2[i - starting_index[0]] = np.nan
 
         if self.metabolimeter == 'cortex_bruce_2':
-            df = read_csv(self.filename + self.data_extension)
+
+            df = self.df
             print('Reading data Bruce file type 2!!!!')
 
             starting_index = df.loc[df[df.columns[0]] == 't'].index+2
@@ -716,7 +724,8 @@ class Test:
                     self.PetCO2[i - starting_index[0]] = np.nan
 
         if self.metabolimeter == 'mourot':
-            df = read_csv(self.filename + self.data_extension)
+
+            df = self.df
             # print('Reading data Mourot file!!!!')
 
             starting_index = df.loc[df[df.columns[0]] == 'Temps'].index+2
@@ -792,8 +801,8 @@ class Test:
 
         if self.metabolimeter == 'mourot_COPD':
 
-            df = read_csv(self.filename + self.data_extension)
-            # print('Reading data Mourot file with no age nor BMI data !!!!')
+            df = self.df
+            print('Reading data Mourot file with no age nor BMI data !!!!')
 
             starting_index = [1]
             n_rows = df[df.columns[0]].last_valid_index() - 3
@@ -848,7 +857,7 @@ class Test:
 
         if self.metabolimeter == 'low':
 
-            df = read_csv(self.filename + self.data_extension)
+            df = self.df
 
             # print('Reading age')
             self.age = float(30)
@@ -889,7 +898,7 @@ class Test:
 
         if self.metabolimeter == 'VO2Master':
 
-            df = read_csv(self.filename + self.data_extension)
+            df = self.df
 
             # print('Reading age')
             self.age = float(30)
@@ -930,7 +939,7 @@ class Test:
 
         if self.metabolimeter == 'centro-monzino':
 
-            df = read_csv(self.filename + self.data_extension)
+            df = self.df
 
             # print('Reading age')
             self.age = float(30)
