@@ -259,7 +259,7 @@ def read_csv():
 
     try:
         file = request.files['file']
-        data = pd.read_csv(file)
+        data = pd.read_csv(file, encoding="ISO-8859-1")
         t = pyoxynet.Test('')
         t.set_data_extension('.csv')
         t.infer_metabolimeter(optional_data=data)
