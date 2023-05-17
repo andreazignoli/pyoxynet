@@ -1,6 +1,8 @@
 import flask
 import os
 from flask import Flask, request, render_template, session, redirect, url_for
+import flask_swagger
+from flask_swagger import swagger
 import pyoxynet
 # import pyoxynet import utilities
 import numpy as np
@@ -14,6 +16,13 @@ port = int(os.getenv("PORT", 9098))
 app.secret_key = "super secret key"
 
 generator = pyoxynet.utilities.load_tf_generator()
+
+@app.route("/swagger")
+def get_swagger():
+    swag = swagger(app)
+    swag['info']['title'] = 'Your API Title'
+    swag['info']['version'] = '1.0'
+    return swag
 
 def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
@@ -254,6 +263,13 @@ def read_json_ET():
 
 @app.route('/read_csv', methods=['GET', 'POST'])
 def read_csv():
+    """
+    This is the description of read_csv.
+    ---
+    responses:
+      200:
+        description: A successful response
+    """
     # Reads from csv and uses the pyoxynet parser
     args = request.args
 

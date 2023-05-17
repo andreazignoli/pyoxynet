@@ -5,3 +5,4 @@ faker
 chardet
 openpyxl
 xlrd
+flask_swagger
