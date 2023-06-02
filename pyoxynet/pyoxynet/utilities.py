@@ -618,6 +618,15 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     from scipy import stats
     import json
 
+    # import the data for the normalisation
+    import pkgutil
+    from io import StringIO
+    bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_resting.csv')
+
+    s = str(bytes_data, 'utf-8')
+    data = StringIO(s)
+    db_df = pd.read_csv(data)
+
     tf_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
 
     if len(input_df) == 0:
@@ -644,9 +653,20 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
             df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
         filter_vars = ['VCO2VO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
         X = df[filter_vars]
-        XN = normalize(X)
+        # XN = normalize(X)
+        XN = X
+        XN['VCO2VO2_I'] = (XN['VCO2VO2_I'] - np.percentile(db_df.VCO2min/db_df.VO2min, 5)) / (X['VCO2VO2_I'].quantile(0.95) - np.percentile(db_df.VCO2min/db_df.VO2min, 5))
+        XN['VE_I'] = (XN['VE_I'] - np.percentile(db_df.VEmin, 5)) / (X['VE_I'].quantile(0.95) - np.percentile(db_df.VEmin, 5))
+        XN['PetO2_I'] = (XN['PetO2_I'] - np.percentile(db_df.PetO2min, 25)) / (X['PetO2_I'].quantile(0.95) - np.percentile(db_df.PetO2min, 5))
+        # in the case of PetCO2 you take MAX from top 25 and MIN from the single test
+        # (x - MIN) / (MAX - MIN)
+        XN['PetCO2_I'] = (XN['PetCO2_I'] - X['PetCO2_I'].quantile(0.05)) / (np.percentile(db_df.PetCO2peak, 95) - X['PetCO2_I'].quantile(0.05))
+        XN['VEVO2_I'] = (XN['VEVO2_I'] - np.percentile(db_df.VEmin/db_df.VO2min, 5)) / (X['VEVO2_I'].quantile(0.95) - np.percentile(db_df.VEmin/db_df.VO2min, 5))
+        XN['VEVCO2_I'] = (XN['VEVCO2_I'] - np.percentile(db_df.VEmin/db_df.VCO2min, 5)) / (X['VEVCO2_I'].quantile(0.95) - np.percentile(db_df.VEmin/db_df.VCO2min, 5))
         XN = XN.filter(filter_vars, axis=1)
+
     if n_inputs == 5 and past_points == 40:
+        # TODO: FIX the normalisation here as well
         filter_vars = ['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']
         X = df[filter_vars]
         XN = normalize(X)
@@ -747,7 +767,7 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=False, resting = True, resting_duration=60):
+def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=False, resting = True, resting_duration=60, y_pm0=1):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -756,6 +776,7 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         duration (int): Length of the test file
         VT1 (int): First ventilatory threshold, in time samples from the beginning of the test
         VT2 (int): Second ventilatory threshold, in time samples from the beginning of the test
+        y_pm0 (double): This is used to set the first value of the probabilities. Indeed if you start from a higher VO2 you're not likely full in moderate domain (pm<1)
 
     Returns:
         p_mF (np array): Probability of being in the moderate intensity zone (-1:1)
@@ -777,8 +798,12 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         step_1 = 1
         smooth_lambda = [duration*2, duration*2, duration*2]
 
-    y_pm = [1, 1, 0.5, 0, 0, 0]
-    y_ph = [0, 0, 0.5, 1, 0.5, 0]
+    if y_pm0 < 0.65:
+        print('This is too close to VT1, I am settling at 0.65')
+        y_pm0 = 0.65
+
+    y_pm = [y_pm0, y_pm0, 0.5, 0, 0, 0]
+    y_ph = [1 - y_pm0, 1 - y_pm0, 0.5, 1, 0.5, 0]
     y_ps = [0, 0, 0, 0, 0.5, 1]
     # linear coefficients
     x_p = [0, step_1, VT1, ((VT2 - VT1) / 2 + VT1), VT2, duration]
