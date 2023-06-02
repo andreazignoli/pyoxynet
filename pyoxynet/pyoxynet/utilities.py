@@ -811,12 +811,12 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
     from scipy.interpolate import UnivariateSpline
     # build splines
     # moderate => 2 splines
-    pm_L1 = UnivariateSpline([0, step_1, VT1], [1, 1, 0.5], k=2)
+    pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm0, 0.5], k=2)
     # compute additional points
     pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=2)
     p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
     # heavy => 3 splines
-    ph_L1 = UnivariateSpline([0, step_1, VT1], [0, 0, 0.5], k=2)
+    ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm0, 0.5], k=2)
     # compute additional points
     ph_L2 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L1(VT1 + 30), 0.5], k=2)
     ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=2)

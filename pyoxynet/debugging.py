@@ -9,11 +9,11 @@ import random
 import os
 from pyoxynet import testing
 from pyoxynet import utilities
+from bs4 import BeautifulSoup
 
-# test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/data_test/Oxynet_Test.xlsx'
+test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4_short.xls'
 #filename, file_extension = os.path.splitext(test_file)
 
-test_file = '/Users/andreazignoli/Downloads/Test_1.xlsx'
 filename, file_extension = os.path.splitext(test_file)
 t = testing.Test(filename)
 t.set_data_extension(file_extension)
@@ -22,8 +22,44 @@ t.load_file()
 t.create_data_frame()
 #
 df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
-#
-# here=0
+pass
+here=0
+
+if False:
+    # test_file = '/Users/andreazignoli/Downloads/Standard_Test_1_2022.12.05_16.54.00_.xml'
+    #
+    # with open(test_file, 'r') as f:
+    #     data = f.read()
+    # Bs_data = BeautifulSoup(data, "xml")
+    #
+    # rows = Bs_data.find_all('Row')
+    #
+    # # Create an empty list to store the row data
+    # data = []
+    # # Iterate over the rows
+    # for row in rows:
+    #     row_data = []
+    #     # Find all the 'Cell' elements in the row
+    #     cells = row.find_all('Cell')
+    #     # Iterate over the cells
+    #     for cell in cells:
+    #         # Get the value from the 'Data' element within the 'Cell'
+    #         value = cell.find('Data').text
+    #         row_data.append(value)
+    #     data.append(row_data)
+    #
+    # df = pd.DataFrame()
+    # flag_ON = False
+    # for n, cells in enumerate(data):
+    #     try:
+    #         if cells[0] == 't':
+    #             flag_ON = True
+    #         if flag_ON:
+    #             df = pd.concat([df, pd.DataFrame(cells)])
+    #     except:
+    #         pass
+    pass
+
 #
 # model = load_tf_model(n_inputs=6, past_points=40, model='CNN')
 #
