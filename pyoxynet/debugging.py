@@ -11,8 +11,16 @@ from pyoxynet import testing
 from pyoxynet import utilities
 from bs4 import BeautifulSoup
 
-test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4_short.xls'
+#test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 #filename, file_extension = os.path.splitext(test_file)
+
+with open('/Users/andreazignoli/oxynet-writing/RStudio/archive/real/real_#012.json', 'r') as f:
+    CPET_data = json.load(f)
+new_dict_CPET = {}
+new_dict_CPET[0] = {'data': []}
+new_dict_CPET[0]['data'] = CPET_data['data']
+df = utilities.load_exercise_threshold_app_data(data_dict=new_dict_CPET)
+df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=df, model='TCN')
 
 filename, file_extension = os.path.splitext(test_file)
 t = testing.Test(filename)
@@ -21,7 +29,7 @@ t.infer_metabolimeter()
 t.load_file()
 t.create_data_frame()
 #
-df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
+df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame, model='TCN')
 pass
 here=0
 
