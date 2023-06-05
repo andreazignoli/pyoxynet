@@ -118,3 +118,35 @@ class Model(tf.keras.Model):
 
     def loadModel(self, model_path):
         self.load_weights(model_path)
+
+class TCN(tf.keras.Model):
+    def __init__(self, num_classes, num_filters, kernel_size, dilation_rates):
+        super(TCN, self).__init__()
+        self.conv_layers = []
+        for dilation_rate in dilation_rates:
+            self.conv_layers.append(tf.keras.layers.Conv1D(filters=num_filters,
+                                                           kernel_size=kernel_size,
+                                                           padding='VALID',
+                                                           dilation_rate=dilation_rate,
+                                                           activation='sigmoid'))
+        self.f = tf.keras.layers.Flatten()
+        self.drop = tf.keras.layers.Dropout(rate=0.4)
+        self.dense = tf.keras.layers.Dense(16, kernel_regularizer='l1', activation='sigmoid')
+        self.bn = tf.keras.layers.BatchNormalization()
+
+        self.output_layer = tf.keras.layers.Dense(num_classes, activation='sigmoid')
+
+    def call(self, inputs, training=None):
+        x = inputs
+        for conv_layer in self.conv_layers:
+            x = conv_layer(x)
+        x = self.f(x)
+        x = self.drop(x)
+        x = self.dense(x)
+        x = self.bn(x, training=training)
+        output = self.output_layer(x)
+        return output
+
+    def loadModel(self, model_path):
+        # self.model = Model(n_classes, n_input)
+        self.load_weights(model_path)
