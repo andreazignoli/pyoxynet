@@ -230,7 +230,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
     import importlib_resources
     import pickle
     from io import BytesIO
-    from pyoxynet import regressor
+    from pyoxynet import regressor, TCN
     import tensorflow as tf
     import os
 
@@ -242,6 +242,13 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             keras_metadata_model_binaries = importlib_resources.read_binary(regressor, 'keras_metadata.pb')
             variables_data_binaries = importlib_resources.read_binary(regressor, 'variables.data-00000-of-00001')
             variables_index_binaries = importlib_resources.read_binary(regressor, 'variables.index')
+        if model == 'TCN':
+            # load the classic Oxynet model configuration
+            print('Classic Oxynet configuration model uploaded')
+            saved_model_binaries = importlib_resources.read_binary(TCN, 'saved_model.pb')
+            keras_metadata_model_binaries = importlib_resources.read_binary(TCN, 'keras_metadata.pb')
+            variables_data_binaries = importlib_resources.read_binary(TCN, 'variables.data-00000-of-00001')
+            variables_index_binaries = importlib_resources.read_binary(TCN, 'variables.index')
         if model == 'transformer':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
@@ -258,11 +265,22 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
         open('/tmp/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
         open('/tmp/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
         open('/tmp/variables/variables.index', 'wb').write(variables_index_binaries)
-        model = tf.keras.models.load_model('/tmp/')
-        from .model import Model
-        my_model = Model(n_classes=3, n_input=6)
-        my_model.build(input_shape=(1, 40, 6))
-        my_model.set_weights(model.get_weights())
+
+        from .model import Model, TCN
+        if model == 'CNN':
+            model = tf.keras.models.load_model('/tmp/')
+            my_model = Model(n_classes=3, n_input=6)
+            my_model.build(input_shape=(1, 40, 6))
+            my_model.set_weights(model.get_weights())
+        if model == 'TCN':
+            model = tf.keras.models.load_model('/tmp/')
+            num_classes = 3  # Replace with the number of classes in your task
+            num_filters = 32
+            kernel_size = 3
+            dilation_rates = [2 ** i for i in range(4)]
+            my_model = TCN(num_classes, num_filters, kernel_size, dilation_rates)
+            my_model.build(input_shape=(1, 40, 6))
+            my_model.set_weights(model.get_weights())
 
         return my_model
     except:
@@ -736,30 +754,30 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
     VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
 
-    out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
-    out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
+    out_dict['VT1']['time'] = df.iloc[VT1_index+int(past_points/2)]['time']
+    out_dict['VT2']['time'] = df.iloc[VT2_index+int(past_points/2)]['time']
 
     out_dict['VT1_upper']['time'] = overlap_ci_1[1]
     out_dict['VT1_lower']['time'] = overlap_ci_1[0]
     out_dict['VT2_upper']['time'] = overlap_ci_2[1]
     out_dict['VT2_lower']['time'] = overlap_ci_2[0]
 
-    out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
-    out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
+    out_dict['VT1']['HR'] = df.iloc[VT1_index+int(past_points/2)]['HR_I']
+    out_dict['VT2']['HR'] = df.iloc[VT2_index+int(past_points/2)]['HR_I']
     out_dict['VT1_upper']['HR'] = df[df.time == overlap_ci_1[1]]['HR_I'].values[0]
     out_dict['VT1_lower']['HR'] = df[df.time == overlap_ci_1[0]]['HR_I'].values[0]
     out_dict['VT2_upper']['HR'] = df[df.time == overlap_ci_2[1]]['HR_I'].values[0]
     out_dict['VT2_lower']['HR'] = df[df.time == overlap_ci_2[0]]['HR_I'].values[0]
 
-    out_dict['VT1']['VE'] = df.iloc[VT1_index]['VE_I']
-    out_dict['VT2']['VE'] = df.iloc[VT2_index]['VE_I']
+    out_dict['VT1']['VE'] = df.iloc[VT1_index+int(past_points/2)]['VE_I']
+    out_dict['VT2']['VE'] = df.iloc[VT2_index+int(past_points/2)]['VE_I']
     out_dict['VT1_upper']['VE'] = df[df.time == overlap_ci_1[1]]['VE_I'].values[0]
     out_dict['VT1_lower']['VE'] = df[df.time == overlap_ci_1[0]]['VE_I'].values[0]
     out_dict['VT2_upper']['VE'] = df[df.time == overlap_ci_2[1]]['VE_I'].values[0]
     out_dict['VT2_lower']['VE'] = df[df.time == overlap_ci_2[0]]['VE_I'].values[0]
 
-    out_dict['VT1']['VO2'] = df.iloc[VT1_index]['VO2_20s']
-    out_dict['VT2']['VO2'] = df.iloc[VT2_index]['VO2_20s']
+    out_dict['VT1']['VO2'] = df.iloc[VT1_index+int(past_points/2)]['VO2_20s']
+    out_dict['VT2']['VO2'] = df.iloc[VT2_index+int(past_points/2)]['VO2_20s']
     out_dict['VT1_upper']['VO2'] = df[df.time == overlap_ci_1[1]]['VO2_20s'].values[0]
     out_dict['VT1_lower']['VO2'] = df[df.time == overlap_ci_1[0]]['VO2_20s'].values[0]
     out_dict['VT2_upper']['VO2'] = df[df.time == overlap_ci_2[1]]['VO2_20s'].values[0]
