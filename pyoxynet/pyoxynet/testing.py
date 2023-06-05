@@ -1131,22 +1131,23 @@ class Test:
 
         # rolling averages
         from scipy.ndimage import uniform_filter1d
+        filter_size=1
 
         if self.metabolimeter != 'low':
 
-            self.Rf_F = uniform_filter1d(self.Rf, size=20)
-            self.PetO2_F = uniform_filter1d(self.PetO2, size=20)
-            self.PetCO2_F = uniform_filter1d(self.PetCO2, size=20)
+            self.Rf_F = uniform_filter1d(self.Rf, size=filter_size)
+            self.PetO2_F = uniform_filter1d(self.PetO2, size=filter_size)
+            self.PetCO2_F = uniform_filter1d(self.PetCO2, size=filter_size)
 
         if self.metabolimeter == 'low':
             self.Rf_F = np.zeros((n_rows - 2,), dtype=np.float32)
             self.PetO2_F = np.zeros((n_rows - 2,), dtype=np.float32)
             self.PetCO2_F = np.zeros((n_rows - 2,), dtype=np.float32)
 
-        self.VO2_F = uniform_filter1d(self.VO2, size=20)
-        self.VCO2_F = uniform_filter1d(self.VCO2, size=20)
-        self.HR_F = uniform_filter1d(self.HR, size=20)
-        self.VE_F = uniform_filter1d(self.VE, size=20)
+        self.VO2_F = uniform_filter1d(self.VO2, size=filter_size)
+        self.VCO2_F = uniform_filter1d(self.VCO2, size=filter_size)
+        self.HR_F = uniform_filter1d(self.HR, size=filter_size)
+        self.VE_F = uniform_filter1d(self.VE, size=filter_size)
 
         # maximal VE value (cutting after)
         max_VE_idx = max([(v, i) for i, v in enumerate(self.VE_F)])[1]
