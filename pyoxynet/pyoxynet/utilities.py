@@ -234,7 +234,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
     import tensorflow as tf
     import os
 
-    if n_inputs == 6 and past_points == 40:
+    if n_inputs == 6:
         if model == 'CNN':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
@@ -270,16 +270,16 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
         if model == 'CNN':
             model = tf.keras.models.load_model('/tmp/')
             my_model = Model(n_classes=3, n_input=6)
-            my_model.build(input_shape=(1, 40, 6))
+            my_model.build(input_shape=(1, past_points, 6))
             my_model.set_weights(model.get_weights())
         if model == 'TCN':
             model = tf.keras.models.load_model('/tmp/')
             num_classes = 3  # Replace with the number of classes in your task
-            num_filters = 32
+            num_filters = 64
             kernel_size = 3
-            dilation_rates = [2 ** i for i in range(4)]
+            dilation_rates = [2 ** i for i in range(5)]
             my_model = TCN(num_classes, num_filters, kernel_size, dilation_rates)
-            my_model.build(input_shape=(1, 40, 6))
+            my_model.build(input_shape=(1, past_points, 6))
             my_model.set_weights(model.get_weights())
 
         return my_model
@@ -604,6 +604,20 @@ def load_exercise_threshold_app_data(data_dict={}):
     VEVCO2_I = np.interp(time_I, time, VEVCO2_I)
     VCO2VO2_I = np.interp(time_I, time, VCO2VO2_I)
 
+    # rolling averages to filter the data
+    from scipy.ndimage import uniform_filter1d
+    # This filter size should be equal to the one used by the Test class
+    filter_size = 20
+
+    VO2_I = uniform_filter1d(VO2_I, size=filter_size)
+    VCO2_I = uniform_filter1d(VCO2_I, size=filter_size)
+    VE_I = uniform_filter1d(VE_I, size=filter_size)
+    PetO2_I = uniform_filter1d(PetO2_I, size=filter_size)
+    PetCO2_I = uniform_filter1d(PetCO2_I, size=filter_size)
+    VEVO2_I = uniform_filter1d(VEVO2_I, size=filter_size)
+    VEVCO2_I = uniform_filter1d(VEVCO2_I, size=filter_size)
+    VCO2VO2_I = uniform_filter1d(VCO2VO2_I, size=filter_size)
+
     df = pd.DataFrame()
     df['time'] = time_I
     df['VO2_I'] = VO2_I
@@ -665,7 +679,7 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
 
-    if n_inputs == 6 and past_points == 40:
+    if n_inputs == 6:
         # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
         if 'VCO2VO2_I' not in df.columns:
             df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
@@ -673,14 +687,20 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
         X = df[filter_vars]
         # XN = normalize(X)
         XN = X
-        XN['VCO2VO2_I'] = (XN['VCO2VO2_I'] - np.percentile(db_df.VCO2min/db_df.VO2min, 5)) / (X['VCO2VO2_I'].quantile(0.95) - np.percentile(db_df.VCO2min/db_df.VO2min, 5))
-        XN['VE_I'] = (XN['VE_I'] - np.percentile(db_df.VEmin, 5)) / (X['VE_I'].quantile(0.95) - np.percentile(db_df.VEmin, 5))
-        XN['PetO2_I'] = (XN['PetO2_I'] - np.percentile(db_df.PetO2min, 25)) / (X['PetO2_I'].quantile(0.95) - np.percentile(db_df.PetO2min, 5))
+        XN['VCO2VO2_I'] = (XN['VCO2VO2_I'] - XN['VCO2VO2_I'].min()) / (
+                XN['VCO2VO2_I'].max() - XN['VCO2VO2_I'].min())
+        XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
+                XN['VE_I'].max() - XN['VE_I'].min())
+        XN['PetO2_I'] = (XN['PetO2_I'] - XN['PetO2_I'].min()) / (
+                XN['PetO2_I'].max() - XN['PetO2_I'].min())
         # in the case of PetCO2 you take MAX from top 25 and MIN from the single test
         # (x - MIN) / (MAX - MIN)
-        XN['PetCO2_I'] = (XN['PetCO2_I'] - X['PetCO2_I'].quantile(0.05)) / (np.percentile(db_df.PetCO2peak, 95) - X['PetCO2_I'].quantile(0.05))
-        XN['VEVO2_I'] = (XN['VEVO2_I'] - np.percentile(db_df.VEmin/db_df.VO2min, 5)) / (X['VEVO2_I'].quantile(0.95) - np.percentile(db_df.VEmin/db_df.VO2min, 5))
-        XN['VEVCO2_I'] = (XN['VEVCO2_I'] - np.percentile(db_df.VEmin/db_df.VCO2min, 5)) / (X['VEVCO2_I'].quantile(0.95) - np.percentile(db_df.VEmin/db_df.VCO2min, 5))
+        XN['PetCO2_I'] = (XN['PetCO2_I'] - XN['PetCO2_I'].min()) / (
+                XN['PetCO2_I'].max() - XN['PetCO2_I'].min())
+        XN['VEVO2_I'] = (XN['VEVO2_I'] - XN['VEVO2_I'].min()) / (
+                XN['VEVO2_I'].max() - XN['VEVO2_I'].min())
+        XN['VEVCO2_I'] = (XN['VEVCO2_I'] - XN['VEVCO2_I'].min()) / (
+                XN['VEVCO2_I'].max() - XN['VEVCO2_I'].min())
         XN = XN.filter(filter_vars, axis=1)
 
     if n_inputs == 5 and past_points == 40:
@@ -695,9 +715,9 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     p_3 = []
     time = []
 
-    for i in np.arange(int(past_points/2), len(XN) - int(past_points/2)):
-        XN_array = np.asarray(XN[(i-int(past_points/2)):(i+int(past_points/2))])
-        output_data = tf_model(XN_array.reshape(1, 40, 6))
+    for i in np.arange(1, len(XN) - int(past_points)):
+        XN_array = np.asarray(XN[(i):(i+int(past_points))])
+        output_data = tf_model(XN_array.reshape(1, past_points, 6))
         p_1.append(output_data.numpy()[0][0])
         p_2.append(output_data.numpy()[0][1])
         p_3.append(output_data.numpy()[0][2])
@@ -754,30 +774,30 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
     VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
 
-    out_dict['VT1']['time'] = df.iloc[VT1_index+int(past_points/2)]['time']
-    out_dict['VT2']['time'] = df.iloc[VT2_index+int(past_points/2)]['time']
+    out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
+    out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
 
     out_dict['VT1_upper']['time'] = overlap_ci_1[1]
     out_dict['VT1_lower']['time'] = overlap_ci_1[0]
     out_dict['VT2_upper']['time'] = overlap_ci_2[1]
     out_dict['VT2_lower']['time'] = overlap_ci_2[0]
 
-    out_dict['VT1']['HR'] = df.iloc[VT1_index+int(past_points/2)]['HR_I']
-    out_dict['VT2']['HR'] = df.iloc[VT2_index+int(past_points/2)]['HR_I']
+    out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
+    out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
     out_dict['VT1_upper']['HR'] = df[df.time == overlap_ci_1[1]]['HR_I'].values[0]
     out_dict['VT1_lower']['HR'] = df[df.time == overlap_ci_1[0]]['HR_I'].values[0]
     out_dict['VT2_upper']['HR'] = df[df.time == overlap_ci_2[1]]['HR_I'].values[0]
     out_dict['VT2_lower']['HR'] = df[df.time == overlap_ci_2[0]]['HR_I'].values[0]
 
-    out_dict['VT1']['VE'] = df.iloc[VT1_index+int(past_points/2)]['VE_I']
-    out_dict['VT2']['VE'] = df.iloc[VT2_index+int(past_points/2)]['VE_I']
+    out_dict['VT1']['VE'] = df.iloc[VT1_index]['VE_I']
+    out_dict['VT2']['VE'] = df.iloc[VT2_index]['VE_I']
     out_dict['VT1_upper']['VE'] = df[df.time == overlap_ci_1[1]]['VE_I'].values[0]
     out_dict['VT1_lower']['VE'] = df[df.time == overlap_ci_1[0]]['VE_I'].values[0]
     out_dict['VT2_upper']['VE'] = df[df.time == overlap_ci_2[1]]['VE_I'].values[0]
     out_dict['VT2_lower']['VE'] = df[df.time == overlap_ci_2[0]]['VE_I'].values[0]
 
-    out_dict['VT1']['VO2'] = df.iloc[VT1_index+int(past_points/2)]['VO2_20s']
-    out_dict['VT2']['VO2'] = df.iloc[VT2_index+int(past_points/2)]['VO2_20s']
+    out_dict['VT1']['VO2'] = df.iloc[VT1_index]['VO2_20s']
+    out_dict['VT2']['VO2'] = df.iloc[VT2_index]['VO2_20s']
     out_dict['VT1_upper']['VO2'] = df[df.time == overlap_ci_1[1]]['VO2_20s'].values[0]
     out_dict['VT1_lower']['VO2'] = df[df.time == overlap_ci_1[0]]['VO2_20s'].values[0]
     out_dict['VT2_upper']['VO2'] = df[df.time == overlap_ci_2[1]]['VO2_20s'].values[0]
@@ -785,7 +805,8 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=False, resting = True, resting_duration=60, y_pm0=1):
+def create_probabilities(duration=600, VT1=320, VT2=460
+                         , normalization=False, resting = True, resting_duration=60, y_pm0=1):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities

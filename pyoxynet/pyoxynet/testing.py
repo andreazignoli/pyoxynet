@@ -1131,7 +1131,7 @@ class Test:
 
         # rolling averages
         from scipy.ndimage import uniform_filter1d
-        filter_size=1
+        filter_size=20
 
         if self.metabolimeter != 'low':
 

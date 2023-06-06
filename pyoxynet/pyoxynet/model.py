@@ -73,16 +73,16 @@ class Model(tf.keras.Model):
     def __init__(self, n_classes, n_input):
         super(Model, self).__init__()
 
-        self.conv1 = tf.keras.layers.Conv1D(filters=32, kernel_size=6, padding='VALID', activation='sigmoid')
-        self.p1 = tf.keras.layers.MaxPooling1D(pool_size=2, strides=2, padding='VALID')
-        self.avg1 = tf.keras.layers.AveragePooling1D(pool_size=2, strides=2, padding='VALID')
+        self.conv1 = tf.keras.layers.Conv1D(filters=32, kernel_size=6, padding='causal')
+        self.p1 = tf.keras.layers.MaxPooling1D(pool_size=2, strides=2, padding='same')
+        self.avg1 = tf.keras.layers.AveragePooling1D(pool_size=2, strides=2, padding='same')
         self.bn1 = tf.keras.layers.BatchNormalization()
         self.f1 = tf.keras.layers.Flatten()
         self.drop1 = tf.keras.layers.Dropout(rate=0.4)
 
-        self.conv2 = tf.keras.layers.Conv1D(filters=32, kernel_size=6, padding="VALID")
-        self.p2 = tf.keras.layers.MaxPooling1D(pool_size=2, strides=2, padding='VALID')
-        self.avg2 = tf.keras.layers.AveragePooling1D(pool_size=2, strides=2, padding='VALID')
+        self.conv2 = tf.keras.layers.Conv1D(filters=32, kernel_size=6, padding="causal")
+        self.p2 = tf.keras.layers.MaxPooling1D(pool_size=2, strides=2, padding='same')
+        self.avg2 = tf.keras.layers.AveragePooling1D(pool_size=2, strides=2, padding='same')
         self.bn2 = tf.keras.layers.BatchNormalization()
         self.f2 = tf.keras.layers.Flatten()
         self.drop2 = tf.keras.layers.Dropout(rate=0.4)
@@ -102,13 +102,24 @@ class Model(tf.keras.Model):
         self.d4 = tf.keras.layers.Dense(n_classes, activation='sigmoid')
 
     def call(self, inputs, training=None):
-
         x = self.conv1(inputs)
         x = self.avg1(x)
         x = self.bn1(x, training=training)
         x = self.drop1(x, training=training)
 
+        x = self.conv2(x)
+        x = self.avg2(x)
+        x = self.bn2(x, training=training)
         x = self.f2(x, training=training)
+        x = self.drop2(x, training=training)
+
+        x = self.d1(x)
+        x = self.drop3(x, training=training)
+        x = self.bn3(x, training=training)
+
+        x = self.d2(x)
+        x = self.drop4(x, training=training)
+        x = self.bn4(x, training=training)
 
         x = self.d3(x)
         x = self.drop5(x, training=training)
@@ -117,16 +128,18 @@ class Model(tf.keras.Model):
         return self.d4(x)
 
     def loadModel(self, model_path):
+        # self.model = Model(n_classes, n_input)
         self.load_weights(model_path)
 
 class TCN(tf.keras.Model):
     def __init__(self, num_classes, num_filters, kernel_size, dilation_rates):
         super(TCN, self).__init__()
         self.conv_layers = []
+
         for dilation_rate in dilation_rates:
             self.conv_layers.append(tf.keras.layers.Conv1D(filters=num_filters,
                                                            kernel_size=kernel_size,
-                                                           padding='VALID',
+                                                           padding='causal',
                                                            dilation_rate=dilation_rate,
                                                            activation='sigmoid'))
         self.f = tf.keras.layers.Flatten()
@@ -138,6 +151,7 @@ class TCN(tf.keras.Model):
 
     def call(self, inputs, training=None):
         x = inputs
+
         for conv_layer in self.conv_layers:
             x = conv_layer(x)
         x = self.f(x)
