@@ -951,6 +951,13 @@ def generate_CPET(generator,
     data = StringIO(s)
     db_df = pd.read_csv(data)
 
+    bytes_data_standard = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_resting.csv')
+    s = str(bytes_data_standard, 'utf-8')
+    data = StringIO(s)
+    db_df_standard = pd.read_csv(data)
+
+    standard_beginning_ratio = db_df_standard.VO2min.mean()/db_df_standard.VO2peak.mean()
+
     # extract sample from db
     if fitness_group == None:
         # if fitness group is not user defined, then a sample is randomly taken
@@ -987,12 +994,17 @@ def generate_CPET(generator,
 
     # probability definition
     # FIXME: hard coded here
+
+    tmp_beginning_ratio = VO2_min/VO2_peak
+    y_pm0 = np.min([standard_beginning_ratio/tmp_beginning_ratio, 1])
+
     p_mF, p_hF, p_sF = create_probabilities(duration=duration,
                                             VT1=VT1,
                                             VT2=VT2,
                                             training=training,
                                             resting=resting,
-                                            normalization=normalization)
+                                            normalization=normalization,
+                                            y_pm0=y_pm0)
 
     # initialise
     VO2 = []
