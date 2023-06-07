@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 #test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 #filename, file_extension = os.path.splitext(test_file)
 
-with open('/Users/andreazignoli/oxynet-writing/RStudio/archive/fake/fake_#045.json', 'r') as f:
+with open('/Users/andreazignoli/oxynet-writing/RStudio/archive/real/real_#028.json', 'r') as f:
     CPET_data = json.load(f)
 new_dict_CPET = {}
 new_dict_CPET[0] = {'data': []}
