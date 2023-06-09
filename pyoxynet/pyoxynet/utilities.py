@@ -230,7 +230,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
     import importlib_resources
     import pickle
     from io import BytesIO
-    from pyoxynet import regressor, TCN
+    from pyoxynet import regressor, TCN, murias_lab
     import tensorflow as tf
     import os
 
@@ -249,6 +249,14 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             keras_metadata_model_binaries = importlib_resources.read_binary(TCN, 'keras_metadata.pb')
             variables_data_binaries = importlib_resources.read_binary(TCN, 'variables.data-00000-of-00001')
             variables_index_binaries = importlib_resources.read_binary(TCN, 'variables.index')
+        if model == 'murias_lab':
+            # load the classic Oxynet model configuration
+            print('Model custom trained on data from Juan Murias Lab uploaded')
+            saved_model_binaries = importlib_resources.read_binary(murias_lab, 'saved_model.pb')
+            keras_metadata_model_binaries = importlib_resources.read_binary(murias_lab, 'keras_metadata.pb')
+            variables_data_binaries = importlib_resources.read_binary(murias_lab, 'variables.data-00000-of-00001')
+            variables_index_binaries = importlib_resources.read_binary(murias_lab, 'variables.index')
+
         if model == 'transformer':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
@@ -279,6 +287,11 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             kernel_size = 3
             dilation_rates = [2 ** i for i in range(5)]
             my_model = TCN(num_classes, num_filters, kernel_size, dilation_rates)
+            my_model.build(input_shape=(1, past_points, 6))
+            my_model.set_weights(model.get_weights())
+        if model == 'murias_lab':
+            model = tf.keras.models.load_model('/tmp/')
+            my_model = Model(n_classes=3, n_input=6)
             my_model.build(input_shape=(1, past_points, 6))
             my_model.set_weights(model.get_weights())
 
