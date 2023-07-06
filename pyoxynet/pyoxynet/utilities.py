@@ -891,7 +891,7 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         pm_L3 = UnivariateSpline([step_1 + 120, VT1],
                                  [(y_pm0 - 0.5) / 2 + 0.5, 0.5], k=1)
         pm_L4 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration],
-                                 [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=2)
+                                 [0.5, pm_L3(VT1 + 30), 0, 0, 0], k=2)
         p_mF = np.hstack((pm_L0(t[t < step_1]),
                           pm_L1(t[(t >= step_1) & (t < step_1 + 60)]),
                           pm_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
