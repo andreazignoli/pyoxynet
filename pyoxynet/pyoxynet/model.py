@@ -73,45 +73,48 @@ class Model(tf.keras.Model):
     def __init__(self, n_classes, n_input):
         super(Model, self).__init__()
 
-        self.conv1 = tf.keras.layers.Conv1D(filters=32, kernel_size=6, padding='causal')
+        self.conv1 = tf.keras.layers.Conv1D(filters=64, kernel_size=6, padding='causal')
         self.p1 = tf.keras.layers.MaxPooling1D(pool_size=2, strides=2, padding='same')
         self.avg1 = tf.keras.layers.AveragePooling1D(pool_size=2, strides=2, padding='same')
         self.bn1 = tf.keras.layers.BatchNormalization()
         self.f1 = tf.keras.layers.Flatten()
-        self.drop1 = tf.keras.layers.Dropout(rate=0.4)
+        self.drop1 = tf.keras.layers.Dropout(rate=0.2)
 
-        self.conv2 = tf.keras.layers.Conv1D(filters=32, kernel_size=6, padding="causal")
+        self.conv2 = tf.keras.layers.Conv1D(filters=64, kernel_size=6, padding="causal")
         self.p2 = tf.keras.layers.MaxPooling1D(pool_size=2, strides=2, padding='same')
         self.avg2 = tf.keras.layers.AveragePooling1D(pool_size=2, strides=2, padding='same')
         self.bn2 = tf.keras.layers.BatchNormalization()
         self.f2 = tf.keras.layers.Flatten()
-        self.drop2 = tf.keras.layers.Dropout(rate=0.4)
+        self.drop2 = tf.keras.layers.Dropout(rate=0.2)
 
-        self.d1 = tf.keras.layers.Dense(64, kernel_regularizer='l1', activation='relu')
-        self.drop3 = tf.keras.layers.Dropout(rate=0.4)
+        self.d1 = tf.keras.layers.Dense(64, kernel_regularizer='l2', activation='relu')
+        self.drop3 = tf.keras.layers.Dropout(rate=0.2)
         self.bn3 = tf.keras.layers.BatchNormalization()
 
-        self.d2 = tf.keras.layers.Dense(32, kernel_regularizer='l1', activation='relu')
-        self.drop4 = tf.keras.layers.Dropout(rate=0.4)
+        self.d2 = tf.keras.layers.Dense(32, kernel_regularizer='l2', activation='relu')
+        self.drop4 = tf.keras.layers.Dropout(rate=0.2)
         self.bn4 = tf.keras.layers.BatchNormalization()
 
-        self.d3 = tf.keras.layers.Dense(16, kernel_regularizer='l1', activation='relu')
-        self.drop5 = tf.keras.layers.Dropout(rate=0.4)
+        self.d3 = tf.keras.layers.Dense(16, kernel_regularizer='l2', activation='relu')
+        self.drop5 = tf.keras.layers.Dropout(rate=0.2)
         self.bn5 = tf.keras.layers.BatchNormalization()
 
-        self.d4 = tf.keras.layers.Dense(n_classes, activation='sigmoid')
+        self.d4 = tf.keras.layers.Dense(n_classes, activation='relu')
 
     def call(self, inputs, training=None):
+
         x = self.conv1(inputs)
-        x = self.avg1(x)
+        # x = self.avg1(x)
+        x = self.p1(x)
         x = self.bn1(x, training=training)
         x = self.drop1(x, training=training)
 
         x = self.conv2(x)
-        x = self.avg2(x)
+        # x = self.avg2(x)
+        x = self.p2(x)
         x = self.bn2(x, training=training)
-        x = self.f2(x, training=training)
         x = self.drop2(x, training=training)
+        x = self.f2(x, training=training)
 
         x = self.d1(x)
         x = self.drop3(x, training=training)

@@ -728,8 +728,8 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     p_3 = []
     time = []
 
-    for i in np.arange(1, len(XN) - int(past_points)):
-        XN_array = np.asarray(XN[(i):(i+int(past_points))])
+    for i in np.arange(int(past_points/2), len(XN) - int(past_points/2)):
+        XN_array = np.asarray(XN[(i-int(past_points/2)):(i+int(past_points/2))])
         output_data = tf_model(XN_array.reshape(1, past_points, 6))
         p_1.append(output_data.numpy()[0][0])
         p_2.append(output_data.numpy()[0][1])
@@ -818,7 +818,7 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=False, resting = True, resting_duration=60, y_pm0=1):
+def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=False, resting = True, resting_duration=60, initial_step=False, y_pm0=1):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -861,13 +861,18 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
 
     from scipy.interpolate import UnivariateSpline
     # build splines
+
+    y_pm1 = y_pm0
+    if initial_step:
+        y_pm1 = (y_pm0 - 0.5)/2 + 0.5
+
     # moderate => 2 splines
-    pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm0, 0.5], k=2)
+    pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm1, 0.5], k=2)
     # compute additional points
     pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=2)
     p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
     # heavy => 3 splines
-    ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm0, 0.5], k=2)
+    ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm1, 0.5], k=2)
     # compute additional points
     ph_L2 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L1(VT1 + 30), 0.5], k=2)
     ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=2)
@@ -1019,6 +1024,10 @@ def generate_CPET(generator,
                                             normalization=normalization,
                                             y_pm0=y_pm0)
 
+    # # IMPORTANT: normalization only in > 0.5
+    p_hF[p_hF > 0.5] = np.interp(p_hF[p_hF > 0.5], (0.5, p_hF.max()), (0.5, 1))
+    p_sF[p_sF > 0.5] = np.interp(p_sF[p_sF > 0.5], (0.5, p_sF.max()), (0.5, 1))
+
     # initialise
     VO2 = []
     VCO2 = []
@@ -1029,6 +1038,7 @@ def generate_CPET(generator,
     PetCO2 = []
 
     time_array = np.arange(duration)
+
     # TODO: this is hard coded
     input_data = np.array(np.random.random_sample([1, 53]))
 
@@ -1096,10 +1106,11 @@ def generate_CPET(generator,
     df['PetO2VO2_I'] = df['PetO2_I'] / df['VO2_I']
     df['PetCO2VO2_I'] = df['PetCO2_I'] / df['VO2_I']
 
+    # TODO: this is hard coded, you need to subtract half window-length (see probability definition)
     df['domain'] = np.NaN
-    df.loc[df['time'] < (VT1), 'domain'] = -1
-    df.loc[df['time'] >= (VT2), 'domain'] = 1
-    df.loc[(df['time'] < (VT2)) & (df['time'] >= (VT1)), 'domain'] = 0
+    df.loc[df['time'] < (VT1 - 20), 'domain'] = -1
+    df.loc[df['time'] >= (VT2 - 20), 'domain'] = 1
+    df.loc[(df['time'] < (VT2 - 20)) & (df['time'] >= (VT1 - 20)), 'domain'] = 0
     df['fitness_group'] = db_df_sample['fitness_group'].values[0]
     df['Age'] = db_df_sample['Age'].values[0]
     df['age_group'] = db_df_sample['age_group'].values[0]

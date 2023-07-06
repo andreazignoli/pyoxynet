@@ -11,16 +11,40 @@ from pyoxynet import testing
 from pyoxynet import utilities
 from bs4 import BeautifulSoup
 
+# generator = load_tf_generator()
+# df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
+#
+# here=0
+
 #test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 #filename, file_extension = os.path.splitext(test_file)
 
-with open('/Users/andreazignoli/oxynet-writing/RStudio/test/real/real_#039.json', 'r') as f:
-    CPET_data = json.load(f)
-new_dict_CPET = {}
-new_dict_CPET[0] = {'data': []}
-new_dict_CPET[0]['data'] = CPET_data['data']
-df = utilities.load_exercise_threshold_app_data(data_dict=new_dict_CPET)
-df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=df, model='murias_lab')
+file_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/'
+json_list = []
+for files in os.listdir(file_dir):
+    if files.endswith(".json"):
+        json_list.append(files)
+
+VO2VT1_TDE = []
+VO2VT2_TDE = []
+VO2VT1_NN = []
+VO2VT2_NN = []
+
+for json_file in json_list:
+    with open(file_dir + json_file, 'r') as f:
+        CPET_data = json.load(f)
+    # new_dict_CPET = {}
+    # new_dict_CPET[0] = {'data': []}
+    # new_dict_CPET[0]['data'] = CPET_data['data']
+    df = utilities.load_exercise_threshold_app_data(data_dict=CPET_data)
+    df_fake = pd.DataFrame.from_dict(CPET_data[0]['data'], orient='columns')
+    df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=df)
+
+    VO2VT1_TDE.append(int(CPET_data[0]['VO2VT1']))
+    VO2VT2_TDE.append(int(CPET_data[0]['VO2VT2']))
+
+    VO2VT1_NN.append(int(dict_estimates['VT1']['VO2']))
+    VO2VT2_NN.append(int(dict_estimates['VT2']['VO2']))
 
 test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 filename, file_extension = os.path.splitext(test_file)
