@@ -818,7 +818,7 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=False, resting = True, resting_duration=60, initial_step=False, y_pm0=1):
+def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=False, resting=True, resting_duration=60, initial_step=False, y_pm0=1):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -867,25 +867,57 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm0, 0.5], k=2)
         # heavy => 3 splines
         ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm0, 0.5], k=2)
+        # compute additional points
+        pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=2)
+        p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
+        # compute additional points
+        ph_L2 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L1(VT1 + 30), 0.5], k=2)
+        ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=2)
+        p_hF = np.hstack((ph_L1(t[t < VT1]), ph_L2(t[(t >= VT1) & (t < VT2)]), ph_L3(t[t >= VT2])))
+        # severe => 2 splines
+        ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
+        # compute additional points
+        ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
+                                 [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
+        p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
+
     else:
         # moderate => 2 splines
-        pm_L1 = UnivariateSpline([0, 60, 120, VT1], [y_pm0, (y_pm0 - 0.5)/2 + 0.5, (y_pm0 - 0.5)/2 + 0.5, 0.5], k=2)
-        # heavy => 3 splines
-        ph_L1 = UnivariateSpline([0, 60, 120, VT1], [1 - y_pm0, 1 - ((y_pm0 - 0.5)/2 + 0.5), 1 - ((y_pm0 - 0.5)/2 + 0.5), 0.5], k=2)
+        pm_L0 = UnivariateSpline([0, step_1], [y_pm0, y_pm0], k=1)
+        pm_L1 = UnivariateSpline([step_1, step_1 + 60],
+                                 [y_pm0, (y_pm0 - 0.5)/2 + 0.5], k=1)
+        pm_L2 = UnivariateSpline([step_1 + 60, step_1 + 120],
+                                 [(y_pm0 - 0.5) / 2 + 0.5, (y_pm0 - 0.5) / 2 + 0.5], k=1)
+        pm_L3 = UnivariateSpline([step_1 + 120, VT1],
+                                 [(y_pm0 - 0.5) / 2 + 0.5, 0.5], k=1)
+        pm_L4 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration],
+                                 [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=2)
+        p_mF = np.hstack((pm_L0(t[t < step_1]),
+                          pm_L1(t[(t >= step_1) & (t < step_1 + 60)]),
+                          pm_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
+                          pm_L3(t[(t >= step_1 + 120) & (t < VT1)]),
+                          pm_L4(t[(t >= VT1)])))
 
-    # compute additional points
-    pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=2)
-    p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
-    # compute additional points
-    ph_L2 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L1(VT1 + 30), 0.5], k=2)
-    ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=2)
-    p_hF = np.hstack((ph_L1(t[t < VT1]), ph_L2(t[(t >= VT1) & (t < VT2)]), ph_L3(t[t >= VT2])))
-    # severe => 2 splines
-    ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
-    # compute additional points
-    ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
-                             [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
-    p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
+        # heavy => 3 splines
+        ph_L0 = UnivariateSpline([0, step_1], [1 - y_pm0, 1 - y_pm0], k=1)
+        ph_L1 = UnivariateSpline([step_1, step_1 + 60], [1 - y_pm0, 1 - ((y_pm0 - 0.5)/2 + 0.5)], k=1)
+        ph_L2 = UnivariateSpline([step_1 + 60, step_1 + 120], [1 - ((y_pm0 - 0.5) / 2 + 0.5), 1 - ((y_pm0 - 0.5) / 2 + 0.5)], k=1)
+        ph_L3 = UnivariateSpline([step_1 + 120, VT1],
+                                 [1 - ((y_pm0 - 0.5) / 2 + 0.5), 0.5], k=1)
+        ph_L4 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L3(VT1 + 30), 0.5], k=2)
+        ph_L5 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L4(VT2 + 30), 0], k=2)
+        p_hF = np.hstack((ph_L0(t[t < step_1]),
+                          ph_L1(t[(t >= step_1) & (t < step_1 + 60)]),
+                          ph_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
+                          ph_L3(t[(t >= step_1 + 120) & (t < VT1)]),
+                          ph_L4(t[(t >= VT1) & (t < VT2)]),
+                          ph_L4(t[(t >= VT2)])))
+        # severe => 2 splines
+        ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
+        # compute additional points
+        ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
+                                 [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
+        p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
 
     p_mF = optimal_filter(t, p_mF, 100)
     p_hF = optimal_filter(t, p_hF, 50)
@@ -1027,9 +1059,9 @@ def generate_CPET(generator,
                                             normalization=normalization,
                                             y_pm0=y_pm0)
 
-    # # IMPORTANT: normalization only in > 0.5
-    p_hF[p_hF > 0.5] = np.interp(p_hF[p_hF > 0.5], (0.5, p_hF.max()), (0.5, 1))
-    p_sF[p_sF > 0.5] = np.interp(p_sF[p_sF > 0.5], (0.5, p_sF.max()), (0.5, 1))
+    # # # IMPORTANT: normalization only in > 0.5
+    # p_hF[p_hF > 0.5] = np.interp(p_hF[p_hF > 0.5], (0.5, p_hF.max()), (0.5, 1))
+    # p_sF[p_sF > 0.5] = np.interp(p_sF[p_sF > 0.5], (0.5, p_sF.max()), (0.5, 1))
 
     # initialise
     VO2 = []
