@@ -784,8 +784,8 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     out_dict['VT2_lower'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) + int(past_points/2)
+    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) + int(past_points/2)
 
     out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
     out_dict['VT2']['time'] = df.iloc[VT2_index]['time']

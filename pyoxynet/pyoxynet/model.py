@@ -99,7 +99,7 @@ class Model(tf.keras.Model):
         self.drop5 = tf.keras.layers.Dropout(rate=0.2)
         self.bn5 = tf.keras.layers.BatchNormalization()
 
-        self.d4 = tf.keras.layers.Dense(n_classes, activation='relu')
+        self.d4 = tf.keras.layers.Dense(n_classes, activation='sigmoid')
 
     def call(self, inputs, training=None):
 
