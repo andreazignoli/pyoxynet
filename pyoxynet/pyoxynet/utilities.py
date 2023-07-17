@@ -717,16 +717,16 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
         XN = df
         # XN = normalize(X)
         # XN = X
-        XN['VO2_I'] = (XN['VO2_I'] - XN['VO2_I'].min()) / (
-                XN['VO2_I'].max() - XN['VO2_I'].min())
-        XN['VCO2_I'] = (XN['VCO2_I'] - XN['VCO2_I'].min()) / (
-                XN['VCO2_I'].max() - XN['VCO2_I'].min())
-        XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
-                XN['VE_I'].max() - XN['VE_I'].min())
-        XN['HR_I'] = (XN['HR_I'] - XN['HR_I'].min()) / (
-                XN['HR_I'].max() - XN['HR_I'].min())
-        XN['RF_I'] = (XN['RF_I'] - XN['RF_I'].min()) / (
-                XN['RF_I'].max() - XN['RF_I'].min())
+        # XN['VO2_I'] = (XN['VO2_I'] - XN['VO2_I'].min()) / (
+        #         XN['VO2_I'].max() - XN['VO2_I'].min())
+        # XN['VCO2_I'] = (XN['VCO2_I'] - XN['VCO2_I'].min()) / (
+        #         XN['VCO2_I'].max() - XN['VCO2_I'].min())
+        # XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
+        #         XN['VE_I'].max() - XN['VE_I'].min())
+        # XN['HR_I'] = (XN['HR_I'] - XN['HR_I'].min()) / (
+        #         XN['HR_I'].max() - XN['HR_I'].min())
+        # XN['RF_I'] = (XN['RF_I'] - XN['RF_I'].min()) / (
+        #         XN['RF_I'].max() - XN['RF_I'].min())
         XN['VCO2VO2_I'] = (XN['VCO2VO2_I'] - XN['VCO2VO2_I'].min()) / (
                 XN['VCO2VO2_I'].max() - XN['VCO2VO2_I'].min())
         XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
