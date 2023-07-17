@@ -11,10 +11,13 @@ from pyoxynet import testing
 from pyoxynet import utilities
 from bs4 import BeautifulSoup
 
-# generator = load_tf_generator()
-# df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
-#
-# here=0
+generator = load_tf_generator()
+df_fake, data_dict_fake = generate_CPET(generator,
+                                        noise_factor=None)
+CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
+df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
+
+here=0
 
 #test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 #filename, file_extension = os.path.splitext(test_file)
