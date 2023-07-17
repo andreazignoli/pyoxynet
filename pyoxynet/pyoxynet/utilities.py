@@ -238,10 +238,18 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
         if model == 'CNN':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
-            saved_model_binaries = importlib_resources.read_binary(regressor, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(regressor, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(regressor, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(regressor, 'variables.index')
+
+            try:
+                saved_model_binaries = importlib_resources.read_binary(regressor, 'saved_model.pb')
+                keras_metadata_model_binaries = importlib_resources.read_binary(regressor, 'keras_metadata.pb')
+                variables_data_binaries = importlib_resources.read_binary(regressor, 'variables.data-00000-of-00001')
+                variables_index_binaries = importlib_resources.read_binary(regressor, 'variables.index')
+            except:
+                saved_model_binaries = importlib_resources.files(regressor).joinpath('saved_model.pb').read_bytes()
+                keras_metadata_model_binaries = importlib_resources.files(regressor).joinpath('keras_metadata.pb').read_bytes()
+                variables_data_binaries = importlib_resources.files(regressor).joinpath('variables.data-00000-of-00001').read_bytes()
+                variables_index_binaries = importlib_resources.files(regressor).joinpath('variables.index').read_bytes()
+
         if model == 'TCN':
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
@@ -320,10 +328,19 @@ def load_tf_generator():
 
     # load the classic Oxynet model configuration
     print('Classic Oxynet configuration model uploaded')
-    saved_model_binaries = importlib_resources.read_binary(generator, 'saved_model.pb')
-    keras_metadata_model_binaries = importlib_resources.read_binary(generator, 'keras_metadata.pb')
-    variables_data_binaries = importlib_resources.read_binary(generator, 'variables.data-00000-of-00001')
-    variables_index_binaries = importlib_resources.read_binary(generator, 'variables.index')
+
+    try:
+        # importlib < 6.0
+        saved_model_binaries = importlib_resources.read_binary(generator, 'saved_model.pb')
+        keras_metadata_model_binaries = importlib_resources.read_binary(generator, 'keras_metadata.pb')
+        variables_data_binaries = importlib_resources.read_binary(generator, 'variables.data-00000-of-00001')
+        variables_index_binaries = importlib_resources.read_binary(generator, 'variables.index')
+    except:
+        # importlib >= 6.0
+        saved_model_binaries = importlib_resources.files(generator).joinpath('saved_model.pb').read_bytes()
+        keras_metadata_model_binaries = importlib_resources.files(generator).joinpath('keras_metadata.pb').read_bytes()
+        variables_data_binaries = importlib_resources.files(generator).joinpath('variables.data-00000-of-00001').read_bytes()
+        variables_index_binaries = importlib_resources.files(generator).joinpath('variables.index').read_bytes()
 
     try:
         if not os.path.isdir('/tmp/variables'):
@@ -697,9 +714,19 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
         if 'VCO2VO2_I' not in df.columns:
             df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
         filter_vars = ['VCO2VO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
-        X = df[filter_vars]
+        XN = df
         # XN = normalize(X)
-        XN = X
+        # XN = X
+        XN['VO2_I'] = (XN['VO2_I'] - XN['VO2_I'].min()) / (
+                XN['VO2_I'].max() - XN['VO2_I'].min())
+        XN['VCO2_I'] = (XN['VCO2_I'] - XN['VCO2_I'].min()) / (
+                XN['VCO2_I'].max() - XN['VCO2_I'].min())
+        XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
+                XN['VE_I'].max() - XN['VE_I'].min())
+        XN['HR_I'] = (XN['HR_I'] - XN['HR_I'].min()) / (
+                XN['HR_I'].max() - XN['HR_I'].min())
+        XN['RF_I'] = (XN['RF_I'] - XN['RF_I'].min()) / (
+                XN['RF_I'].max() - XN['RF_I'].min())
         XN['VCO2VO2_I'] = (XN['VCO2VO2_I'] - XN['VCO2VO2_I'].min()) / (
                 XN['VCO2VO2_I'].max() - XN['VCO2VO2_I'].min())
         XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
@@ -1025,9 +1052,18 @@ def generate_CPET(generator,
         VT1 = 0
         VT2 = 0
         # check if difference in threshold is < 10% of the entire duration
-        while (duration - VT2) < 60 or (VT2 - VT1) > 240 or (VT2 - VT1) < 60 or (duration - VT2) > 240 or (VT2 - VT1)/duration < 0.2:
-            VT1 = int(random.randrange(25, 65) * duration * 0.01)
-            VT2 = int(random.randrange(70, 96) * duration * 0.01)
+        print('Generating realistic LT and RCP levels ...')
+        if not resting:
+            # this means that it is a ramp test
+            while (duration - VT2) < 60 or (VT2 - VT1) > 240 or (VT2 - VT1) < 60 or (duration - VT2) > 240 or (VT2 - VT1)/duration < 0.2:
+                VT1 = int(np.random.normal(0.42, 0.07) * duration)
+                VT2 = int(np.random.normal(0.72, 0.08) * duration)
+        if resting:
+            # this means that it is a ramp test
+            while (duration - VT2) < 60 or (VT2 - VT1) > 240 or (VT2 - VT1) < 60 or (duration - VT2) > 240 or (VT2 - VT1)/duration < 0.2:
+                VT1 = int(np.random.normal(0.62, 0.07) * duration)
+                VT2 = int(np.random.normal(0.84, 0.05) * duration)
+        print('Found realistic LT and RCP levels ...')
 
     VO2_peak = int(db_df_sample.VO2peak)
     VCO2_peak = int(db_df_sample.VCO2peak)
@@ -1082,13 +1118,13 @@ def generate_CPET(generator,
         # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
         input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
         output_data = generator(input_data)
-        VO2.append(np.median(output_data[0, :, 0]))
-        VCO2.append(np.median(output_data[0, :, 1]))
-        VE.append(np.median(output_data[0, :, 2]))
-        HR.append(np.median(output_data[0, :, 3]))
-        RF.append(np.median(output_data[0, :, 4]))
-        PetO2.append(np.median(output_data[0, :, 5]))
-        PetCO2.append(np.median(output_data[0, :, 6]))
+        VO2.append(np.mean(output_data[0, :, 0]))
+        VCO2.append(np.mean(output_data[0, :, 1]))
+        VE.append(np.mean(output_data[0, :, 2]))
+        HR.append(np.mean(output_data[0, :, 3]))
+        RF.append(np.mean(output_data[0, :, 4]))
+        PetO2.append(np.mean(output_data[0, :, 5]))
+        PetCO2.append(np.mean(output_data[0, :, 6]))
         # vars -> ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
 
     # filter before you expand again between min and max
@@ -1187,9 +1223,12 @@ def generate_CPET(generator,
     print('Noise factor: ', round(noise_factor, 2))
     print('VT1: ', str(VT1))
     print('VT2: ', str(VT2))
-    print('VO2VT2: ', str(int(VO2VT1)))
+    print('VO2VT1: ', str(int(VO2VT1)))
     print('VO2VT2: ', str(int(VO2VT2)))
+    print('VO2VT1%: ', str(int(VO2VT1/VO2_peak*100)))
+    print('VO2VT2%: ', str(int(VO2VT2/VO2_peak * 100)))
     print('Resting:', resting)
+    print('Duration:', duration)
 
     # TODO: create a function to generate this dict, as it is the same that we should use when drawing real data files
     # create dict fro Exercise Threshold App
