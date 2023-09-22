@@ -234,29 +234,36 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
     import tensorflow as tf
     import os
 
-    if n_inputs == 6:
-        if model == 'CNN':
-            # load the classic Oxynet model configuration
-            print('Classic Oxynet configuration model uploaded')
+    if model == 'CNN':
+        # load the classic Oxynet model configuration
+        print('Classic Oxynet configuration model uploaded')
+        try:
+            saved_model_binaries = importlib_resources.read_binary(regressor, 'saved_model.pb')
+            keras_metadata_model_binaries = importlib_resources.read_binary(regressor, 'keras_metadata.pb')
+            variables_data_binaries = importlib_resources.read_binary(regressor, 'variables.data-00000-of-00001')
+            variables_index_binaries = importlib_resources.read_binary(regressor, 'variables.index')
+        except:
+            saved_model_binaries = importlib_resources.files(regressor).joinpath('saved_model.pb').read_bytes()
+            keras_metadata_model_binaries = importlib_resources.files(regressor).joinpath('keras_metadata.pb').read_bytes()
+            variables_data_binaries = importlib_resources.files(regressor).joinpath('variables.data-00000-of-00001').read_bytes()
+            variables_index_binaries = importlib_resources.files(regressor).joinpath('variables.index').read_bytes()
 
-            try:
-                saved_model_binaries = importlib_resources.read_binary(regressor, 'saved_model.pb')
-                keras_metadata_model_binaries = importlib_resources.read_binary(regressor, 'keras_metadata.pb')
-                variables_data_binaries = importlib_resources.read_binary(regressor, 'variables.data-00000-of-00001')
-                variables_index_binaries = importlib_resources.read_binary(regressor, 'variables.index')
-            except:
-                saved_model_binaries = importlib_resources.files(regressor).joinpath('saved_model.pb').read_bytes()
-                keras_metadata_model_binaries = importlib_resources.files(regressor).joinpath('keras_metadata.pb').read_bytes()
-                variables_data_binaries = importlib_resources.files(regressor).joinpath('variables.data-00000-of-00001').read_bytes()
-                variables_index_binaries = importlib_resources.files(regressor).joinpath('variables.index').read_bytes()
-
-        if model == 'TCN':
-            # load the classic Oxynet model configuration
-            print('Classic Oxynet configuration model uploaded')
+    if model == 'TCN':
+        # load the classic Oxynet model configuration
+        print('You are uploading an undocumented version of this model TCN')
+        try:
             saved_model_binaries = importlib_resources.read_binary(TCN, 'saved_model.pb')
             keras_metadata_model_binaries = importlib_resources.read_binary(TCN, 'keras_metadata.pb')
             variables_data_binaries = importlib_resources.read_binary(TCN, 'variables.data-00000-of-00001')
             variables_index_binaries = importlib_resources.read_binary(TCN, 'variables.index')
+        except:
+            saved_model_binaries = importlib_resources.files(TCN).joinpath('saved_model.pb').read_bytes()
+            keras_metadata_model_binaries = importlib_resources.files(TCN).joinpath('keras_metadata.pb').read_bytes()
+            variables_data_binaries = importlib_resources.files(TCN).joinpath('variables.data-00000-of-00001').read_bytes()
+            variables_index_binaries = importlib_resources.files(TCN).joinpath('variables.index').read_bytes()
+
+
+
         if model == 'murias_lab':
             # load the classic Oxynet model configuration
             print('Model custom trained on data from Juan Murias Lab uploaded')
@@ -269,10 +276,6 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             # load the classic Oxynet model configuration
             print('Classic Oxynet configuration model uploaded')
             tfl_model_binaries = importlib_resources.read_binary(regressor, 'transformer.pickle')
-    if n_inputs == 5 and past_points == 40:
-        # load the 5 input model configuration (e.g. in this case when on CO2 info is included)
-        print('Specific configuration model uploaded (no VCO2 available)')
-        tfl_model_binaries = importlib_resources.read_binary(regressor, 'tfl_model_5_40.pickle')
 
     try:
         if not os.path.isdir('/tmp/variables'):
@@ -285,22 +288,23 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
         from .model import Model, TCN
         if model == 'CNN':
             model = tf.keras.models.load_model('/tmp/')
-            my_model = Model(n_classes=3, n_input=6)
-            my_model.build(input_shape=(1, past_points, 6))
+            my_model = Model(n_classes=3, n_input=n_inputs)
+            my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'TCN':
             model = tf.keras.models.load_model('/tmp/')
             num_classes = 3  # Replace with the number of classes in your task
             num_filters = 64
             kernel_size = 3
-            dilation_rates = [2 ** i for i in range(5)]
-            my_model = TCN(num_classes, num_filters, kernel_size, dilation_rates)
-            my_model.build(input_shape=(1, past_points, 6))
+            num_layers = 6
+            dropout_rate = 0.2
+            my_model = TCN(num_classes, n_inputs, num_layers=num_layers, num_filters=num_filters, kernel_size=kernel_size, dropout_rate=dropout_rate)
+            my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'murias_lab':
             model = tf.keras.models.load_model('/tmp/')
-            my_model = Model(n_classes=3, n_input=6)
-            my_model.build(input_shape=(1, past_points, 6))
+            my_model = Model(n_classes=3, n_input=n_inputs)
+            my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
 
         return my_model
@@ -636,17 +640,19 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     # rolling averages to filter the data
     from scipy.ndimage import uniform_filter1d
-    # This filter size should be equal to the one used by the Test class
-    filter_size = 20
 
-    VO2_I = uniform_filter1d(VO2_I, size=filter_size)
-    VCO2_I = uniform_filter1d(VCO2_I, size=filter_size)
-    VE_I = uniform_filter1d(VE_I, size=filter_size)
-    PetO2_I = uniform_filter1d(PetO2_I, size=filter_size)
-    PetCO2_I = uniform_filter1d(PetCO2_I, size=filter_size)
-    VEVO2_I = uniform_filter1d(VEVO2_I, size=filter_size)
-    VEVCO2_I = uniform_filter1d(VEVCO2_I, size=filter_size)
-    VCO2VO2_I = uniform_filter1d(VCO2VO2_I, size=filter_size)
+    # This filter size should be equal to the one used by the Test class
+
+    # filter_size = 20
+    #
+    # VO2_I = uniform_filter1d(VO2_I, size=filter_size)
+    # VCO2_I = uniform_filter1d(VCO2_I, size=filter_size)
+    # VE_I = uniform_filter1d(VE_I, size=filter_size)
+    # PetO2_I = uniform_filter1d(PetO2_I, size=filter_size)
+    # PetCO2_I = uniform_filter1d(PetCO2_I, size=filter_size)
+    # VEVO2_I = uniform_filter1d(VEVO2_I, size=filter_size)
+    # VEVCO2_I = uniform_filter1d(VEVCO2_I, size=filter_size)
+    # VCO2VO2_I = uniform_filter1d(VCO2VO2_I, size=filter_size)
 
     df = pd.DataFrame()
     df['time'] = time_I
@@ -662,7 +668,7 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     return df
 
-def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=True):
+def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=False):
     """Runs the pyoxynet inference
 
     Parameters: 
@@ -709,59 +715,63 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
 
-    if n_inputs == 6:
-        # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
-        if 'VCO2VO2_I' not in df.columns:
-            df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
-        filter_vars = ['VCO2VO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
-        XN = df
-        # XN = normalize(X)
-        # XN = X
-        # XN['VO2_I'] = (XN['VO2_I'] - XN['VO2_I'].min()) / (
-        #         XN['VO2_I'].max() - XN['VO2_I'].min())
-        # XN['VCO2_I'] = (XN['VCO2_I'] - XN['VCO2_I'].min()) / (
-        #         XN['VCO2_I'].max() - XN['VCO2_I'].min())
-        # XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
-        #         XN['VE_I'].max() - XN['VE_I'].min())
-        # XN['HR_I'] = (XN['HR_I'] - XN['HR_I'].min()) / (
-        #         XN['HR_I'].max() - XN['HR_I'].min())
-        # XN['RF_I'] = (XN['RF_I'] - XN['RF_I'].min()) / (
-        #         XN['RF_I'].max() - XN['RF_I'].min())
-        XN['VCO2VO2_I'] = (XN['VCO2VO2_I'] - XN['VCO2VO2_I'].min()) / (
-                XN['VCO2VO2_I'].max() - XN['VCO2VO2_I'].min())
-        XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
-                XN['VE_I'].max() - XN['VE_I'].min())
-        XN['PetO2_I'] = (XN['PetO2_I'] - XN['PetO2_I'].min()) / (
-                XN['PetO2_I'].max() - XN['PetO2_I'].min())
-        # in the case of PetCO2 you take MAX from top 25 and MIN from the single test
-        # (x - MIN) / (MAX - MIN)
-        XN['PetCO2_I'] = (XN['PetCO2_I'] - XN['PetCO2_I'].min()) / (
-                XN['PetCO2_I'].max() - XN['PetCO2_I'].min())
-        XN['VEVO2_I'] = (XN['VEVO2_I'] - XN['VEVO2_I'].min()) / (
-                XN['VEVO2_I'].max() - XN['VEVO2_I'].min())
-        XN['VEVCO2_I'] = (XN['VEVCO2_I'] - XN['VEVCO2_I'].min()) / (
-                XN['VEVCO2_I'].max() - XN['VEVCO2_I'].min())
-        XN = XN.filter(filter_vars, axis=1)
-
-    if n_inputs == 5 and past_points == 40:
-        # TODO: FIX the normalisation here as well
-        filter_vars = ['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']
-        X = df[filter_vars]
-        XN = normalize(X)
-        XN = XN.filter(filter_vars, axis=1)
+    # filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
+    if 'VCO2VO2_I' not in df.columns:
+        df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
+    # filter_vars = ['VCO2VO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
+    filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I']
+    XN = df.copy()
+    # XN = normalize(X)
+    # XN = X
+    XN['VO2_I'] = (XN['VO2_I'] - XN['VO2_I'].min()) / (
+            XN['VO2_I'].max() - XN['VO2_I'].min())
+    XN['VCO2_I'] = (XN['VCO2_I'] - XN['VCO2_I'].min()) / (
+            XN['VCO2_I'].max() - XN['VCO2_I'].min())
+    XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
+            XN['VE_I'].max() - XN['VE_I'].min())
+    # XN['HR_I'] = (XN['HR_I'] - XN['HR_I'].min()) / (
+    #         XN['HR_I'].max() - XN['HR_I'].min())
+    # XN['RF_I'] = (XN['RF_I'] - XN['RF_I'].min()) / (
+    #         XN['RF_I'].max() - XN['RF_I'].min())
+    # XN['VCO2VO2_I'] = (XN['VCO2VO2_I'] - XN['VCO2VO2_I'].min()) / (
+    #         XN['VCO2VO2_I'].max() - XN['VCO2VO2_I'].min())
+    XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
+            XN['VE_I'].max() - XN['VE_I'].min())
+    XN['PetO2_I'] = (XN['PetO2_I'] - XN['PetO2_I'].min()) / (
+            XN['PetO2_I'].max() - XN['PetO2_I'].min())
+    # in the case of PetCO2 you take MAX from top 25 and MIN from the single test
+    # (x - MIN) / (MAX - MIN)
+    XN['PetCO2_I'] = (XN['PetCO2_I'] - XN['PetCO2_I'].min()) / (
+            XN['PetCO2_I'].max() - XN['PetCO2_I'].min())
+    # XN['VEVO2_I'] = (XN['VEVO2_I'] - XN['VEVO2_I'].min()) / (
+    #         XN['VEVO2_I'].max() - XN['VEVO2_I'].min())
+    # XN['VEVCO2_I'] = (XN['VEVCO2_I'] - XN['VEVCO2_I'].min()) / (
+    #         XN['VEVCO2_I'].max() - XN['VEVCO2_I'].min())
+    XN = XN.filter(filter_vars, axis=1)
 
     p_1 = []
     p_2 = []
     p_3 = []
     time = []
+    VO2 = []
+    VCO2 = []
+    VE = []
+    PetO2 = []
+    PetCO2 = []
 
-    for i in np.arange(int(past_points/2), len(XN) - int(past_points/2)):
-        XN_array = np.asarray(XN[(i-int(past_points/2)):(i+int(past_points/2))])
-        output_data = tf_model(XN_array.reshape(1, past_points, 6))
+    for i in np.arange(1, len(XN) - past_points):
+        XN_array = np.asarray(XN[i:i+int(past_points)])
+        output_data = tf_model(XN_array.reshape(1, past_points, n_inputs))
         p_1.append(output_data.numpy()[0][0])
         p_2.append(output_data.numpy()[0][1])
         p_3.append(output_data.numpy()[0][2])
-        time.append(df.time[i])
+        time.append(df.time[i] + past_points - 1)
+        # ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'domain']
+        VO2.append(np.mean(XN_array[-1, 0]) * (df['VO2_I'].max() - df['VO2_I'].min()) + df['VO2_I'].min())
+        VCO2.append(np.mean(XN_array[-1, 1]) * (df['VCO2_I'].max() - df['VCO2_I'].min()) + df['VCO2_I'].min())
+        VE.append(np.mean(XN_array[-1, 2]) * (df['VE_I'].max() - df['VE_I'].min()) + df['VE_I'].min())
+        PetO2.append(np.mean(XN_array[-1, 3]) * (df['PetO2_I'].max() - df['PetO2_I'].min()) + df['PetO2_I'].min())
+        PetCO2.append(np.mean(XN_array[-1, 4]) * (df['PetCO2_I'].max() - df['PetCO2_I'].min()) + df['PetCO2_I'].min())
 
     tmp_df = pd.DataFrame()
     tmp_df['time'] = time
@@ -773,6 +783,10 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     tmp_df['p_md_N'] = np.asarray(p_1) / (np.asarray(p_1) + np.asarray(p_2) + np.asarray(p_3))
     tmp_df['p_hv_N'] = np.asarray(p_2) / (np.asarray(p_1) + np.asarray(p_2) + np.asarray(p_3))
     tmp_df['p_sv_N'] = np.asarray(p_3) / (np.asarray(p_1) + np.asarray(p_2) + np.asarray(p_3))
+
+    tmp_df.loc[tmp_df['p_md_N'] < 0, 'p_md_N'] = 0
+    tmp_df.loc[tmp_df['p_hv_N'] < 0, 'p_hv_N'] = 0
+    tmp_df.loc[tmp_df['p_sv_N'] < 0, 'p_sv_N'] = 0
 
     # Perform kernel density estimation on the overlap probabilities
     kde_1 = stats.gaussian_kde(time, weights=tmp_df['p_sv_N'] * tmp_df['p_md_N'])
@@ -792,6 +806,12 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     out_df['p_md'] = tmp_df[mod_col]
     out_df['p_hv'] = tmp_df[hv_col]
     out_df['p_sv'] = tmp_df[sev_col]
+    out_df['VO2'] = VO2
+    out_df['VCO2'] = VCO2
+    out_df['VE'] = VE
+    out_df['PetO2'] = PetO2
+    out_df['PetCO2'] = PetCO2
+    out_df['VO2_F'] = optimal_filter(np.asarray(time), np.asarray(VO2), 100)
 
     if plot == True:
         plot([out_df['p_md'], out_df['p_hv'], out_df['p_sv']],
@@ -811,11 +831,14 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     out_dict['VT2_lower'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) + int(past_points/2)
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) + int(past_points/2)
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) - int(past_points/2)
+    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) - int(past_points/2)
 
-    out_dict['VT1']['time'] = df.iloc[VT1_index]['time']
-    out_dict['VT2']['time'] = df.iloc[VT2_index]['time']
+    VT1_time = int(out_df.iloc[VT1_index]['time'])
+    VT2_time = int(out_df.iloc[VT2_index]['time'])
+
+    out_dict['VT1']['time'] = VT1_time
+    out_dict['VT2']['time'] = VT2_time
 
     out_dict['VT1_upper']['time'] = overlap_ci_1[1]
     out_dict['VT1_lower']['time'] = overlap_ci_1[0]
@@ -829,19 +852,19 @@ def test_pyoxynet(input_df=[], n_inputs=6, past_points=40, model='CNN', plot=Tru
     out_dict['VT2_upper']['HR'] = df[df.time == overlap_ci_2[1]]['HR_I'].values[0]
     out_dict['VT2_lower']['HR'] = df[df.time == overlap_ci_2[0]]['HR_I'].values[0]
 
-    out_dict['VT1']['VE'] = df.iloc[VT1_index]['VE_I']
-    out_dict['VT2']['VE'] = df.iloc[VT2_index]['VE_I']
-    out_dict['VT1_upper']['VE'] = df[df.time == overlap_ci_1[1]]['VE_I'].values[0]
-    out_dict['VT1_lower']['VE'] = df[df.time == overlap_ci_1[0]]['VE_I'].values[0]
-    out_dict['VT2_upper']['VE'] = df[df.time == overlap_ci_2[1]]['VE_I'].values[0]
-    out_dict['VT2_lower']['VE'] = df[df.time == overlap_ci_2[0]]['VE_I'].values[0]
+    out_dict['VT1']['VE'] = out_df.iloc[VT1_index]['VE']
+    out_dict['VT2']['VE'] = out_df.iloc[VT2_index]['VE']
+    out_dict['VT1_upper']['VE'] = out_df[out_df.time == overlap_ci_1[1]]['VE'].values[0]
+    out_dict['VT1_lower']['VE'] = out_df[out_df.time == overlap_ci_1[0]]['VE'].values[0]
+    out_dict['VT2_upper']['VE'] = out_df[out_df.time == overlap_ci_2[1]]['VE'].values[0]
+    out_dict['VT2_lower']['VE'] = out_df[out_df.time == overlap_ci_2[0]]['VE'].values[0]
 
-    out_dict['VT1']['VO2'] = df.iloc[VT1_index]['VO2_20s']
-    out_dict['VT2']['VO2'] = df.iloc[VT2_index]['VO2_20s']
-    out_dict['VT1_upper']['VO2'] = df[df.time == overlap_ci_1[1]]['VO2_20s'].values[0]
-    out_dict['VT1_lower']['VO2'] = df[df.time == overlap_ci_1[0]]['VO2_20s'].values[0]
-    out_dict['VT2_upper']['VO2'] = df[df.time == overlap_ci_2[1]]['VO2_20s'].values[0]
-    out_dict['VT2_lower']['VO2'] = df[df.time == overlap_ci_2[0]]['VO2_20s'].values[0]
+    out_dict['VT1']['VO2'] = out_df.iloc[VT1_index]['VO2_F']
+    out_dict['VT2']['VO2'] = out_df.iloc[VT2_index]['VO2_F']
+    out_dict['VT1_upper']['VO2'] = out_df[out_df.time == overlap_ci_1[1]]['VO2_F'].values[0]
+    out_dict['VT1_lower']['VO2'] = out_df[out_df.time == overlap_ci_1[0]]['VO2_F'].values[0]
+    out_dict['VT2_upper']['VO2'] = out_df[out_df.time == overlap_ci_2[1]]['VO2_F'].values[0]
+    out_dict['VT2_lower']['VO2'] = out_df[out_df.time == overlap_ci_2[0]]['VO2_F'].values[0]
 
     return out_df, out_dict
 
@@ -1056,8 +1079,10 @@ def generate_CPET(generator,
         if not resting:
             # this means that it is a ramp test
             while (duration - VT2) < 60 or (VT2 - VT1) > 240 or (VT2 - VT1) < 60 or (duration - VT2) > 240 or (VT2 - VT1)/duration < 0.2:
-                VT1 = int(np.random.normal(0.42, 0.07) * duration)
-                VT2 = int(np.random.normal(0.72, 0.08) * duration)
+                # VT1 = int(np.random.normal(0.42, 0.07) * duration)
+                # VT2 = int(np.random.normal(0.72, 0.08) * duration)
+                VT1 = int(np.random.normal(0.65, 0.06) * duration)
+                VT2 = int(np.random.normal(0.84, 0.06) * duration)
         if resting:
             # this means that it is a ramp test
             while (duration - VT2) < 60 or (VT2 - VT1) > 240 or (VT2 - VT1) < 60 or (duration - VT2) > 240 or (VT2 - VT1)/duration < 0.2:
@@ -1118,13 +1143,13 @@ def generate_CPET(generator,
         # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
         input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
         output_data = generator(input_data)
-        VO2.append(np.mean(output_data[0, :, 0]))
-        VCO2.append(np.mean(output_data[0, :, 1]))
-        VE.append(np.mean(output_data[0, :, 2]))
-        HR.append(np.mean(output_data[0, :, 3]))
-        RF.append(np.mean(output_data[0, :, 4]))
-        PetO2.append(np.mean(output_data[0, :, 5]))
-        PetCO2.append(np.mean(output_data[0, :, 6]))
+        VO2.append(np.median(output_data[0, :, 0]))
+        VCO2.append(np.median(output_data[0, :, 1]))
+        VE.append(np.median(output_data[0, :, 2]))
+        HR.append(np.median(output_data[0, :, 3]))
+        RF.append(np.median(output_data[0, :, 4]))
+        PetO2.append(np.median(output_data[0, :, 5]))
+        PetCO2.append(np.median(output_data[0, :, 6]))
         # vars -> ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
 
     # filter before you expand again between min and max
@@ -1221,14 +1246,15 @@ def generate_CPET(generator,
     print('Height: ', db_df_sample.height.values[0], 'm')
     print('Age: ', int(db_df_sample.Age.values), 'y')
     print('Noise factor: ', round(noise_factor, 2))
-    print('VT1: ', str(VT1))
-    print('VT2: ', str(VT2))
-    print('VO2VT1: ', str(int(VO2VT1)))
-    print('VO2VT2: ', str(int(VO2VT2)))
-    print('VO2VT1%: ', str(int(VO2VT1/VO2_peak*100)))
-    print('VO2VT2%: ', str(int(VO2VT2/VO2_peak * 100)))
+    print('VT1: ', str(VT1), ' sec after start')
+    print('VT2: ', str(VT2), ' sec after start')
+    print('Duration:', duration, ' sec')
+    print('VO2VT1: ', str(int(VO2VT1)), ' mlO2')
+    print('VO2VT2: ', str(int(VO2VT2)), ' mlO2')
+    print('VO2VT1%: ', str(int(VO2VT1/VO2_peak*100)), ' %')
+    print('VO2VT2%: ', str(int(VO2VT2/VO2_peak * 100)), ' %')
     print('Resting:', resting)
-    print('Duration:', duration)
+
 
     # TODO: create a function to generate this dict, as it is the same that we should use when drawing real data files
     # create dict fro Exercise Threshold App
