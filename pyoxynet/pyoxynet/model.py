@@ -135,35 +135,51 @@ class Model(tf.keras.Model):
         self.load_weights(model_path)
 
 class TCN(tf.keras.Model):
-    def __init__(self, num_classes, num_filters, kernel_size, dilation_rates):
+
+    def __init__(self, n_output, n_input, num_layers=6, num_filters=64, kernel_size=3, dropout_rate=0.2):
         super(TCN, self).__init__()
-        self.conv_layers = []
 
-        for dilation_rate in dilation_rates:
-            self.conv_layers.append(tf.keras.layers.Conv1D(filters=num_filters,
-                                                           kernel_size=kernel_size,
-                                                           padding='causal',
-                                                           dilation_rate=dilation_rate,
-                                                           activation='sigmoid'))
-        self.f = tf.keras.layers.Flatten()
-        self.drop = tf.keras.layers.Dropout(rate=0.4)
-        self.dense = tf.keras.layers.Dense(16, kernel_regularizer='l1', activation='sigmoid')
-        self.bn = tf.keras.layers.BatchNormalization()
+        # Initial Input Layer
+        self.input_layer = tf.keras.layers.Input(shape=(None, n_input))
 
-        self.output_layer = tf.keras.layers.Dense(num_classes, activation='sigmoid')
+        # TCN Blocks
+        for i in range(num_layers):
+            dilation_rate = 2 ** i
+            tcn_block = self.build_tcn_block(num_filters, kernel_size, dilation_rate, dropout_rate)
+            setattr(self, f'tcn_block_{i}', tcn_block)
+
+        # Fully Connected Layers
+        self.fc1 = tf.keras.layers.Dense(128, activation='relu')
+        self.fc2 = tf.keras.layers.Dense(64, activation='relu')
+
+        # Output Layer for Regression
+        self.output_layer = tf.keras.layers.Dense(n_output, activation='linear')
+
+    def build_tcn_block(self, num_filters, kernel_size, dilation_rate, dropout_rate):
+        tcn_block = tf.keras.models.Sequential([
+            tf.keras.layers.Conv1D(filters=num_filters, kernel_size=kernel_size, padding='causal', dilation_rate=dilation_rate,
+                          activation='relu'),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.SpatialDropout1D(dropout_rate)
+        ])
+        return tcn_block
 
     def call(self, inputs, training=None):
-        x = inputs
+        x = inputs  # No need to call the input layer explicitly
 
-        for conv_layer in self.conv_layers:
-            x = conv_layer(x)
-        x = self.f(x)
-        x = self.drop(x)
-        x = self.dense(x)
-        x = self.bn(x, training=training)
-        output = self.output_layer(x)
-        return output
+        # TCN Blocks
+        for i in range(6):
+            x = getattr(self, f'tcn_block_{i}')(x)
+
+        # Global Average Pooling
+        x = tf.keras.layers.GlobalAveragePooling1D()(x)
+
+        # Fully Connected Layers
+        x = self.fc1(x)
+        x = self.fc2(x)
+
+        # Output Layer for Regression
+        return self.output_layer(x)
 
     def loadModel(self, model_path):
-        # self.model = Model(n_classes, n_input)
         self.load_weights(model_path)
