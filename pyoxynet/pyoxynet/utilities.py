@@ -354,10 +354,10 @@ def load_tf_generator():
         open('/tmp/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
         open('/tmp/variables/variables.index', 'wb').write(variables_index_binaries)
         model = tf.keras.models.load_model('/tmp/')
-        from .model import Generator
-        my_model = Generator()
+        from .model import generator
+        my_model = generator()
         # TODO: this is hardcoded
-        my_model.build(input_shape=(1, 53))
+        my_model.build(input_shape=(1, 23))
         my_model.set_weights(model.get_weights())
 
         return my_model
@@ -831,8 +831,8 @@ def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=Fal
     out_dict['VT2_lower'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1]) - int(past_points/2)
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1]) - int(past_points/2)
+    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
+    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
 
     VT1_time = int(out_df.iloc[VT1_index]['time'])
     VT2_time = int(out_df.iloc[VT2_index]['time'])
@@ -1136,20 +1136,20 @@ def generate_CPET(generator,
     time_array = np.arange(duration)
 
     # TODO: this is hard coded
-    input_data = np.array(np.random.random_sample([1, 53]))
+    input_data = np.array(np.random.random_sample([1, 23]))
 
     for seconds_ in time_array:
         # keep the seed?
         # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
         input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
         output_data = generator(input_data)
-        VO2.append(np.median(output_data[0, :, 0]))
-        VCO2.append(np.median(output_data[0, :, 1]))
-        VE.append(np.median(output_data[0, :, 2]))
-        HR.append(np.median(output_data[0, :, 3]))
-        RF.append(np.median(output_data[0, :, 4]))
-        PetO2.append(np.median(output_data[0, :, 5]))
-        PetCO2.append(np.median(output_data[0, :, 6]))
+        VO2.append(np.mean(output_data[0, :, 0]))
+        VCO2.append(np.mean(output_data[0, :, 1]))
+        VE.append(np.mean(output_data[0, :, 2]))
+        HR.append(np.mean(output_data[0, :, 3]))
+        RF.append(np.mean(output_data[0, :, 4]))
+        PetO2.append(np.mean(output_data[0, :, 5]))
+        PetCO2.append(np.mean(output_data[0, :, 6]))
         # vars -> ['VO2_I', 'VCO2_I', 'VE_I', 'HR_I', 'RF_I', 'PetO2_I', 'PetCO2_I']
 
     # filter before you expand again between min and max
@@ -1251,7 +1251,7 @@ def generate_CPET(generator,
     print('Duration:', duration, ' sec')
     print('VO2VT1: ', str(int(VO2VT1)), ' mlO2')
     print('VO2VT2: ', str(int(VO2VT2)), ' mlO2')
-    print('VO2VT1%: ', str(int(VO2VT1/VO2_peak*100)), ' %')
+    print('VO2VT1%: ', str(int(VO2VT1/VO2_peak * 100)), ' %')
     print('VO2VT2%: ', str(int(VO2VT2/VO2_peak * 100)), ' %')
     print('Resting:', resting)
 
@@ -1270,7 +1270,7 @@ def generate_CPET(generator,
     data['VO2VT2'] = str(int(VO2VT2))
     data['VO2max'] = str(int(VO2_peak))
     data['LT'] = str(int(VO2VT1))
-    data['LT_vo2max'] = str(int((VO2VT1/VO2_peak)*100)) + '%'
+    data['LT_vo2max'] = str(int((VO2VT1/VO2_peak) * 100)) + '%'
     data['RCP'] = str(int(VO2VT2))
     data['RCP_vo2max'] = str(int((VO2VT2/VO2_peak) * 100)) + '%'
     data['id'] = 'fake_#'
