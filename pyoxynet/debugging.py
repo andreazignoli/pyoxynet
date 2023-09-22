@@ -11,11 +11,19 @@ from pyoxynet import testing
 from pyoxynet import utilities
 from bs4 import BeautifulSoup
 
-generator = load_tf_generator()
-df_fake, data_dict_fake = generate_CPET(generator,
-                                        noise_factor=None)
-CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
-df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
+##################
+
+# file_path = '/Users/andreazignoli/oxynet-interpreter-tf2/training_data/ARC_VO2_FOL.csv'
+# df = pd.read_csv(file_path)
+# df_est, dict_est = test_pyoxynet(df, model='TCN')
+
+
+##################
+
+# generator = load_tf_generator()
+# df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
+# CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
+# df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
 
 here=0
 
@@ -39,15 +47,23 @@ for json_file in json_list:
     # new_dict_CPET = {}
     # new_dict_CPET[0] = {'data': []}
     # new_dict_CPET[0]['data'] = CPET_data['data']
-    df = utilities.load_exercise_threshold_app_data(data_dict=CPET_data)
-    df_fake = pd.DataFrame.from_dict(CPET_data[0]['data'], orient='columns')
-    df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=df)
 
-    VO2VT1_TDE.append(int(CPET_data[0]['VO2VT1']))
-    VO2VT2_TDE.append(int(CPET_data[0]['VO2VT2']))
+    try:
+        df = utilities.load_exercise_threshold_app_data(data_dict=CPET_data)
+        df_fake = pd.DataFrame.from_dict(CPET_data[0]['data'], orient='columns')
+        df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=df, n_inputs=5, model='TCN')
 
-    VO2VT1_NN.append(int(dict_estimates['VT1']['VO2']))
-    VO2VT2_NN.append(int(dict_estimates['VT2']['VO2']))
+        VO2VT1_TDE.append(int(CPET_data[0]['VO2VT1']))
+        VO2VT2_TDE.append(int(CPET_data[0]['VO2VT2']))
+
+        VO2VT1_NN.append(int(dict_estimates['VT1']['VO2']))
+        VO2VT2_NN.append(int(dict_estimates['VT2']['VO2']))
+
+    except:
+        print('Could not process ', json_file)
+        pass
+
+    here = 0
 
 test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 filename, file_extension = os.path.splitext(test_file)
