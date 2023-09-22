@@ -20,10 +20,27 @@ from bs4 import BeautifulSoup
 
 ##################
 
-# generator = load_tf_generator()
-# df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
-# CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
-# df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
+
+generator = load_tf_generator()
+
+VO2VT1_FAKE = []
+VO2VT2_FAKE = []
+VO2VT1_NN = []
+VO2VT2_NN = []
+
+for i in np.arange(20):
+    try:
+        df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
+        # CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
+        df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
+
+        VO2VT1_FAKE.append(int(data_dict_fake['VO2VT1']))
+        VO2VT2_FAKE.append(int(data_dict_fake['VO2VT2']))
+
+        VO2VT1_NN.append(int(dict_est_fake['VT1']['VO2']))
+        VO2VT2_NN.append(int(dict_est_fake['VT2']['VO2']))
+    except:
+        pass
 
 here=0
 
