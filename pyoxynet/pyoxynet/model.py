@@ -1,9 +1,9 @@
 import tensorflow as tf
 
-class Generator(tf.keras.Model):
+class generator(tf.keras.Model):
     def __init__(self, n_input=7, n_past_points=40, n_labels=3, data_noise_dim=50):
 
-        super(Generator, self).__init__()
+        super(generator, self).__init__()
         # DATA
         self.d1 = tf.keras.layers.Dense(n_past_points * n_input, use_bias=False, input_shape=(data_noise_dim,))
         self.bn1 = tf.keras.layers.BatchNormalization()
@@ -27,15 +27,15 @@ class Generator(tf.keras.Model):
         self.bn3 = tf.keras.layers.BatchNormalization()
         self.lRe3 = tf.keras.layers.LeakyReLU()
 
-        self.conv3 = tf.keras.layers.Conv1D(n_input, 5, strides=2, padding='same', use_bias=False, activation='tanh')
+        self.conv3 = tf.keras.layers.Conv1D(n_input, 5, strides=2, padding='same', use_bias=False, activation='linear')
         self.bn32 = tf.keras.layers.BatchNormalization()
         self.lRe32 = tf.keras.layers.LeakyReLU()
 
     def call(self, inputs, training=None):
         # data
-        inputs_1 = tf.slice(inputs, [0, 0], [-1, 50])
+        inputs_1 = tf.slice(inputs, [0, 0], [-1, 20])
         # label
-        inputs_2 = tf.slice(inputs, [0, 50], [-1, 3])
+        inputs_2 = tf.slice(inputs, [0, 20], [-1, 3])
 
         # INPUT
         x = self.d1(inputs_1)
@@ -64,9 +64,6 @@ class Generator(tf.keras.Model):
         x = self.lRe32(x, training=training)
 
         return x
-
-    def loadModel(self, model_path):
-        self.load_weights(model_path)
 
 class Model(tf.keras.Model):
 
