@@ -28,7 +28,7 @@ VO2VT2_FAKE = []
 VO2VT1_NN = []
 VO2VT2_NN = []
 
-for i in np.arange(20):
+for i in np.arange(40):
     try:
         df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
         # CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
