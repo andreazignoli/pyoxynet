@@ -27,8 +27,9 @@ VO2VT1_FAKE = []
 VO2VT2_FAKE = []
 VO2VT1_NN = []
 VO2VT2_NN = []
+save_files = True
 
-for i in np.arange(40):
+for i in np.arange(800):
     try:
         df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
         # CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
@@ -39,6 +40,21 @@ for i in np.arange(40):
 
         VO2VT1_NN.append(int(dict_est_fake['VT1']['VO2']))
         VO2VT2_NN.append(int(dict_est_fake['VT2']['VO2']))
+
+        file_id = 'fake_#' + str(i).zfill(3)
+
+        # data_dict_fake['oxynet'] = {}
+        # data_dict_fake['oxynet']['LT'] = int(dict_est_fake['VT1']['VO2'])
+        # data_dict_fake['oxynet']['RCP'] = int(dict_est_fake['VT2']['VO2'])
+
+        if save_files:
+            df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
+            json_object = json.dumps(data_dict_fake)
+            # Writing to sample.json
+            with open('/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/' + file_id + '.json',
+                      "w") as outfile:
+                outfile.write(json_object)
+
     except:
         pass
 
