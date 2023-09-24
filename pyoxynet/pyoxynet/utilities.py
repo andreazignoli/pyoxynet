@@ -1069,42 +1069,27 @@ def generate_CPET(generator,
         db_df_sample = db_df[db_df['fitness_group'] == fitness_group].sample()
 
     if duration == None:
-        duration = int(db_df_sample.duration)
+        duration = int(db_df_sample.duration) + int(np.random.normal(0, 10))
 
     if VT1 == None and VT2 == None:
-        VT1 = 0
-        VT2 = 0
-        # check if difference in threshold is < 10% of the entire duration
-        print('Generating realistic LT and RCP levels ...')
-        if not resting:
-            # this means that it is a ramp test
-            while (duration - VT2) < 60 or (VT2 - VT1) > 240 or (VT2 - VT1) < 60 or (duration - VT2) > 240 or (VT2 - VT1)/duration < 0.2:
-                # VT1 = int(np.random.normal(0.42, 0.07) * duration)
-                # VT2 = int(np.random.normal(0.72, 0.08) * duration)
-                VT1 = int(np.random.normal(0.65, 0.06) * duration)
-                VT2 = int(np.random.normal(0.84, 0.06) * duration)
-        if resting:
-            # this means that it is a ramp test
-            while (duration - VT2) < 60 or (VT2 - VT1) > 240 or (VT2 - VT1) < 60 or (duration - VT2) > 240 or (VT2 - VT1)/duration < 0.2:
-                VT1 = int(np.random.normal(0.62, 0.07) * duration)
-                VT2 = int(np.random.normal(0.84, 0.05) * duration)
-        print('Found realistic LT and RCP levels ...')
+        VT1 = int(db_df_sample.VT1) + int(np.random.normal(0, 5))
+        VT2 = int(db_df_sample.VT2) + int(np.random.normal(0, 5))
 
-    VO2_peak = int(db_df_sample.VO2peak)
-    VCO2_peak = int(db_df_sample.VCO2peak)
-    VE_peak = int(db_df_sample.VEpeak)
-    RF_peak = int(db_df_sample.RFpeak)
-    HR_peak = int(db_df_sample.HRpeak)
-    PetO2_peak = int(db_df_sample.PetO2peak)
-    PetCO2_peak = int(db_df_sample.PetCO2peak)
+    VO2_peak = int(db_df_sample.VO2peak) + int(np.random.normal(0, 60))
+    VCO2_peak = int(db_df_sample.VCO2peak) + int(np.random.normal(0, 60))
+    VE_peak = int(db_df_sample.VEpeak) + int(np.random.normal(0, 4))
+    RF_peak = int(db_df_sample.RFpeak) + int(np.random.normal(0, 4))
+    HR_peak = int(db_df_sample.HRpeak) + int(np.random.normal(0, 4))
+    PetO2_peak = int(db_df_sample.PetO2peak) + int(np.random.normal(0, 4))
+    PetCO2_peak = int(db_df_sample.PetCO2peak) + int(np.random.normal(0, 4))
 
-    VO2_min = int(db_df_sample.VO2min)
-    VCO2_min = int(db_df_sample.VCO2min)
-    VE_min = int(db_df_sample.VEmin)
-    RF_min = int(db_df_sample.RFmin)
-    HR_min = int(db_df_sample.HRmin)
-    PetO2_min = int(db_df_sample.PetO2min)
-    PetCO2_min = int(db_df_sample.PetCO2min)
+    VO2_min = int(db_df_sample.VO2min) + int(np.random.normal(0, 4))
+    VCO2_min = int(db_df_sample.VCO2min) + int(np.random.normal(0, 4))
+    VE_min = int(db_df_sample.VEmin) + int(np.random.normal(0, 1))
+    RF_min = int(db_df_sample.RFmin) + int(np.random.normal(0, 1))
+    HR_min = int(db_df_sample.HRmin) + int(np.random.normal(0, 1))
+    PetO2_min = int(db_df_sample.PetO2min) + int(np.random.normal(0, 2))
+    PetCO2_min = int(db_df_sample.PetCO2min) + int(np.random.normal(0, 2))
 
     # probability definition
     # FIXME: hard coded here
@@ -1254,7 +1239,6 @@ def generate_CPET(generator,
     print('VO2VT1%: ', str(int(VO2VT1/VO2_peak * 100)), ' %')
     print('VO2VT2%: ', str(int(VO2VT2/VO2_peak * 100)), ' %')
     print('Resting:', resting)
-
 
     # TODO: create a function to generate this dict, as it is the same that we should use when drawing real data files
     # create dict fro Exercise Threshold App
