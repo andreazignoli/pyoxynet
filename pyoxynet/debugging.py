@@ -9,6 +9,7 @@ import random
 import os
 from pyoxynet import testing
 from pyoxynet import utilities
+import sys
 from bs4 import BeautifulSoup
 
 ##################
@@ -20,7 +21,6 @@ from bs4 import BeautifulSoup
 
 ##################
 
-
 generator = load_tf_generator()
 
 VO2VT1_FAKE = []
@@ -29,10 +29,17 @@ VO2VT1_NN = []
 VO2VT2_NN = []
 save_files = True
 
-for i in np.arange(800):
+for i in np.arange(60):
     try:
-        df_fake, data_dict_fake = generate_CPET(generator, noise_factor=None)
-        # CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
+        resting = random.choice([0, 1])
+        fitness_group = random.choice([2, 3])
+        df_fake, data_dict_fake = generate_CPET(generator,
+                                                noise_factor=None,
+                                                resting=resting,
+                                                training=True,
+                                                fitness_group=fitness_group,
+                                                normalization=False)
+        CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
         df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
 
         VO2VT1_FAKE.append(int(data_dict_fake['VO2VT1']))
@@ -43,15 +50,15 @@ for i in np.arange(800):
 
         file_id = 'fake_#' + str(i).zfill(3)
 
-        # data_dict_fake['oxynet'] = {}
-        # data_dict_fake['oxynet']['LT'] = int(dict_est_fake['VT1']['VO2'])
-        # data_dict_fake['oxynet']['RCP'] = int(dict_est_fake['VT2']['VO2'])
+        data_dict_fake['oxynet'] = {}
+        data_dict_fake['oxynet']['LT'] = int(dict_est_fake['VT1']['VO2'])
+        data_dict_fake['oxynet']['RCP'] = int(dict_est_fake['VT2']['VO2'])
 
         if save_files:
-            df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
+            df_fake.to_csv('/Users/andreazignoli/oxynet-writing/RStudio/generated/csv/' + file_id + '.csv')
             json_object = json.dumps(data_dict_fake)
             # Writing to sample.json
-            with open('/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/' + file_id + '.json',
+            with open('/Users/andreazignoli/oxynet-writing/RStudio/generated/json/' + file_id + '.json',
                       "w") as outfile:
                 outfile.write(json_object)
 
@@ -59,6 +66,8 @@ for i in np.arange(800):
         pass
 
 here=0
+
+sys.exit()
 
 #test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 #filename, file_extension = os.path.splitext(test_file)
