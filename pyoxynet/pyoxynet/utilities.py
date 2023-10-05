@@ -262,8 +262,6 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             variables_data_binaries = importlib_resources.files(TCN).joinpath('variables.data-00000-of-00001').read_bytes()
             variables_index_binaries = importlib_resources.files(TCN).joinpath('variables.index').read_bytes()
 
-
-
         if model == 'murias_lab':
             # load the classic Oxynet model configuration
             print('Model custom trained on data from Juan Murias Lab uploaded')
@@ -294,9 +292,9 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
         if model == 'TCN':
             model = tf.keras.models.load_model('/tmp/')
             num_classes = 3  # Replace with the number of classes in your task
-            num_filters = 64
+            num_filters = 128
             kernel_size = 3
-            num_layers = 6
+            num_layers = 8
             dropout_rate = 0.2
             my_model = TCN(num_classes, n_inputs, num_layers=num_layers, num_filters=num_filters, kernel_size=kernel_size, dropout_rate=dropout_rate)
             my_model.build(input_shape=(1, past_points, n_inputs))
@@ -1017,8 +1015,6 @@ def random_walk(length=1, scale_factor=1, variation=1):
 def generate_CPET(generator,
                   plot=False,
                   fitness_group=None,
-                  VT1=None, VT2=None,
-                  duration=None,
                   noise_factor=0,
                   resting=False,
                   training=True,
@@ -1042,60 +1038,51 @@ def generate_CPET(generator,
     from uniplot import plot as terminal_plot
     from datetime import datetime
 
-    import pkgutil
-    from io import StringIO
+    # Set the minimum and maximum values
+    minimum_value = 1800
+    maximum_value = 4900
+
+    # Generate a random number
+    VO2_peak = round(np.random.uniform(minimum_value, maximum_value), 1)
+    VO2_VT1_efficiency = np.random.uniform(10.8, 11.8)
+    # VO2_VT2_efficiency = VO2_VT1_efficiency + np.random.uniform(0.2, 0.8)
+
+    if resting == None:
+        resting = random.choice([0, 1])
+    VT1 = round(np.random.uniform(320, 480))
+    VT2 = round(0.9307 * VT1 + 199.7 + np.random.normal(0, 30))
+    duration = round(0.9784 * VT2 + 147.33 + np.random.normal(0, 30))
 
     if resting:
-        bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_resting.csv')
+        VO2_min = np.random.uniform(320, 540)
+        VT1 = VT1 + 60
+        VT2 = VT2 + 60
+        duration = duration + 60
+        RF_min = np.random.uniform(12, 16)
     else:
-        bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_ramp.csv')
+        VO2_min = VO2_VT1_efficiency * 80
+        RF_min = np.random.uniform(14, 20)  # starting at 80 W
 
-    s = str(bytes_data, 'utf-8')
-    data = StringIO(s)
-    db_df = pd.read_csv(data)
+    VCO2_peak = VO2_peak + np.random.uniform(260, 440)
+    VE_peak = 0.0455 * VO2_peak - 8.8016
+    RF_peak = 0.0093 * VO2_peak + 26.21
+    HR_peak = 0.0121 * VO2_peak + 126.74
+    PetO2_peak = - 0.004 * VO2_peak + 122.37
 
-    bytes_data_standard = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_resting.csv')
-    s = str(bytes_data_standard, 'utf-8')
-    data = StringIO(s)
-    db_df_standard = pd.read_csv(data)
+    VCO2_min = 0.8592 * VO2_min - 11.805
+    VE_min = 0.0226 * VO2_min + 2.7968
+    HR_min = 0.0327 * VO2_min + 65.1
+    PetO2_min = - 0.0269 * VO2_min + 107.6
 
-    standard_beginning_ratio = db_df_standard.VO2min.mean()/db_df_standard.VO2peak.mean()
-
-    # extract sample from db
-    if fitness_group == None:
-        # if fitness group is not user defined, then a sample is randomly taken
-        db_df_sample = db_df.sample()
-    else:
-        db_df_sample = db_df[db_df['fitness_group'] == fitness_group].sample()
-
-    if duration == None:
-        duration = int(db_df_sample.duration) + int(np.random.normal(0, 10))
-
-    if VT1 == None and VT2 == None:
-        VT1 = int(db_df_sample.VT1) + int(np.random.normal(0, 5))
-        VT2 = int(db_df_sample.VT2) + int(np.random.normal(0, 5))
-
-    VO2_peak = int(db_df_sample.VO2peak) + int(np.random.normal(0, 60))
-    VCO2_peak = int(db_df_sample.VCO2peak) + int(np.random.normal(0, 60))
-    VE_peak = int(db_df_sample.VEpeak) + int(np.random.normal(0, 4))
-    RF_peak = int(db_df_sample.RFpeak) + int(np.random.normal(0, 4))
-    HR_peak = int(db_df_sample.HRpeak) + int(np.random.normal(0, 4))
-    PetO2_peak = int(db_df_sample.PetO2peak) + int(np.random.normal(0, 4))
-    PetCO2_peak = int(db_df_sample.PetCO2peak) + int(np.random.normal(0, 4))
-
-    VO2_min = int(db_df_sample.VO2min) + int(np.random.normal(0, 4))
-    VCO2_min = int(db_df_sample.VCO2min) + int(np.random.normal(0, 4))
-    VE_min = int(db_df_sample.VEmin) + int(np.random.normal(0, 1))
-    RF_min = int(db_df_sample.RFmin) + int(np.random.normal(0, 1))
-    HR_min = int(db_df_sample.HRmin) + int(np.random.normal(0, 1))
-    PetO2_min = int(db_df_sample.PetO2min) + int(np.random.normal(0, 2))
-    PetCO2_min = int(db_df_sample.PetCO2min) + int(np.random.normal(0, 2))
+    PetCO2_min = np.random.normal(30, 5)
+    PetCO2_peak = PetCO2_min + 8 + np.random.uniform(5, 17)
 
     # probability definition
     # FIXME: hard coded here
 
     tmp_beginning_ratio = VO2_min/VO2_peak
-    y_pm0 = np.min([standard_beginning_ratio/tmp_beginning_ratio, 1])
+    # y_pm0 = np.min([standard_beginning_ratio/tmp_beginning_ratio, 1])
+    y_pm0 = 1
 
     p_mF, p_hF, p_sF = create_probabilities(duration=duration,
                                             VT1=VT1,
@@ -1192,12 +1179,12 @@ def generate_CPET(generator,
     df.loc[df['time'] < (VT1 - 20), 'domain'] = -1
     df.loc[df['time'] >= (VT2 - 20), 'domain'] = 1
     df.loc[(df['time'] < (VT2 - 20)) & (df['time'] >= (VT1 - 20)), 'domain'] = 0
-    df['fitness_group'] = db_df_sample['fitness_group'].values[0]
-    df['Age'] = db_df_sample['Age'].values[0]
-    df['age_group'] = db_df_sample['age_group'].values[0]
-    df['gender'] = db_df_sample['gender'].values[0]
-    df['weight'] = db_df_sample['weight'].values[0]
-    df['height'] = db_df_sample['height'].values[0]
+    # df['fitness_group'] = db_df_sample['fitness_group'].values[0]
+    # df['Age'] = db_df_sample['Age'].values[0]
+    # df['age_group'] = db_df_sample['age_group'].values[0]
+    # df['gender'] = db_df_sample['gender'].values[0]
+    # df['weight'] = db_df_sample['weight'].values[0]
+    # df['height'] = db_df_sample['height'].values[0]
 
     # Collect VO2 value at VT1 and VT2
     VO2VT1 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[0] - 10):(df[df['domain'].diff().fillna(0) == 1].index[0] + 10)]['VO2_I'].mean()
@@ -1215,21 +1202,21 @@ def generate_CPET(generator,
                       title="CPET variables", width=120,
                       color=True, legend_labels=['PetO2_I', 'PetCO2_I'])
 
-    if db_df_sample.fitness_group.values == 1:
-        fitness_group = 'LOW'
-    if db_df_sample.fitness_group.values == 2:
-        fitness_group = 'MEDIUM'
-    if db_df_sample.fitness_group.values == 3:
-        fitness_group = 'HIGH'
-    if db_df_sample.gender.values == -1:
-        gender = 'MALE'
-    if db_df_sample.gender.values == 1:
-        gender = 'FEMALE'
+    # if db_df_sample.fitness_group.values == 1:
+    #     fitness_group = 'LOW'
+    # if db_df_sample.fitness_group.values == 2:
+    #     fitness_group = 'MEDIUM'
+    # if db_df_sample.fitness_group.values == 3:
+    #     fitness_group = 'HIGH'
+    # if db_df_sample.gender.values == -1:
+    #     gender = 'MALE'
+    # if db_df_sample.gender.values == 1:
+    #     gender = 'FEMALE'
 
-    print('Data generated for a ', gender, ' individual with ', fitness_group, ' fitness capacity.')
-    print('Weight: ', int(db_df_sample.weight.values), ' kg')
-    print('Height: ', db_df_sample.height.values[0], 'm')
-    print('Age: ', int(db_df_sample.Age.values), 'y')
+    # print('Data generated for a ', gender, ' individual with ', fitness_group, ' fitness capacity.')
+    # print('Weight: ', int(db_df_sample.weight.values), ' kg')
+    # print('Height: ', db_df_sample.height.values[0], 'm')
+    # print('Age: ', int(db_df_sample.Age.values), 'y')
     print('Noise factor: ', round(noise_factor, 2))
     print('VT1: ', str(VT1), ' sec after start')
     print('VT2: ', str(VT2), ' sec after start')
@@ -1238,15 +1225,17 @@ def generate_CPET(generator,
     print('VO2VT2: ', str(int(VO2VT2)), ' mlO2')
     print('VO2VT1%: ', str(int(VO2VT1/VO2_peak * 100)), ' %')
     print('VO2VT2%: ', str(int(VO2VT2/VO2_peak * 100)), ' %')
-    print('Resting:', resting)
+    print('MAX RER: ', str(round(VCO2_peak / VO2_peak, 2)), ' %')
+    print('VO2peak: ', str(int(VO2_peak)), ' mlO2')
+    print('Resting: ', resting)
 
     # TODO: create a function to generate this dict, as it is the same that we should use when drawing real data files
     # create dict fro Exercise Threshold App
     data = dict()
-    data['Age'] = str(int(db_df_sample.Age.values))
-    data['Height'] = str(db_df_sample.height.values[0])
-    data['Weight'] = str(int(db_df_sample.weight.values))
-    data['Gender'] = gender
+    # data['Age'] = str(int(db_df_sample.Age.values))
+    # data['Height'] = str(db_df_sample.height.values[0])
+    # data['Weight'] = str(int(db_df_sample.weight.values))
+    # data['Gender'] = gender
     data['Aerobic_fitness_level'] = fitness_group
     data['VT1'] = str(VT1)
     data['VT2'] = str(VT2)
@@ -1272,7 +1261,7 @@ def generate_CPET(generator,
         try:
             tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
             # TODO: this 25 is hardcoded, you should have len(df.columns)
-            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 24]),
+            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 18]),
                                                            columns=tmp.index.to_list())])
             time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
             n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])
