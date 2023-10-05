@@ -146,8 +146,8 @@ class TCN(tf.keras.Model):
             setattr(self, f'tcn_block_{i}', tcn_block)
 
         # Fully Connected Layers
-        self.fc1 = tf.keras.layers.Dense(128, activation='relu')
-        self.fc2 = tf.keras.layers.Dense(64, activation='relu')
+        self.fc1 = tf.keras.layers.Dense(256, activation='relu')
+        self.fc2 = tf.keras.layers.Dense(128, activation='relu')
 
         # Output Layer for Regression
         self.output_layer = tf.keras.layers.Dense(n_output, activation='linear')
@@ -165,7 +165,7 @@ class TCN(tf.keras.Model):
         x = inputs  # No need to call the input layer explicitly
 
         # TCN Blocks
-        for i in range(6):
+        for i in range(8):
             x = getattr(self, f'tcn_block_{i}')(x)
 
         # Global Average Pooling
