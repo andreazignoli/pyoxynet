@@ -544,9 +544,10 @@ def draw_real_test(resting='random'):
     time_cum_sum = 0
     df_breath = pd.DataFrame()
     n = 0
-    while time_cum_sum < (duration-20):
+    while time_cum_sum < (duration - 6):
         try:
-            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].mean()
+            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
+            # TODO: this 25 is hardcoded, you should have len(df.columns)
             df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, len(df.columns)]),
                                                            columns=tmp.index.to_list())])
             time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
@@ -1015,7 +1016,7 @@ def random_walk(length=1, scale_factor=1, variation=1):
 def generate_CPET(generator,
                   plot=False,
                   fitness_group=None,
-                  noise_factor=0,
+                  noise_factor=None,
                   resting=False,
                   training=True,
                   normalization=False):
@@ -1042,28 +1043,69 @@ def generate_CPET(generator,
     minimum_value = 1800
     maximum_value = 4900
 
-    # Generate a random number
-    VO2_peak = round(np.random.uniform(minimum_value, maximum_value), 1)
+    if fitness_group == None:
+        # Generate a random number
+        VO2_peak = round(np.random.uniform(minimum_value, maximum_value), 1)
+
+    if fitness_group == 0:
+        VO2_peak = round(np.random.uniform(1600, 2200), 1)
+    if fitness_group == 1:
+        VO2_peak = round(np.random.uniform(2200, 3000), 1)
+    if fitness_group == 2:
+        VO2_peak = round(np.random.uniform(3000, 4000), 1)
+    if fitness_group == 3:
+        VO2_peak = round(np.random.uniform(4000, 5000), 1)
+
     VO2_VT1_efficiency = np.random.uniform(10.8, 11.8)
-    # VO2_VT2_efficiency = VO2_VT1_efficiency + np.random.uniform(0.2, 0.8)
 
     if resting == None:
         resting = random.choice([0, 1])
-    VT1 = round(np.random.uniform(320, 480))
-    VT2 = round(0.9307 * VT1 + 199.7 + np.random.normal(0, 30))
-    duration = round(0.9784 * VT2 + 147.33 + np.random.normal(0, 30))
 
     if resting:
         VO2_min = np.random.uniform(320, 540)
-        VT1 = VT1 + 60
-        VT2 = VT2 + 60
-        duration = duration + 60
-        RF_min = np.random.uniform(12, 16)
     else:
-        VO2_min = VO2_VT1_efficiency * 80
-        RF_min = np.random.uniform(14, 20)  # starting at 80 W
+        if VO2_peak < 2200:
+            VO2_basal = np.random.uniform(320, 540)
+            # Assuming they are already delivering 80 W
+            VO2_min = VO2_VT1_efficiency * 30 + np.random.uniform(-100, 100) + VO2_basal
+            # 10 W/min ramp
+            eps = 10
+            duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
+            R_max = 1.08
+        if VO2_peak >= 2200 and VO2_peak < 3000:
+            VO2_basal = np.random.uniform(320, 540)
+            # Assuming they are already delivering 80 W
+            VO2_min = VO2_VT1_efficiency * 50 + np.random.uniform(-100, 100) + VO2_basal
+            # 10 W/min ramp
+            eps = 15
+            duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
+            VCO2_peak = VO2_peak + np.random.uniform(160, 260)
+            R_max = 1.15
+        if VO2_peak >= 3000 and VO2_peak < 4000:
+            VO2_basal = np.random.uniform(320, 540)
+            # Assuming they are already delivering 80 W
+            VO2_min = VO2_VT1_efficiency * 80 + np.random.uniform(-100, 100) + VO2_basal
+            # 10 W/min ramp
+            eps = 15
+            duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
+            R_max = 1.25
+        if VO2_peak > 4000:
+            VO2_basal = np.random.uniform(320, 540)
+            # Assuming they are already delivering 80 W
+            VO2_min = VO2_VT1_efficiency * 100 + np.random.uniform(-100, 100) + VO2_basal
+            # 10 W/min ramp
+            eps = 25
+            duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
+            R_max = 1.35
 
-    VCO2_peak = VO2_peak + np.random.uniform(260, 440)
+    # duration in sec for this application
+    duration = round(duration * 60)
+    VT2 = round(np.random.normal(0.81, 0.05) * duration)
+    VT1 = round(np.random.normal(0.7, 0.05) * VT2)
+    VCO2_peak = R_max * VO2_peak + np.random.uniform(-60, 60)
+
+    RF_min = np.random.uniform(14, 20)  # starting at 80 W
+
     VE_peak = 0.0455 * VO2_peak - 8.8016
     RF_peak = 0.0093 * VO2_peak + 26.21
     HR_peak = 0.0121 * VO2_peak + 126.74
