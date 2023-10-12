@@ -230,7 +230,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
     import importlib_resources
     import pickle
     from io import BytesIO
-    from pyoxynet import regressor, TCN, murias_lab
+    from pyoxynet import regressor, TCN, LSTMGRUModel, murias_lab
     import tensorflow as tf
     import os
 
@@ -262,18 +262,32 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             variables_data_binaries = importlib_resources.files(TCN).joinpath('variables.data-00000-of-00001').read_bytes()
             variables_index_binaries = importlib_resources.files(TCN).joinpath('variables.index').read_bytes()
 
-        if model == 'murias_lab':
-            # load the classic Oxynet model configuration
-            print('Model custom trained on data from Juan Murias Lab uploaded')
-            saved_model_binaries = importlib_resources.read_binary(murias_lab, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(murias_lab, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(murias_lab, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(murias_lab, 'variables.index')
+    if model == 'LSTMGRUModel':
+        # load the classic Oxynet model configuration
+        print('You are uploading an undocumented version of this model LSTMGRUModel')
+        try:
+            saved_model_binaries = importlib_resources.read_binary(LSTMGRUModel, 'saved_model.pb')
+            keras_metadata_model_binaries = importlib_resources.read_binary(LSTMGRUModel, 'keras_metadata.pb')
+            variables_data_binaries = importlib_resources.read_binary(LSTMGRUModel, 'variables.data-00000-of-00001')
+            variables_index_binaries = importlib_resources.read_binary(LSTMGRUModel, 'variables.index')
+        except:
+            saved_model_binaries = importlib_resources.files(LSTMGRUModel).joinpath('saved_model.pb').read_bytes()
+            keras_metadata_model_binaries = importlib_resources.files(LSTMGRUModel).joinpath('keras_metadata.pb').read_bytes()
+            variables_data_binaries = importlib_resources.files(LSTMGRUModel).joinpath('variables.data-00000-of-00001').read_bytes()
+            variables_index_binaries = importlib_resources.files(LSTMGRUModel).joinpath('variables.index').read_bytes()
 
-        if model == 'transformer':
-            # load the classic Oxynet model configuration
-            print('Classic Oxynet configuration model uploaded')
-            tfl_model_binaries = importlib_resources.read_binary(regressor, 'transformer.pickle')
+    if model == 'murias_lab':
+        # load the classic Oxynet model configuration
+        print('Model custom trained on data from Juan Murias Lab uploaded')
+        saved_model_binaries = importlib_resources.read_binary(murias_lab, 'saved_model.pb')
+        keras_metadata_model_binaries = importlib_resources.read_binary(murias_lab, 'keras_metadata.pb')
+        variables_data_binaries = importlib_resources.read_binary(murias_lab, 'variables.data-00000-of-00001')
+        variables_index_binaries = importlib_resources.read_binary(murias_lab, 'variables.index')
+
+    if model == 'transformer':
+        # load the classic Oxynet model configuration
+        print('Classic Oxynet configuration model uploaded')
+        tfl_model_binaries = importlib_resources.read_binary(regressor, 'transformer.pickle')
 
     try:
         if not os.path.isdir('/tmp/variables'):
@@ -283,10 +297,15 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
         open('/tmp/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
         open('/tmp/variables/variables.index', 'wb').write(variables_index_binaries)
 
-        from .model import Model, TCN
+        from .model import Model, TCN, LSTMGRUModel
         if model == 'CNN':
             model = tf.keras.models.load_model('/tmp/')
             my_model = Model(n_classes=3, n_input=n_inputs)
+            my_model.build(input_shape=(1, past_points, n_inputs))
+            my_model.set_weights(model.get_weights())
+        if model == 'LSTMGRUModel':
+            model = tf.keras.models.load_model('/tmp/')
+            my_model = LSTMGRUModel(n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'TCN':
@@ -830,8 +849,8 @@ def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=Fal
     out_dict['VT2_lower'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] <= out_df['p_md'])].index[-1])
-    VT2_index = int(out_df[(out_df['p_hv'] >= out_df['p_sv']) & (out_df['p_hv'] > out_df['p_md'])].index[-1])
+    VT1_index = int(out_df[(out_df['p_hv'] >= out_df['p_md'])].index[0])
+    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv'])].index[-1])
 
     VT1_time = int(out_df.iloc[VT1_index]['time'])
     VT2_time = int(out_df.iloc[VT2_index]['time'])
