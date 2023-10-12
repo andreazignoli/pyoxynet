@@ -180,3 +180,35 @@ class TCN(tf.keras.Model):
 
     def loadModel(self, model_path):
         self.load_weights(model_path)
+
+class LSTMGRUModel(tf.keras.Model):
+    def __init__(self, n_input, num_units=64):
+        super(LSTMGRUModel, self).__init__()
+
+        # Input Layer
+        self.input_layer = tf.keras.layers.Input(shape=(None, n_input))
+
+        # Flatten
+        self.f1 = tf.keras.layers.Flatten()
+
+        # Avg pooling
+        self.avg1 = tf.keras.layers.GlobalAveragePooling1D()
+
+        # LSTM and GRU Layers
+        self.lstm_layer = tf.keras.layers.LSTM(num_units, return_sequences=True, kernel_regularizer=tf.keras.regularizers.l2(0.001))
+        self.gru_layer = tf.keras.layers.GRU(num_units, return_sequences=True, kernel_regularizer=tf.keras.regularizers.l2(0.001))
+        self.dropout = tf.keras.layers.Dropout(0.2)
+
+        # Dense Layer for Binary Classification
+        self.output_layer = tf.keras.layers.Dense(3, activation='linear')
+
+    def call(self, inputs, training=None):
+        x = inputs
+        x = self.lstm_layer(x)
+        x = self.gru_layer(x)
+        x = self.dropout(x, training=training)
+        x = self.avg1(x)
+        return self.output_layer(x)
+
+    def load_model(self, model_path):
+        self.load_weights(model_path)
