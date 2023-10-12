@@ -34,17 +34,17 @@ save_files = False
 for i in np.arange(60):
     try:
         # fitness_group = random.choice([2, 3])
-        df_fake, data_dict_fake = generate_CPET(generator)
-        CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
-        df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
-        VO2VT1_FAKE.append(int(data_dict_fake['VO2VT1']))
-        VO2VT2_FAKE.append(int(data_dict_fake['VO2VT2']))
+        # df_fake, data_dict_fake = generate_CPET(generator)
+        # CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
+        # df_est_fake, dict_est_fake = test_pyoxynet(df_fake)
+        # VO2VT1_FAKE.append(int(data_dict_fake['VO2VT1']))
+        # VO2VT2_FAKE.append(int(data_dict_fake['VO2VT2']))
 
-        # df, data = draw_real_test()
-        # df_est_fake, dict_est_fake = test_pyoxynet(df)
-        #
-        # VO2VT1_REAL.append(int(data['LT']))
-        # VO2VT2_REAL.append(int(data['RCP']))
+        df, data = draw_real_test(resting=False)
+        df_est_fake, dict_est_fake = test_pyoxynet(df, model='LSTMGRUModel')
+
+        VO2VT1_REAL.append(int(data['LT']))
+        VO2VT2_REAL.append(int(data['RCP']))
 
         VO2VT1_NN.append(int(dict_est_fake['VT1']['VO2']))
         VO2VT2_NN.append(int(dict_est_fake['VT2']['VO2']))
