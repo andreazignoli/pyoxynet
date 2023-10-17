@@ -611,6 +611,7 @@ def load_exercise_threshold_app_data(data_dict={}):
     import json
     import pandas as pd
     import numpy as np
+    from scipy.ndimage import uniform_filter1d
 
     time = []
     VO2_I = []
@@ -645,32 +646,29 @@ def load_exercise_threshold_app_data(data_dict={}):
     VEVCO2_I = np.asarray(VEVCO2_I)
     VCO2VO2_I = np.asarray(VCO2VO2_I)
 
+    # rolling averages to filter the data
+    # This filter size should be equal to the one used by the Test class
+    filter_size = 20
+    #
+    VO2_F = uniform_filter1d(VO2_I, size=filter_size)
+    VCO2_F = uniform_filter1d(VCO2_I, size=filter_size)
+    VE_F = uniform_filter1d(VE_I, size=filter_size)
+    PetO2_F = uniform_filter1d(PetO2_I, size=filter_size)
+    PetCO2_F = uniform_filter1d(PetCO2_I, size=filter_size)
+    VEVO2_F = uniform_filter1d(VEVO2_I, size=filter_size)
+    VEVCO2_F = uniform_filter1d(VEVCO2_I, size=filter_size)
+    VCO2VO2_F = uniform_filter1d(VCO2VO2_I, size=filter_size)
+
     # filter and interpolate
     time_I = np.arange(int(time[0]), int(time[-1]))
-    VO2_I = np.interp(time_I, time, VO2_I)
-    VCO2_I = np.interp(time_I, time, VCO2_I)
-    VE_I = np.interp(time_I, time, VE_I)
-    PetO2_I = np.interp(time_I, time, PetO2_I)
-    PetCO2_I = np.interp(time_I, time, PetCO2_I)
-    VEVO2_I = np.interp(time_I, time, VEVO2_I)
-    VEVCO2_I = np.interp(time_I, time, VEVCO2_I)
-    VCO2VO2_I = np.interp(time_I, time, VCO2VO2_I)
-
-    # rolling averages to filter the data
-    from scipy.ndimage import uniform_filter1d
-
-    # This filter size should be equal to the one used by the Test class
-
-    # filter_size = 20
-    #
-    # VO2_I = uniform_filter1d(VO2_I, size=filter_size)
-    # VCO2_I = uniform_filter1d(VCO2_I, size=filter_size)
-    # VE_I = uniform_filter1d(VE_I, size=filter_size)
-    # PetO2_I = uniform_filter1d(PetO2_I, size=filter_size)
-    # PetCO2_I = uniform_filter1d(PetCO2_I, size=filter_size)
-    # VEVO2_I = uniform_filter1d(VEVO2_I, size=filter_size)
-    # VEVCO2_I = uniform_filter1d(VEVCO2_I, size=filter_size)
-    # VCO2VO2_I = uniform_filter1d(VCO2VO2_I, size=filter_size)
+    VO2_I = np.interp(time_I, time, VO2_F)
+    VCO2_I = np.interp(time_I, time, VCO2_F)
+    VE_I = np.interp(time_I, time, VE_F)
+    PetO2_I = np.interp(time_I, time, PetO2_F)
+    PetCO2_I = np.interp(time_I, time, PetCO2_F)
+    VEVO2_I = np.interp(time_I, time, VEVO2_F)
+    VEVCO2_I = np.interp(time_I, time, VEVCO2_F)
+    VCO2VO2_I = np.interp(time_I, time, VCO2VO2_F)
 
     df = pd.DataFrame()
     df['time'] = time_I
@@ -1085,17 +1083,19 @@ def generate_CPET(generator,
     else:
         if VO2_peak < 2200:
             VO2_basal = np.random.uniform(320, 540)
-            # Assuming they are already delivering 80 W
-            VO2_min = VO2_VT1_efficiency * 30 + np.random.uniform(-100, 100) + VO2_basal
+            # Assuming they are already delivering 30 W
+            W0 = 50
+            VO2_min = VO2_VT1_efficiency * W0 + np.random.uniform(-100, 100) + VO2_basal
             # 10 W/min ramp
             eps = 10
             duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
             R_max = 1.08
         if VO2_peak >= 2200 and VO2_peak < 3000:
             VO2_basal = np.random.uniform(320, 540)
-            # Assuming they are already delivering 80 W
-            VO2_min = VO2_VT1_efficiency * 50 + np.random.uniform(-100, 100) + VO2_basal
-            # 10 W/min ramp
+            # Assuming they are already delivering 50 W
+            W0 = 50
+            VO2_min = VO2_VT1_efficiency * W0 + np.random.uniform(-100, 100) + VO2_basal
+            # 15 W/min ramp
             eps = 15
             duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
             VCO2_peak = VO2_peak + np.random.uniform(160, 260)
@@ -1103,16 +1103,18 @@ def generate_CPET(generator,
         if VO2_peak >= 3000 and VO2_peak < 4000:
             VO2_basal = np.random.uniform(320, 540)
             # Assuming they are already delivering 80 W
-            VO2_min = VO2_VT1_efficiency * 80 + np.random.uniform(-100, 100) + VO2_basal
-            # 10 W/min ramp
+            W0 = 80
+            VO2_min = VO2_VT1_efficiency * W0 + np.random.uniform(-100, 100) + VO2_basal
+            # 15 W/min ramp
             eps = 15
             duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
             R_max = 1.25
         if VO2_peak > 4000:
             VO2_basal = np.random.uniform(320, 540)
-            # Assuming they are already delivering 80 W
-            VO2_min = VO2_VT1_efficiency * 100 + np.random.uniform(-100, 100) + VO2_basal
-            # 10 W/min ramp
+            # Assuming they are already delivering 100 W
+            W0 = 100
+            VO2_min = VO2_VT1_efficiency * W0 + np.random.uniform(-100, 100) + VO2_basal
+            # 25 W/min ramp
             eps = 25
             duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
             R_max = 1.35
@@ -1224,6 +1226,9 @@ def generate_CPET(generator,
     df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + np.random.randn(len(VO2)) * 1.5 * noise_factor
     df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + np.random.randn(len(VO2)) * 1.5 * noise_factor
 
+    # NEW: Add the workload
+    df['W'] = eps * time_array / 60 + W0
+
     df['p_mF'] = p_mF
     df['p_hF'] = p_hF
     df['p_sF'] = p_sF
@@ -1289,6 +1294,8 @@ def generate_CPET(generator,
     print('MAX RER: ', str(round(VCO2_peak / VO2_peak, 2)), ' %')
     print('VO2peak: ', str(int(VO2_peak)), ' mlO2')
     print('Resting: ', resting)
+    print('W0: ', str(W0), ' W')
+    print('ramp: ', str(eps), ' W/min')
 
     # TODO: create a function to generate this dict, as it is the same that we should use when drawing real data files
     # create dict fro Exercise Threshold App
@@ -1311,6 +1318,8 @@ def generate_CPET(generator,
     data['noise_factor'] = str(noise_factor)
     data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
     data['resting'] = str(resting)
+    data['W0'] = str(W0)
+    data['W/min'] = str(eps)
 
     df['breaths'] = (1/(df.RF_I/60))
     # df['recorded_timestamp'] = pd.to_datetime(df.time, unit='s')
@@ -1322,7 +1331,7 @@ def generate_CPET(generator,
         try:
             tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
             # TODO: this 25 is hardcoded, you should have len(df.columns)
-            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 18]),
+            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 19]),
                                                            columns=tmp.index.to_list())])
             time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
             n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])
