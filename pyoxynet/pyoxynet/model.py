@@ -182,7 +182,7 @@ class TCN(tf.keras.Model):
         self.load_weights(model_path)
 
 class LSTMGRUModel(tf.keras.Model):
-    def __init__(self, n_input, num_units=16):
+    def __init__(self, n_input, num_units=32):
         super(LSTMGRUModel, self).__init__()
 
         # Input Layer
@@ -196,9 +196,9 @@ class LSTMGRUModel(tf.keras.Model):
 
         # LSTM and GRU Layers
         self.lstm_layer = tf.keras.layers.LSTM(num_units, return_sequences=True, kernel_regularizer=tf.keras.regularizers.l2(0.001))
-        self.lstm_bn = tf.keras.layers.BatchNormalization()
+        # self.lstm_bn = tf.keras.layers.BatchNormalization()
         self.gru_layer = tf.keras.layers.GRU(num_units, return_sequences=True, kernel_regularizer=tf.keras.regularizers.l2(0.001))
-        self.gru_bn = tf.keras.layers.BatchNormalization()
+        # self.gru_bn = tf.keras.layers.BatchNormalization()
         self.gru_layer = tf.keras.layers.GRU(num_units, return_sequences=True, kernel_regularizer=tf.keras.regularizers.l2(0.001))
         self.dropout = tf.keras.layers.Dropout(0.2)
 
@@ -208,9 +208,9 @@ class LSTMGRUModel(tf.keras.Model):
     def call(self, inputs, training=None):
         x = inputs
         x = self.lstm_layer(x)
-        x = self.lstm_bn(x)
+        # x = self.lstm_bn(x)
         x = self.gru_layer(x)
-        x = self.gru_bn(x)
+        # x = self.gru_bn(x)
         x = self.dropout(x, training=training)
         x = self.avg1(x)
         return self.output_layer(x)

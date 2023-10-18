@@ -290,12 +290,14 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
         tfl_model_binaries = importlib_resources.read_binary(regressor, 'transformer.pickle')
 
     try:
-        if not os.path.isdir('/tmp/variables'):
-            os.mkdir('/tmp/variables')
-        open('/tmp/saved_model.pb', 'wb').write(saved_model_binaries)
-        open('/tmp/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
-        open('/tmp/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
-        open('/tmp/variables/variables.index', 'wb').write(variables_index_binaries)
+        if not os.path.isdir('/tmp/model'):
+            os.mkdir('/tmp/model')
+        if not os.path.isdir('/tmp/model/variables'):
+            os.mkdir('/tmp/model/variables')
+        open('/tmp/model/saved_model.pb', 'wb').write(saved_model_binaries)
+        open('/tmp/model/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
+        open('/tmp/model/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
+        open('/tmp/model/variables/variables.index', 'wb').write(variables_index_binaries)
 
         from .model import Model, TCN, LSTMGRUModel
         if model == 'CNN':
@@ -304,12 +306,12 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'LSTMGRUModel':
-            model = tf.keras.models.load_model('/tmp/')
+            model = tf.keras.models.load_model('/tmp/model/')
             my_model = LSTMGRUModel(n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'TCN':
-            model = tf.keras.models.load_model('/tmp/')
+            model = tf.keras.models.load_model('/tmp/model/')
             num_classes = 3  # Replace with the number of classes in your task
             num_filters = 128
             kernel_size = 3
@@ -319,7 +321,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'murias_lab':
-            model = tf.keras.models.load_model('/tmp/')
+            model = tf.keras.models.load_model('/tmp/model/')
             my_model = Model(n_classes=3, n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
@@ -364,13 +366,15 @@ def load_tf_generator():
         variables_index_binaries = importlib_resources.files(generator).joinpath('variables.index').read_bytes()
 
     try:
-        if not os.path.isdir('/tmp/variables'):
-            os.mkdir('/tmp/variables')
-        open('/tmp/saved_model.pb', 'wb').write(saved_model_binaries)
-        open('/tmp/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
-        open('/tmp/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
-        open('/tmp/variables/variables.index', 'wb').write(variables_index_binaries)
-        model = tf.keras.models.load_model('/tmp/')
+        if not os.path.isdir('/tmp/generator'):
+            os.mkdir('/tmp/generator')
+        if not os.path.isdir('/tmp/generator/variables'):
+            os.mkdir('/tmp/generator/variables')
+        open('/tmp/generator/saved_model.pb', 'wb').write(saved_model_binaries)
+        open('/tmp/generator/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
+        open('/tmp/generator/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
+        open('/tmp/generator/variables/variables.index', 'wb').write(variables_index_binaries)
+        model = tf.keras.models.load_model('/tmp/generator/')
         from .model import generator
         my_model = generator()
         # TODO: this is hardcoded
