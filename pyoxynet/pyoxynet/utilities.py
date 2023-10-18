@@ -743,8 +743,6 @@ def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=Fal
             XN['VO2_I'].max() - XN['VO2_I'].min())
     XN['VCO2_I'] = (XN['VCO2_I'] - XN['VCO2_I'].min()) / (
             XN['VCO2_I'].max() - XN['VCO2_I'].min())
-    XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
-            XN['VE_I'].max() - XN['VE_I'].min())
     # XN['HR_I'] = (XN['HR_I'] - XN['HR_I'].min()) / (
     #         XN['HR_I'].max() - XN['HR_I'].min())
     # XN['RF_I'] = (XN['RF_I'] - XN['RF_I'].min()) / (
