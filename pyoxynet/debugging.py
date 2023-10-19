@@ -29,14 +29,14 @@ VO2VT1_NN = []
 VO2VT2_NN = []
 VO2VT1_REAL = []
 VO2VT2_REAL = []
-save_files = True
+save_files = False
 
 for i in np.arange(60):
     try:
         # fitness_group = random.choice([2, 3])
         df_fake, data_dict_fake = generate_CPET(generator)
         CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
-        df_est_fake, dict_est_fake = test_pyoxynet(df_fake, model='LSTMGRUModel')
+        df_est_fake, dict_est_fake = test_pyoxynet(df_fake, model='TCN')
         VO2VT1_FAKE.append(int(data_dict_fake['VO2VT1']))
         VO2VT2_FAKE.append(int(data_dict_fake['VO2VT2']))
 

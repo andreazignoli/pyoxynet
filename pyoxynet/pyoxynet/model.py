@@ -150,7 +150,7 @@ class TCN(tf.keras.Model):
         self.fc2 = tf.keras.layers.Dense(128, activation='relu')
 
         # Output Layer for Regression
-        self.output_layer = tf.keras.layers.Dense(n_output, activation='linear')
+        self.output_layer = tf.keras.layers.Dense(n_output, activation='softmax')
 
     def build_tcn_block(self, num_filters, kernel_size, dilation_rate, dropout_rate):
         tcn_block = tf.keras.models.Sequential([

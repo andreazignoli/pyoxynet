@@ -301,7 +301,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
 
         from .model import Model, TCN, LSTMGRUModel
         if model == 'CNN':
-            model = tf.keras.models.load_model('/tmp/')
+            model = tf.keras.models.load_model('/tmp/model/')
             my_model = Model(n_classes=3, n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
@@ -312,7 +312,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             my_model.set_weights(model.get_weights())
         if model == 'TCN':
             model = tf.keras.models.load_model('/tmp/model/')
-            num_classes = 3  # Replace with the number of classes in your task
+            num_classes = 3
             num_filters = 128
             kernel_size = 3
             num_layers = 8
