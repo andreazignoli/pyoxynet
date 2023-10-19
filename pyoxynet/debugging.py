@@ -36,7 +36,7 @@ for i in np.arange(60):
         # fitness_group = random.choice([2, 3])
         df_fake, data_dict_fake = generate_CPET(generator)
         CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
-        df_est_fake, dict_est_fake = test_pyoxynet(df_fake, model='TCN')
+        df_est_fake, dict_est_fake = test_pyoxynet(df_fake, model='CNN')
         VO2VT1_FAKE.append(int(data_dict_fake['VO2VT1']))
         VO2VT2_FAKE.append(int(data_dict_fake['VO2VT2']))
 
