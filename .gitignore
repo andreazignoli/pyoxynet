@@ -31,3 +31,5 @@ docs/*
 !docs/index.rst
 !docs/usage.rst
 !docs/Makefile
+
+.DS_store
