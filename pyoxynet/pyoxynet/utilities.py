@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.interpolate
 from scipy.stats import beta
+from scipy.interpolate import UnivariateSpline
+from scipy.interpolate import interp1d
 
 def PrintHello(hello='hello'):
     """This function prints to screen.
@@ -887,7 +889,13 @@ def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=Fal
 
     return out_df, out_dict
 
-def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normalization=False, resting=True, resting_duration=60, initial_step=False, y_pm0=1):
+def create_probabilities(duration=600,
+                         VT1=320, VT2=460,
+                         training=True, normalization=False, resting=True,
+                         resting_duration=60,
+                         initial_step=False,
+                         y_pm0=1,
+                         generator=False):
     """Creates the probabilities of being in different intensity domains
 
     These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
@@ -896,7 +904,10 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         duration (int): Length of the test file
         VT1 (int): First ventilatory threshold, in time samples from the beginning of the test
         VT2 (int): Second ventilatory threshold, in time samples from the beginning of the test
-        y_pm0 (double): This is used to set the first value of the probabilities. Indeed if you start from a higher VO2 you're not likely full in moderate domain (pm<1)
+        y_pm0 (double): This is used to set the first value of the probabilities.
+            Indeed, if you start from a higher VO2 you're not likely full in moderate domain (pm<1)
+        generator (bool): Use the following when you need to create the files to
+            train the INFERENCE model (False, default), or the GENERATOR (True)
 
     Returns:
         p_mF (np array): Probability of being in the moderate intensity zone (-1:1)
@@ -904,9 +915,6 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         p_sF (np array): Probability of being in the severe intensity zone (-1:1)
 
     """
-
-    import numpy as np
-    from scipy.interpolate import interp1d
 
     t = np.arange(1, duration + 1)
 
@@ -922,78 +930,83 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         print('This is too close to VT1, I am settling at 0.65')
         y_pm0 = 0.65
 
-    y_pm = [1, 0.5, 0, 0]
-    y_ph = [0, 0.5, 1, 0]
-    y_ps = [0, 0.1, 0.5, 1]
-    # linear coefficients
-    x_p = [0, VT1, VT2, duration]
+    # Use the following when you need to create the files to train the INFERENCE model
+    if ~generator:
+        y_pm = [1, 0.5, 0, 0]
+        y_ph = [0, 0.5, 1, 0]
+        y_ps = [0, 0.1, 0.5, 1]
 
-    interp_pm = interp1d(x_p, y_pm, kind='linear', fill_value="extrapolate")
-    interp_ph = interp1d(x_p, y_ph, kind='linear', fill_value="extrapolate")
-    interp_ps = interp1d(x_p, y_ps, kind='linear', fill_value="extrapolate")
+        # linear coefficients
+        x_p = [0, VT1, VT2, duration]
 
-    p_mF = interp_pm(t)
-    p_hF = interp_ph(t)
-    p_sF = interp_ps(t)
+        interp_pm = interp1d(x_p, y_pm, kind='linear', fill_value="extrapolate")
+        interp_ph = interp1d(x_p, y_ph, kind='linear', fill_value="extrapolate")
+        interp_ps = interp1d(x_p, y_ps, kind='linear', fill_value="extrapolate")
 
-    from scipy.interpolate import UnivariateSpline
-    # build splines
+        p_mF = interp_pm(t)
+        p_hF = interp_ph(t)
+        p_sF = interp_ps(t)
 
-    # if not initial_step:
-    #     # moderate => 2 splines
-    #     pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm0, 0.5], k=1)
-    #     # heavy => 3 splines
-    #     ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm0, 0.5], k=1)
-    #     # compute additional points
-    #     pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=1)
-    #     p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
-    #     # compute additional points
-    #     ph_L2 = UnivariateSpline([VT1, ((VT2 - VT1)/2 + VT1), VT2], [0.5, np.min([ph_L1(((VT2 - VT1)/2 + VT1)), 1]), 0.5], k=1)
-    #     ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=1)
-    #     p_hF = np.hstack((ph_L1(t[t < VT1]), ph_L2(t[(t >= VT1) & (t < VT2)]), ph_L3(t[t >= VT2])))
-    #     # severe => 2 splines
-    #     ps_L1 = UnivariateSpline([0, VT1, VT2], [0, 0, 0.5], k=1)
-    #     # compute additional points
-    #     ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
-    #                              [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
-    #     p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
-    # else:
-    #     # moderate => 2 splines
-    #     pm_L0 = UnivariateSpline([0, step_1], [y_pm0, y_pm0], k=1)
-    #     pm_L1 = UnivariateSpline([step_1, step_1 + 60],
-    #                              [y_pm0, (y_pm0 - 0.5)/2 + 0.5], k=1)
-    #     pm_L2 = UnivariateSpline([step_1 + 60, step_1 + 120],
-    #                              [(y_pm0 - 0.5) / 2 + 0.5, (y_pm0 - 0.5) / 2 + 0.5], k=1)
-    #     pm_L3 = UnivariateSpline([step_1 + 120, VT1],
-    #                              [(y_pm0 - 0.5) / 2 + 0.5, 0.5], k=1)
-    #     pm_L4 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration],
-    #                              [0.5, pm_L3(VT1 + 30), 0, 0, 0], k=2)
-    #     p_mF = np.hstack((pm_L0(t[t < step_1]),
-    #                       pm_L1(t[(t >= step_1) & (t < step_1 + 60)]),
-    #                       pm_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
-    #                       pm_L3(t[(t >= step_1 + 120) & (t < VT1)]),
-    #                       pm_L4(t[(t >= VT1)])))
-    #
-    #     # heavy => 3 splines
-    #     ph_L0 = UnivariateSpline([0, step_1], [1 - y_pm0, 1 - y_pm0], k=1)
-    #     ph_L1 = UnivariateSpline([step_1, step_1 + 60], [1 - y_pm0, 1 - ((y_pm0 - 0.5)/2 + 0.5)], k=1)
-    #     ph_L2 = UnivariateSpline([step_1 + 60, step_1 + 120], [1 - ((y_pm0 - 0.5) / 2 + 0.5), 1 - ((y_pm0 - 0.5) / 2 + 0.5)], k=1)
-    #     ph_L3 = UnivariateSpline([step_1 + 120, VT1],
-    #                              [1 - ((y_pm0 - 0.5) / 2 + 0.5), 0.5], k=1)
-    #     ph_L4 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L3(VT1 + 30), 0.5], k=2)
-    #     ph_L5 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L4(VT2 + 30), 0], k=2)
-    #     p_hF = np.hstack((ph_L0(t[t < step_1]),
-    #                       ph_L1(t[(t >= step_1) & (t < step_1 + 60)]),
-    #                       ph_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
-    #                       ph_L3(t[(t >= step_1 + 120) & (t < VT1)]),
-    #                       ph_L4(t[(t >= VT1) & (t < VT2)]),
-    #                       ph_L4(t[(t >= VT2)])))
-    #     # severe => 2 splines
-    #     ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
-    #     # compute additional points
-    #     ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
-    #                              [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
-    #     p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
+    # Use the following when you need to create the files to train the GENERATOR model
+    if generator:
+        # in this case you create a set of probabilities with know shape
+        # (as opposed to the case where you only have the thresholds,
+        # so you do not know how the probabilities work)
+        if not initial_step:
+            # moderate => 2 splines
+            pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm0, 0.5], k=1)
+            # heavy => 3 splines
+            ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm0, 0.5], k=1)
+            # compute additional points
+            pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=1)
+            p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
+            # compute additional points
+            ph_L2 = UnivariateSpline([VT1, ((VT2 - VT1)/2 + VT1), VT2], [0.5, np.min([ph_L1(((VT2 - VT1)/2 + VT1)), 1]), 0.5], k=1)
+            ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=1)
+            p_hF = np.hstack((ph_L1(t[t < VT1]), ph_L2(t[(t >= VT1) & (t < VT2)]), ph_L3(t[t >= VT2])))
+            # severe => 2 splines
+            ps_L1 = UnivariateSpline([0, VT1, VT2], [0, 0, 0.5], k=1)
+            # compute additional points
+            ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
+                                     [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
+            p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
+        else:
+            # moderate => 2 splines
+            pm_L0 = UnivariateSpline([0, step_1], [y_pm0, y_pm0], k=1)
+            pm_L1 = UnivariateSpline([step_1, step_1 + 60],
+                                     [y_pm0, (y_pm0 - 0.5)/2 + 0.5], k=1)
+            pm_L2 = UnivariateSpline([step_1 + 60, step_1 + 120],
+                                     [(y_pm0 - 0.5) / 2 + 0.5, (y_pm0 - 0.5) / 2 + 0.5], k=1)
+            pm_L3 = UnivariateSpline([step_1 + 120, VT1],
+                                     [(y_pm0 - 0.5) / 2 + 0.5, 0.5], k=1)
+            pm_L4 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration],
+                                     [0.5, pm_L3(VT1 + 30), 0, 0, 0], k=2)
+            p_mF = np.hstack((pm_L0(t[t < step_1]),
+                              pm_L1(t[(t >= step_1) & (t < step_1 + 60)]),
+                              pm_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
+                              pm_L3(t[(t >= step_1 + 120) & (t < VT1)]),
+                              pm_L4(t[(t >= VT1)])))
+
+            # heavy => 3 splines
+            ph_L0 = UnivariateSpline([0, step_1], [1 - y_pm0, 1 - y_pm0], k=1)
+            ph_L1 = UnivariateSpline([step_1, step_1 + 60], [1 - y_pm0, 1 - ((y_pm0 - 0.5)/2 + 0.5)], k=1)
+            ph_L2 = UnivariateSpline([step_1 + 60, step_1 + 120], [1 - ((y_pm0 - 0.5) / 2 + 0.5), 1 - ((y_pm0 - 0.5) / 2 + 0.5)], k=1)
+            ph_L3 = UnivariateSpline([step_1 + 120, VT1],
+                                     [1 - ((y_pm0 - 0.5) / 2 + 0.5), 0.5], k=1)
+            ph_L4 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L3(VT1 + 30), 0.5], k=2)
+            ph_L5 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L4(VT2 + 30), 0], k=2)
+            p_hF = np.hstack((ph_L0(t[t < step_1]),
+                              ph_L1(t[(t >= step_1) & (t < step_1 + 60)]),
+                              ph_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
+                              ph_L3(t[(t >= step_1 + 120) & (t < VT1)]),
+                              ph_L4(t[(t >= VT1) & (t < VT2)]),
+                              ph_L4(t[(t >= VT2)])))
+            # severe => 2 splines
+            ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
+            # compute additional points
+            ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
+                                     [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
+            p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
 
     p_mF = optimal_filter(t, p_mF, 100)
     p_hF = optimal_filter(t, p_hF, 50)
