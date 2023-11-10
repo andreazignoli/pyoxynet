@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.interpolate
 from scipy.stats import beta
 
 def PrintHello(hello='hello'):
@@ -376,9 +377,9 @@ def load_tf_generator():
         open('/tmp/generator/variables/variables.index', 'wb').write(variables_index_binaries)
         model = tf.keras.models.load_model('/tmp/generator/')
         from .model import generator
-        my_model = generator()
+        my_model = generator(n_input=7, n_past_points=40, n_labels=1, data_noise_dim=20)
         # TODO: this is hardcoded
-        my_model.build(input_shape=(1, 23))
+        my_model.build(input_shape=(1, 21))
         my_model.set_weights(model.get_weights())
 
         return my_model
@@ -921,71 +922,78 @@ def create_probabilities(duration=600, VT1=320, VT2=460, training=True, normaliz
         print('This is too close to VT1, I am settling at 0.65')
         y_pm0 = 0.65
 
-    y_pm = [y_pm0, y_pm0, 0.5, 0, 0, 0]
-    y_ph = [1 - y_pm0, 1 - y_pm0, 0.5, 1, 0.5, 0]
-    y_ps = [0, 0, 0, 0, 0.5, 1]
+    y_pm = [1, 0.5, 0, 0]
+    y_ph = [0, 0.5, 1, 0]
+    y_ps = [0, 0.1, 0.5, 1]
     # linear coefficients
-    x_p = [0, step_1, VT1, ((VT2 - VT1) / 2 + VT1), VT2, duration]
+    x_p = [0, VT1, VT2, duration]
+
+    interp_pm = interp1d(x_p, y_pm, kind='linear', fill_value="extrapolate")
+    interp_ph = interp1d(x_p, y_ph, kind='linear', fill_value="extrapolate")
+    interp_ps = interp1d(x_p, y_ps, kind='linear', fill_value="extrapolate")
+
+    p_mF = interp_pm(t)
+    p_hF = interp_ph(t)
+    p_sF = interp_ps(t)
 
     from scipy.interpolate import UnivariateSpline
     # build splines
 
-    if not initial_step:
-        # moderate => 2 splines
-        pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm0, 0.5], k=2)
-        # heavy => 3 splines
-        ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm0, 0.5], k=2)
-        # compute additional points
-        pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=2)
-        p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
-        # compute additional points
-        ph_L2 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L1(VT1 + 30), 0.5], k=2)
-        ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=2)
-        p_hF = np.hstack((ph_L1(t[t < VT1]), ph_L2(t[(t >= VT1) & (t < VT2)]), ph_L3(t[t >= VT2])))
-        # severe => 2 splines
-        ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
-        # compute additional points
-        ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
-                                 [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
-        p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
-
-    else:
-        # moderate => 2 splines
-        pm_L0 = UnivariateSpline([0, step_1], [y_pm0, y_pm0], k=1)
-        pm_L1 = UnivariateSpline([step_1, step_1 + 60],
-                                 [y_pm0, (y_pm0 - 0.5)/2 + 0.5], k=1)
-        pm_L2 = UnivariateSpline([step_1 + 60, step_1 + 120],
-                                 [(y_pm0 - 0.5) / 2 + 0.5, (y_pm0 - 0.5) / 2 + 0.5], k=1)
-        pm_L3 = UnivariateSpline([step_1 + 120, VT1],
-                                 [(y_pm0 - 0.5) / 2 + 0.5, 0.5], k=1)
-        pm_L4 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration],
-                                 [0.5, pm_L3(VT1 + 30), 0, 0, 0], k=2)
-        p_mF = np.hstack((pm_L0(t[t < step_1]),
-                          pm_L1(t[(t >= step_1) & (t < step_1 + 60)]),
-                          pm_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
-                          pm_L3(t[(t >= step_1 + 120) & (t < VT1)]),
-                          pm_L4(t[(t >= VT1)])))
-
-        # heavy => 3 splines
-        ph_L0 = UnivariateSpline([0, step_1], [1 - y_pm0, 1 - y_pm0], k=1)
-        ph_L1 = UnivariateSpline([step_1, step_1 + 60], [1 - y_pm0, 1 - ((y_pm0 - 0.5)/2 + 0.5)], k=1)
-        ph_L2 = UnivariateSpline([step_1 + 60, step_1 + 120], [1 - ((y_pm0 - 0.5) / 2 + 0.5), 1 - ((y_pm0 - 0.5) / 2 + 0.5)], k=1)
-        ph_L3 = UnivariateSpline([step_1 + 120, VT1],
-                                 [1 - ((y_pm0 - 0.5) / 2 + 0.5), 0.5], k=1)
-        ph_L4 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L3(VT1 + 30), 0.5], k=2)
-        ph_L5 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L4(VT2 + 30), 0], k=2)
-        p_hF = np.hstack((ph_L0(t[t < step_1]),
-                          ph_L1(t[(t >= step_1) & (t < step_1 + 60)]),
-                          ph_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
-                          ph_L3(t[(t >= step_1 + 120) & (t < VT1)]),
-                          ph_L4(t[(t >= VT1) & (t < VT2)]),
-                          ph_L4(t[(t >= VT2)])))
-        # severe => 2 splines
-        ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
-        # compute additional points
-        ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
-                                 [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
-        p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
+    # if not initial_step:
+    #     # moderate => 2 splines
+    #     pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm0, 0.5], k=1)
+    #     # heavy => 3 splines
+    #     ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm0, 0.5], k=1)
+    #     # compute additional points
+    #     pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=1)
+    #     p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
+    #     # compute additional points
+    #     ph_L2 = UnivariateSpline([VT1, ((VT2 - VT1)/2 + VT1), VT2], [0.5, np.min([ph_L1(((VT2 - VT1)/2 + VT1)), 1]), 0.5], k=1)
+    #     ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=1)
+    #     p_hF = np.hstack((ph_L1(t[t < VT1]), ph_L2(t[(t >= VT1) & (t < VT2)]), ph_L3(t[t >= VT2])))
+    #     # severe => 2 splines
+    #     ps_L1 = UnivariateSpline([0, VT1, VT2], [0, 0, 0.5], k=1)
+    #     # compute additional points
+    #     ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
+    #                              [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
+    #     p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
+    # else:
+    #     # moderate => 2 splines
+    #     pm_L0 = UnivariateSpline([0, step_1], [y_pm0, y_pm0], k=1)
+    #     pm_L1 = UnivariateSpline([step_1, step_1 + 60],
+    #                              [y_pm0, (y_pm0 - 0.5)/2 + 0.5], k=1)
+    #     pm_L2 = UnivariateSpline([step_1 + 60, step_1 + 120],
+    #                              [(y_pm0 - 0.5) / 2 + 0.5, (y_pm0 - 0.5) / 2 + 0.5], k=1)
+    #     pm_L3 = UnivariateSpline([step_1 + 120, VT1],
+    #                              [(y_pm0 - 0.5) / 2 + 0.5, 0.5], k=1)
+    #     pm_L4 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration],
+    #                              [0.5, pm_L3(VT1 + 30), 0, 0, 0], k=2)
+    #     p_mF = np.hstack((pm_L0(t[t < step_1]),
+    #                       pm_L1(t[(t >= step_1) & (t < step_1 + 60)]),
+    #                       pm_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
+    #                       pm_L3(t[(t >= step_1 + 120) & (t < VT1)]),
+    #                       pm_L4(t[(t >= VT1)])))
+    #
+    #     # heavy => 3 splines
+    #     ph_L0 = UnivariateSpline([0, step_1], [1 - y_pm0, 1 - y_pm0], k=1)
+    #     ph_L1 = UnivariateSpline([step_1, step_1 + 60], [1 - y_pm0, 1 - ((y_pm0 - 0.5)/2 + 0.5)], k=1)
+    #     ph_L2 = UnivariateSpline([step_1 + 60, step_1 + 120], [1 - ((y_pm0 - 0.5) / 2 + 0.5), 1 - ((y_pm0 - 0.5) / 2 + 0.5)], k=1)
+    #     ph_L3 = UnivariateSpline([step_1 + 120, VT1],
+    #                              [1 - ((y_pm0 - 0.5) / 2 + 0.5), 0.5], k=1)
+    #     ph_L4 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L3(VT1 + 30), 0.5], k=2)
+    #     ph_L5 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L4(VT2 + 30), 0], k=2)
+    #     p_hF = np.hstack((ph_L0(t[t < step_1]),
+    #                       ph_L1(t[(t >= step_1) & (t < step_1 + 60)]),
+    #                       ph_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
+    #                       ph_L3(t[(t >= step_1 + 120) & (t < VT1)]),
+    #                       ph_L4(t[(t >= VT1) & (t < VT2)]),
+    #                       ph_L4(t[(t >= VT2)])))
+    #     # severe => 2 splines
+    #     ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
+    #     # compute additional points
+    #     ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
+    #                              [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
+    #     p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
 
     p_mF = optimal_filter(t, p_mF, 100)
     p_hF = optimal_filter(t, p_hF, 50)
@@ -1057,6 +1065,7 @@ def generate_CPET(generator,
     import pandas as pd
     from uniplot import plot as terminal_plot
     from datetime import datetime
+    from scipy.interpolate import interp1d
 
     # Set the minimum and maximum values
     minimum_value = 1800
@@ -1101,7 +1110,7 @@ def generate_CPET(generator,
             eps = 15
             duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
             VCO2_peak = VO2_peak + np.random.uniform(160, 260)
-            R_max = 1.15
+            R_max = 1.12
         if VO2_peak >= 3000 and VO2_peak < 4000:
             VO2_basal = np.random.uniform(320, 540)
             # Assuming they are already delivering 80 W
@@ -1110,7 +1119,7 @@ def generate_CPET(generator,
             # 15 W/min ramp
             eps = 15
             duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
-            R_max = 1.25
+            R_max = 1.16
         if VO2_peak > 4000:
             VO2_basal = np.random.uniform(320, 540)
             # Assuming they are already delivering 100 W
@@ -1119,12 +1128,15 @@ def generate_CPET(generator,
             # 25 W/min ramp
             eps = 25
             duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
-            R_max = 1.35
+            R_max = 1.18
 
     # duration in sec for this application
     duration = round(duration * 60)
-    VT2 = round(np.random.normal(0.81, 0.05) * duration)
-    VT1 = round(np.random.normal(0.7, 0.05) * VT2)
+    VT2 = round(np.random.normal(0.8, 0.12) * duration)
+    VT1 = round(np.random.normal(0.8, 0.6) * VT2)
+    VO2VT1 = int((W0 + eps / 60 * VT1) * VO2_VT1_efficiency + VO2_basal)
+    VO2VT2 = int((W0 + eps / 60 * VT2) * VO2_VT1_efficiency + VO2_basal)
+
     VCO2_peak = R_max * VO2_peak + np.random.uniform(-60, 60)
 
     RF_min = np.random.uniform(14, 20)  # starting at 80 W
@@ -1143,19 +1155,17 @@ def generate_CPET(generator,
     PetCO2_peak = PetCO2_min + 8 + np.random.uniform(5, 17)
 
     # probability definition
-    # FIXME: hard coded here
+    d = duration
+    y1 = -1 / (VT1 + 2 * VT2 - 4 * d) * VT1
+    y2 = 1 / (VT1 + 2 * VT2 - 4 * d) * (VT1 - 2 * VT2)
 
-    tmp_beginning_ratio = VO2_min/VO2_peak
-    # y_pm0 = np.min([standard_beginning_ratio/tmp_beginning_ratio, 1])
-    y_pm0 = 1
+    xp = [0, VT1, VT2, duration]
+    yp = [0, y1, y2, 1]
 
-    p_mF, p_hF, p_sF = create_probabilities(duration=duration,
-                                            VT1=VT1,
-                                            VT2=VT2,
-                                            training=training,
-                                            resting=resting,
-                                            normalization=normalization,
-                                            y_pm0=y_pm0)
+    t = np.arange(1, duration + 1)
+    interp_pp = interp1d(xp, yp, kind='linear', fill_value="extrapolate")
+    p_p = interp_pp(t)
+    p_p = p_p + np.random.randn(len(t)) / 18
 
     # # # IMPORTANT: normalization only in > 0.5
     # p_hF[p_hF > 0.5] = np.interp(p_hF[p_hF > 0.5], (0.5, p_hF.max()), (0.5, 1))
@@ -1173,12 +1183,12 @@ def generate_CPET(generator,
     time_array = np.arange(duration)
 
     # TODO: this is hard coded
-    input_data = np.array(np.random.random_sample([1, 23]))
+    input_data = np.array(np.random.random_sample([1, 21]))
 
     for seconds_ in time_array:
         # keep the seed?
         # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
-        input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
+        input_data[0, -1:] = np.array([[p_p[seconds_]]])
         output_data = generator(input_data)
         VO2.append(np.mean(output_data[0, :, 0]))
         VCO2.append(np.mean(output_data[0, :, 1]))
@@ -1231,9 +1241,7 @@ def generate_CPET(generator,
     # NEW: Add the workload
     df['W'] = eps * time_array / 60 + W0
 
-    df['p_mF'] = p_mF
-    df['p_hF'] = p_hF
-    df['p_sF'] = p_sF
+    df['p_p'] = p_p
 
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
@@ -1333,7 +1341,7 @@ def generate_CPET(generator,
         try:
             tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
             # TODO: this 25 is hardcoded, you should have len(df.columns)
-            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 19]),
+            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 17]),
                                                            columns=tmp.index.to_list())])
             time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
             n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])

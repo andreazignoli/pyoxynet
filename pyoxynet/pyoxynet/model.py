@@ -35,7 +35,7 @@ class generator(tf.keras.Model):
         # data
         inputs_1 = tf.slice(inputs, [0, 0], [-1, 20])
         # label
-        inputs_2 = tf.slice(inputs, [0, 20], [-1, 3])
+        inputs_2 = tf.slice(inputs, [0, 20], [-1, 1])
 
         # INPUT
         x = self.d1(inputs_1)
@@ -47,7 +47,7 @@ class generator(tf.keras.Model):
         y = self.d12(inputs_2)
         y = self.bn2(y, training=training)
         y = self.lRe2(y, training=training)
-        y = tf.reshape(y, [-1, 40, 3])
+        y = tf.reshape(y, [-1, 40, 1])
 
         # LABELS + INPUT
         x = tf.concat([x, y], axis=2)
