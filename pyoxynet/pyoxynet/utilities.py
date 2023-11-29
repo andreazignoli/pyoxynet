@@ -3,6 +3,7 @@ import scipy.interpolate
 from scipy.stats import beta
 from scipy.interpolate import UnivariateSpline
 from scipy.interpolate import interp1d
+import matplotlib.pyplot as plt
 
 def PrintHello(hello='hello'):
     """This function prints to screen.
@@ -379,9 +380,9 @@ def load_tf_generator():
         open('/tmp/generator/variables/variables.index', 'wb').write(variables_index_binaries)
         model = tf.keras.models.load_model('/tmp/generator/')
         from .model import generator
-        my_model = generator(n_input=7, n_past_points=40, n_labels=1, data_noise_dim=20)
+        my_model = generator(n_input=7, n_past_points=40, n_labels=3, data_noise_dim=20)
         # TODO: this is hardcoded
-        my_model.build(input_shape=(1, 21))
+        my_model.build(input_shape=(1, 23))
         my_model.set_weights(model.get_weights())
 
         return my_model
@@ -786,7 +787,7 @@ def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=Fal
         p_1.append(output_data.numpy()[0][0])
         p_2.append(output_data.numpy()[0][1])
         p_3.append(output_data.numpy()[0][2])
-        time.append(df.time[i] + past_points - 1)
+        time.append(df.time[i] + past_points)
         # ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'domain']
         VO2.append(np.mean(XN_array[-1, 0]) * (df['VO2_I'].max() - df['VO2_I'].min()) + df['VO2_I'].min())
         VCO2.append(np.mean(XN_array[-1, 1]) * (df['VCO2_I'].max() - df['VCO2_I'].min()) + df['VCO2_I'].min())
@@ -852,8 +853,8 @@ def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=Fal
     out_dict['VT2_lower'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] >= out_df['p_md'])].index[0])
-    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv'])].index[-1])
+    VT1_index = int(out_df[(out_df['p_hv'] >= out_df['p_md'])].index[0] - past_points)
+    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv'])].index[-1] - past_points)
 
     VT1_time = int(out_df.iloc[VT1_index]['time'])
     VT2_time = int(out_df.iloc[VT2_index]['time'])
@@ -1145,10 +1146,18 @@ def generate_CPET(generator,
 
     # duration in sec for this application
     duration = round(duration * 60)
-    VT2 = round(np.random.normal(0.8, 0.12) * duration)
-    VT1 = round(np.random.normal(0.8, 0.6) * VT2)
-    VO2VT1 = int((W0 + eps / 60 * VT1) * VO2_VT1_efficiency + VO2_basal)
-    VO2VT2 = int((W0 + eps / 60 * VT2) * VO2_VT1_efficiency + VO2_basal)
+
+    VT1 = 0
+    VT2 = 0
+    VO2VT1_estimated = 0
+    VO2VT2_estimated = 0
+
+    while ((VT2 - VT1) < 60 or VO2VT1_estimated > 0.74 * VO2_peak or VO2VT2_estimated > 0.94 * VO2_peak or
+           VO2VT1_estimated < 0.49 * VO2_peak or VO2VT2_estimated < 0.73 * VO2_peak):
+        VT2 = round(np.random.normal(0.8, 0.12) * duration)
+        VT1 = round(np.random.normal(0.7, 0.6) * VT2)
+        VO2VT1_estimated = int((W0 + eps / 60 * VT1) * VO2_VT1_efficiency + VO2_basal)
+        VO2VT2_estimated = int((W0 + eps / 60 * VT2) * VO2_VT1_efficiency + VO2_basal)
 
     VCO2_peak = R_max * VO2_peak + np.random.uniform(-60, 60)
 
@@ -1175,10 +1184,7 @@ def generate_CPET(generator,
     xp = [0, VT1, VT2, duration]
     yp = [0, y1, y2, 1]
 
-    t = np.arange(1, duration + 1)
-    interp_pp = interp1d(xp, yp, kind='linear', fill_value="extrapolate")
-    p_p = interp_pp(t)
-    p_p = p_p + np.random.randn(len(t)) / 18
+    p_mF, p_hF, p_sF = create_probabilities(d, VT1, VT2, generator=True)
 
     # # # IMPORTANT: normalization only in > 0.5
     # p_hF[p_hF > 0.5] = np.interp(p_hF[p_hF > 0.5], (0.5, p_hF.max()), (0.5, 1))
@@ -1196,12 +1202,12 @@ def generate_CPET(generator,
     time_array = np.arange(duration)
 
     # TODO: this is hard coded
-    input_data = np.array(np.random.random_sample([1, 21]))
+    input_data = np.array(np.random.random_sample([1, 23]))
 
     for seconds_ in time_array:
         # keep the seed?
         # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
-        input_data[0, -1:] = np.array([[p_p[seconds_]]])
+        input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
         output_data = generator(input_data)
         VO2.append(np.mean(output_data[0, :, 0]))
         VCO2.append(np.mean(output_data[0, :, 1]))
@@ -1254,7 +1260,9 @@ def generate_CPET(generator,
     # NEW: Add the workload
     df['W'] = eps * time_array / 60 + W0
 
-    df['p_p'] = p_p
+    df['p_m'] = p_mF
+    df['p_h'] = p_hF
+    df['p_s'] = p_sF
 
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
@@ -1263,11 +1271,13 @@ def generate_CPET(generator,
     df['PetO2VO2_I'] = df['PetO2_I'] / df['VO2_I']
     df['PetCO2VO2_I'] = df['PetCO2_I'] / df['VO2_I']
 
+    df['VO2_F'] = optimal_filter(time_array, df['VO2_I'], 100)
+
     # TODO: this is hard coded, you need to subtract half window-length (see probability definition)
     df['domain'] = np.NaN
-    df.loc[df['time'] < (VT1 - 20), 'domain'] = -1
-    df.loc[df['time'] >= (VT2 - 20), 'domain'] = 1
-    df.loc[(df['time'] < (VT2 - 20)) & (df['time'] >= (VT1 - 20)), 'domain'] = 0
+    df.loc[df['time'] < (VT1), 'domain'] = -1
+    df.loc[df['time'] >= (VT2), 'domain'] = 1
+    df.loc[(df['time'] < (VT2)) & (df['time'] >= (VT1)), 'domain'] = 0
     # df['fitness_group'] = db_df_sample['fitness_group'].values[0]
     # df['Age'] = db_df_sample['Age'].values[0]
     # df['age_group'] = db_df_sample['age_group'].values[0]
@@ -1275,10 +1285,16 @@ def generate_CPET(generator,
     # df['weight'] = db_df_sample['weight'].values[0]
     # df['height'] = db_df_sample['height'].values[0]
 
+    df['change'] = df['domain'].ne(df['domain'].shift())
+    # Find the index where 'domain' changes from -1 to 0
+    first_change_index = df.index[df['change'] & (df['domain'] == 0)].min()
+
+    # Find the index where 'domain' changes from 0 to 1
+    second_change_index = df.index[df['change'] & (df['domain'] == 1)].min()
+
     # Collect VO2 value at VT1 and VT2
-    VO2VT1 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[0] - 10):(df[df['domain'].diff().fillna(0) == 1].index[0] + 10)]['VO2_I'].mean()
-    VO2VT2 = df.iloc[(df[df['domain'].diff().fillna(0) == 1].index[1] - 10):(
-            df[df['domain'].diff().fillna(0) == 1].index[1] + 10)]['VO2_I'].mean()
+    VO2VT1 = int(df.VO2_F[first_change_index])
+    VO2VT2 = int(df.VO2_F[second_change_index])
 
     if plot:
         terminal_plot([df['VO2_I'], df['VCO2_I']],
@@ -1354,7 +1370,7 @@ def generate_CPET(generator,
         try:
             tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
             # TODO: this 25 is hardcoded, you should have len(df.columns)
-            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 17]),
+            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 21]),
                                                            columns=tmp.index.to_list())])
             time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
             n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])
