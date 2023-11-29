@@ -29,25 +29,34 @@ VO2VT1_NN = []
 VO2VT2_NN = []
 VO2VT1_REAL = []
 VO2VT2_REAL = []
-save_files = False
 
-for i in np.arange(60):
+VT1_FAKE = []
+VT2_FAKE = []
+VT1_NN = []
+VT2_NN = []
+
+save_files = True
+
+for i in np.arange(40):
     try:
         # fitness_group = random.choice([2, 3])
         df_fake, data_dict_fake = generate_CPET(generator)
         CPET_data = pd.DataFrame.from_dict(data_dict_fake['data'], orient='columns')
-        df_est_fake, dict_est_fake = test_pyoxynet(df_fake, model='CNN')
+        df_est_fake, dict_est_fake = test_pyoxynet(df_fake, model='LSTMGRUModel')
         VO2VT1_FAKE.append(int(data_dict_fake['VO2VT1']))
         VO2VT2_FAKE.append(int(data_dict_fake['VO2VT2']))
+        VT1_FAKE.append(int(data_dict_fake['VT1']))
+        VT2_FAKE.append(int(data_dict_fake['VT2']))
 
         # df, data = draw_real_test(resting=False)
         # df_est_fake, dict_est_fake = test_pyoxynet(df, model='LSTMGRUModel')
-
         # VO2VT1_REAL.append(int(data['LT']))
         # VO2VT2_REAL.append(int(data['RCP']))
 
         VO2VT1_NN.append(int(dict_est_fake['VT1']['VO2']))
         VO2VT2_NN.append(int(dict_est_fake['VT2']['VO2']))
+        VT1_NN.append(int(dict_est_fake['VT1']['time']))
+        VT2_NN.append(int(dict_est_fake['VT2']['time']))
 
         file_id = 'fake_#' + str(i).zfill(3)
 
@@ -56,12 +65,12 @@ for i in np.arange(60):
         data_dict_fake['oxynet']['RCP'] = int(dict_est_fake['VT2']['VO2'])
 
         if save_files:
-            df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
-            json_object = json.dumps(data_dict_fake)
+            df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/infile/' + file_id + '.csv')
+            #df_fake.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/generated/csv/' + file_id + '.csv')
+            # json_object = json.dumps(data_dict_fake)
             # Writing to sample.json
-            with open('/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/' + file_id + '.json',
-                      "w") as outfile:
-                outfile.write(json_object)
+            # with open('/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/' + file_id + '.json', "w") as outfile:
+                # outfile.write(json_object)
 
     except:
         pass
