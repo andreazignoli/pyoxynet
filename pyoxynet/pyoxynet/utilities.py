@@ -326,7 +326,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
             my_model.set_weights(model.get_weights())
         if model == 'murias_lab':
             model = tf.keras.models.load_model('/tmp/model/')
-            my_model = Model(n_classes=3, n_input=n_inputs)
+            my_model = LSTMGRUModel(n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
 
@@ -656,7 +656,8 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     # rolling averages to filter the data
     # This filter size should be equal to the one used by the Test class
-    filter_size = 20
+    # We do not train the NN on filtered data, just saying
+    filter_size = 1
     #
     VO2_F = uniform_filter1d(VO2_I, size=filter_size)
     VCO2_F = uniform_filter1d(VCO2_I, size=filter_size)

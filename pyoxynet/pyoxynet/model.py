@@ -208,9 +208,9 @@ class LSTMGRUModel(tf.keras.Model):
     def call(self, inputs, training=None):
         x = inputs
         x = self.lstm_layer(x)
-        # x = self.lstm_bn(x)
+        #x = self.lstm_bn(x)
         x = self.gru_layer(x)
-        # x = self.gru_bn(x)
+        #x = self.gru_bn(x)
         x = self.dropout(x, training=training)
         x = self.avg1(x)
         return self.output_layer(x)

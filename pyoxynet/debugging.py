@@ -11,8 +11,46 @@ from pyoxynet import testing
 from pyoxynet import utilities
 import sys
 from bs4 import BeautifulSoup
+from os import walk
 
 ##################
+
+file_dir = '/Users/andreazignoli/Downloads/test-oxynet-main/real/'
+filenames = next(walk(file_dir), (None, None, []))[2]
+
+# read all json from filenames and add them to an array
+real = []
+for filename in filenames:
+    with open(file_dir + filename) as f:
+        real.append(json.load(f))
+
+with open('/Users/andreazignoli/Downloads/test-oxynet-main/experts.json') as f:
+    dict_answers = json.load(f)
+df_answers = pd.DataFrame.from_dict(dict_answers)
+
+# create an empty array to store the results
+oxynet = []
+
+# do the inference and add the results to the array
+for i in range(len(real)):
+
+    try:
+
+        print('Inferencing ' + real[i]['id'])
+        df = load_exercise_threshold_app_data(data_dict=[real[i]])
+        df_estimates, dict_estimates = test_pyoxynet(input_df=df, model='LSTMGRUModel')
+        # save it to the array
+        oxynet.append({
+            'id': real[i]['id'],
+            'oxynet': dict_estimates
+        })
+
+    except:
+        pass
+
+# save the array to json
+with open('/Users/andreazignoli/Downloads/test-oxynet-main/oxynet.json', 'w') as outfile:
+    json.dump(oxynet, outfile)
 
 # file_path = '/Users/andreazignoli/oxynet-interpreter-tf2/training_data/ARC_VO2_FOL.csv'
 # df = pd.read_csv(file_path)
@@ -81,41 +119,6 @@ sys.exit()
 
 #test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 #filename, file_extension = os.path.splitext(test_file)
-
-file_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/generated/json/'
-json_list = []
-for files in os.listdir(file_dir):
-    if files.endswith(".json"):
-        json_list.append(files)
-
-VO2VT1_TDE = []
-VO2VT2_TDE = []
-VO2VT1_NN = []
-VO2VT2_NN = []
-
-for json_file in json_list:
-    with open(file_dir + json_file, 'r') as f:
-        CPET_data = json.load(f)
-    # new_dict_CPET = {}
-    # new_dict_CPET[0] = {'data': []}
-    # new_dict_CPET[0]['data'] = CPET_data['data']
-
-    try:
-        df = utilities.load_exercise_threshold_app_data(data_dict=CPET_data)
-        df_fake = pd.DataFrame.from_dict(CPET_data[0]['data'], orient='columns')
-        df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=df, n_inputs=5, model='TCN')
-
-        VO2VT1_TDE.append(int(CPET_data[0]['VO2VT1']))
-        VO2VT2_TDE.append(int(CPET_data[0]['VO2VT2']))
-
-        VO2VT1_NN.append(int(dict_estimates['VT1']['VO2']))
-        VO2VT2_NN.append(int(dict_estimates['VT2']['VO2']))
-
-    except:
-        print('Could not process ', json_file)
-        pass
-
-    here = 0
 
 test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 filename, file_extension = os.path.splitext(test_file)
