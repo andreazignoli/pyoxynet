@@ -5,8 +5,9 @@ from scipy.ndimage import uniform_filter1d
 
 class Test:
 
-    def __init__(self, filename):
+    def __init__(self, filename, filter_size = 20):
         self.filename = filename
+        self.filter_size = filter_size
 
     def set_data_path(self, data_path):
         self.data_path = data_path
@@ -150,10 +151,11 @@ class Test:
         except:
             pass
 
-    def load_file(self, filter_size = 20):
+    def load_file(self):
 
         from . import utilities
         df = self.df
+        filter_size = self.filter_size
 
         if self.metabolimeter == 'vintus':
 
