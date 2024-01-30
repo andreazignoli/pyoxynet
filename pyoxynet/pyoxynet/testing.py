@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from pandas import read_csv
+from scipy.ndimage import uniform_filter1d
 
 class Test:
 
@@ -149,7 +150,7 @@ class Test:
         except:
             pass
 
-    def load_file(self):
+    def load_file(self, filter_size = 20):
 
         from . import utilities
         df = self.df
@@ -1129,10 +1130,7 @@ class Test:
         self.PetO2 = np.nan_to_num(self.PetO2)
         self.PetCO2 = np.nan_to_num(self.PetCO2)
 
-        # rolling averages
-        from scipy.ndimage import uniform_filter1d
-        filter_size=20
-
+        # Rolling averages
         if self.metabolimeter != 'low':
 
             self.Rf_F = uniform_filter1d(self.Rf, size=filter_size)
