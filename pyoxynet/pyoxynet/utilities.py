@@ -917,7 +917,7 @@ def create_probabilities(duration=600,
         p_sF (np array): Probability of being in the severe intensity zone (-1:1)
 
     """
-
+    
     t = np.arange(1, duration + 1)
 
     if resting == True:
