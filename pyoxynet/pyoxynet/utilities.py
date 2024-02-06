@@ -283,6 +283,7 @@ def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
     if model == 'murias_lab':
         # load the classic Oxynet model configuration
         print('Model custom trained on data from Juan Murias Lab uploaded')
+        print('This is an LSTMGRU model')
         try:
             saved_model_binaries = importlib_resources.read_binary(murias_lab, 'saved_model.pb')
             keras_metadata_model_binaries = importlib_resources.read_binary(murias_lab, 'keras_metadata.pb')
