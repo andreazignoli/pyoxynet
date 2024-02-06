@@ -38,7 +38,7 @@ for i in range(len(real)):
 
         print('Inferencing ' + real[i]['id'])
         df = load_exercise_threshold_app_data(data_dict=[real[i]])
-        df_estimates, dict_estimates = test_pyoxynet(input_df=df, model='LSTMGRUModel')
+        df_estimates, dict_estimates = test_pyoxynet(input_df=df, model='murias_lab')
         # save it to the array
         oxynet.append({
             'id': real[i]['id'],
