@@ -9,6 +9,14 @@
 </head>
 <body>
 
+<div class="container">
+    <h2>Results of the interpretation</h2>
+    <ul>
+        <h4>VT<sub>1</sub>: {{CPET_data.VT1.VO2}} mlO<sub>2</sub>/min ({{CPET_data.VT1.perc_VO2}} %VO<sub>2MAX</sub>)
+        <br>VT<sub>2</sub>: {{CPET_data.VT2.VO2}} mlO<sub>2</sub>/min ({{CPET_data.VT2.perc_VO2}} %VO<sub>2MAX</sub>)</h4>
+    </ul>
+</div>
+
 <div class="row">
     <div class="column">
         <div class="chart" id="plot_VCO2vsVO2">
@@ -21,7 +29,7 @@
     <div class="column">
         <div class="chart" id="plot_VEvsVCO2">
             <script>
-                var graphs = {{VEvsVCO2 | safe}};
+                var graphs = {{VEvsVO2 | safe}};
                 Plotly.plot('plot_VEvsVCO2',graphs,{});
             </script>
         </div>
