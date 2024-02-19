@@ -67,7 +67,7 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
         ),
         autosize=True,
         showlegend=True,
-        template='ggplot2',
+        template='plotly_white',
         legend=dict(
             yanchor="top",
             y=0.99,
@@ -136,7 +136,7 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0, 0, 0]):
         ),
         autosize=True,
         showlegend=True,
-        template='ggplot2',
+        template='plotly_white',
         legend=dict(
             yanchor="top",
             y=0.99,
@@ -205,7 +205,7 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
         ),
         autosize=True,
         showlegend=True,
-        template='ggplot2',
+        template='plotly_white',
         legend=dict(
             yanchor="top",
             y=0.99,
@@ -277,11 +277,12 @@ def read_csv():
     try:
         file = request.files['file']
         data = pd.read_csv(file, encoding="ISO-8859-1")
-        t = pyoxynet.Test('', filter_size = 1)
+        t = pyoxynet.Test('')
         t.set_data_extension('.csv')
         t.infer_metabolimeter(optional_data=data)
         t.load_file()
         t.create_data_frame()
+        t.create_raw_data_frame()
         df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, 
                                                                        model = 'murias_lab')
         
@@ -290,25 +291,44 @@ def read_csv():
         VO2VT1 = 0
         VO2VT2 = 0
 
+        dict_estimates['VT1']['time'] = int(dict_estimates['VT1']['time'])
+        dict_estimates['VT2']['time'] = int(dict_estimates['VT2']['time'])
+        dict_estimates['VT1']['VO2'] = int(dict_estimates['VT1']['VO2'])
+        dict_estimates['VT2']['VO2'] = int(dict_estimates['VT2']['VO2'])
+
+        dict_estimates['VT1']['perc_VO2'] = np.round(dict_estimates['VT1']['VO2']/t.data_frame['VO2_I'].max() * 100, 1)
+        dict_estimates['VT2']['perc_VO2'] = np.round(dict_estimates['VT2']['VO2']/t.data_frame['VO2_I'].max() * 100, 1)
+
         VT1_oxynet = dict_estimates['VT1']['time']
         VT2_oxynet = dict_estimates['VT2']['time']
         VO2VT1_oxynet = dict_estimates['VT1']['VO2']
         VO2VT2_oxynet = dict_estimates['VT2']['VO2']
 
-        plot_VEvsVCO2 = CPET_var_plot_vs_CO2(t.data_frame, var_list=['VE_I'])
-        plot_VCO2vsVO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
-        plot_PetO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['PetO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
-        plot_PetCO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['PetCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
-        plot_VEVO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['VEVO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
-        plot_VEVCO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['VEVCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        # Rename ONLY for viz purposes
+        # TODO: fix this sh*t
+        t.raw_data_frame = t.raw_data_frame.rename(columns={'VO2': 'VO2_I'})
+        t.raw_data_frame = t.raw_data_frame.rename(columns={'VCO2': 'VCO2_I'})
+        t.raw_data_frame = t.raw_data_frame.rename(columns={'VE': 'VE_I'})
+        t.raw_data_frame = t.raw_data_frame.rename(columns={'PetO2': 'PetO2_I'})
+        t.raw_data_frame = t.raw_data_frame.rename(columns={'PetCO2': 'PetCO2_I'})
+        t.raw_data_frame = t.raw_data_frame.rename(columns={'VEVCO2': 'VEVCO2_I'})
+        t.raw_data_frame = t.raw_data_frame.rename(columns={'VEVO2': 'VEVO2_I'})
+
+        plot_VEvsVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VE_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_VCO2vsVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_PetO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['PetO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_PetCO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['PetCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_VEVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VEVO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_VEVCO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VEVCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
 
         return render_template('plot_interpretation.html',
                                        VCO2vsVO2=plot_VCO2vsVO2,
-                                       VEvsVCO2=plot_VEvsVCO2,
+                                       VEvsVO2=plot_VEvsVO2,
                                        PetO2=plot_PetO2,
                                        PetCO2=plot_PetCO2,
                                        VEVO2=plot_VEVO2,
-                                       VEVCO2=plot_VEVCO2)
+                                       VEVCO2=plot_VEVCO2, 
+                                       CPET_data=dict_estimates)
     except:
         if 'file' not in request.files:
             dict_estimates = 'No file part'
