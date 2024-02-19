@@ -101,9 +101,13 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0, 0, 0]):
 
     fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VO2_I", y=var_list,
                      color_discrete_sequence=['white', 'gray'])
-    fig.update_traces(marker=dict(size=8, line=dict(width=2, color='DarkSlateGrey')))
-    fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
-    fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
+    fig.update_traces(marker=dict(size=8, line=dict(width=1, color='black'), color='#51a1ff', opacity=0.7))
+    
+    if VT1 > 0:
+        fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
+    if VT2 > 0:
+        fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
+
     fig.add_vline(x=VT1_oxynet, line_width=1, line_color="dodgerblue")
     fig.add_vline(x=VT2_oxynet, line_width=1, line_color="red")
 
@@ -333,7 +337,7 @@ def read_csv():
         if 'file' not in request.files:
             dict_estimates = 'No file part'
         dict_estimates = {}
-        return flask.jsonify(dict_estimates)
+        return flask.jsonify('We are sprry to report that something went wrong with your file 🤨')
 
 @app.route('/CPET_generation', methods=['GET', 'POST'])
 def CPET_generation():
