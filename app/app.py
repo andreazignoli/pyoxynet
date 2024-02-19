@@ -270,29 +270,57 @@ def read_csv():
       200:
         description: A successful response
     """
+
     # Reads from csv and uses the pyoxynet parser
     args = request.args
 
     try:
         file = request.files['file']
         data = pd.read_csv(file, encoding="ISO-8859-1")
-        t = pyoxynet.Test('')
+        t = pyoxynet.Test('', filter_size = 1)
         t.set_data_extension('.csv')
         t.infer_metabolimeter(optional_data=data)
         t.load_file()
         t.create_data_frame()
-        df_estimates, dict_estimates = pyoxynet.test_pyoxynet(input_df=t.data_frame)
-    except:
-        dict_estimates = {}
+        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, 
+                                                                       model = 'murias_lab')
+        
+        VT1 = 0
+        VT2 = 0
+        VO2VT1 = 0
+        VO2VT2 = 0
 
-    return flask.jsonify(dict_estimates)
+        VT1_oxynet = dict_estimates['VT1']['time']
+        VT2_oxynet = dict_estimates['VT2']['time']
+        VO2VT1_oxynet = dict_estimates['VT1']['VO2']
+        VO2VT2_oxynet = dict_estimates['VT2']['VO2']
+
+        plot_VEvsVCO2 = CPET_var_plot_vs_CO2(t.data_frame, var_list=['VE_I'])
+        plot_VCO2vsVO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_PetO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['PetO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_PetCO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['PetCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_VEVO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['VEVO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        plot_VEVCO2 = CPET_var_plot_vs_O2(t.data_frame, var_list=['VEVCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+
+        return render_template('plot_interpretation.html',
+                                       VCO2vsVO2=plot_VCO2vsVO2,
+                                       VEvsVCO2=plot_VEvsVCO2,
+                                       PetO2=plot_PetO2,
+                                       PetCO2=plot_PetCO2,
+                                       VEVO2=plot_VEVO2,
+                                       VEVCO2=plot_VEVCO2)
+    except:
+        if 'file' not in request.files:
+            dict_estimates = 'No file part'
+        dict_estimates = {}
+        return flask.jsonify(dict_estimates)
 
 @app.route('/CPET_generation', methods=['GET', 'POST'])
 def CPET_generation():
 
     args = request.args
     fitness_group = args.get("fitness_group", default=None, type=int)
-    df, gen_dict = utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group)
+    df, gen_dict = pyoxynet.utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group)
 
     return flask.jsonify(df.to_dict())
 
@@ -312,16 +340,17 @@ def CPET_plot():
                 fitness_group = args.get("fitness_group", default=None, type=int)
 
                 if random.randint(0, 1) == 1:
-                    generator = utilities.load_tf_generator()
-                    df, CPET_data = utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group, noise_factor=None)
+                    generator = pyoxynet.utilities.load_tf_generator()
+                    df, CPET_data = pyoxynet.utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group, noise_factor=None)
                     print('Test was FAKE')
                     session['test_type'] = 'FAKE'
                 else:
-                    df, CPET_data = utilities.draw_real_test()
+                    df, CPET_data = pyoxynet.utilities.draw_real_test()
                     print('Test was REAL')
                     session['test_type'] = 'REAL'
 
-                df_oxynet, out_dict = utilities.test_pyoxynet(input_df=df)
+                df_oxynet, out_dict = pyoxynet.utilities.test_pyoxynet(input_df=df, 
+                                                                       model = 'murias_lab')
 
                 VT1 = int(float(CPET_data['VT1']))
                 VT2 = int(float(CPET_data['VT2']))

@@ -9,27 +9,6 @@
 </head>
 <body>
 
-<div class="container">
-<h2>Cardiopulmonary test done by:</h2>
-<ul>
-    {% for item in data %}
-        <h4>Name: {{item.name}}
-        <br>Address: {{item.address}}</h4>
-    {% endfor %}
-</ul>
-<ul>
-    <h4>AGE: {{CPET_data.Age}}
-    <br>Height: {{CPET_data.Height}} m
-    <br>Weight: {{CPET_data.Weight}} kg
-    <br>Gender: {{CPET_data.Gender}}
-    <br>Fitness level: {{CPET_data.Aerobic_fitness_level}}</h4>
-</ul>
-<h3>What do you think?<h3/>
-    <form method="post" action="/CPET_plot">
-        <input type="submit" value="REAL" name="action1" id="submitREAL" class="button_1"/>
-        <input type="submit" value="FAKE" name="action2" id="submitFALSE" class="button_1"/>
-    </form>
-</div>
 <div class="row">
     <div class="column">
         <div class="chart" id="plot_VCO2vsVO2">

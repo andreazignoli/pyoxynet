@@ -7,7 +7,34 @@
 </head>
 <body>
 <img src="static/logo_BW.png" style="width:200px;height:200px;" class="center">
-<h2>🦆 CPET data generation powered by Oxynet and Pyoxynet 🤖</h2>
+
+<p> Share 👉 Learn 👉 Improve 💡</p>
+<p></p>
+<p> <a href="http://oxynet.net/">Oxynet website</a> · <a href="https://github.com/andreazignoli/pyoxynet">Pyoxynet code repository</a> </p>
+<hr class="bottom-line">
+
+<h2>🦆 CPET data INTERPRETATION powered by Oxynet and Pyoxynet 🤖</h2>
+
+<body>
+    <h3>Upload a file and then click on "INTERPRET"</h3>
+    <form action="/read_csv" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="INTERPRET" name="interpret" id="submitINTERPRET" class="button_0"/>
+    </form>
+</body>
+
+<p></p>
+<h3>🔨 How does this work? 🔧</h3>
+<p></p>
+<p class="p1"> You upload a cardiopulmonary 🫀 exercise test file </p>
+<p class="p1"> A deep neural network is used to suggest you the ventilatory thresholds </p>
+<p></p>
+<p class="p1"> You can read more how the fake tests are interpreted here <a href="https://medium.com/@andrea.zignoli/automatic-interpretation-of-cardiopulmonary-exercise-tests-with-deep-learning-2c9b3920ad51">here</a> </p>
+<p></p>
+
+<hr class="custom-line">
+
+<h2>🦆 CPET data GENERATION powered by Oxynet and Pyoxynet 🤖</h2>
 
 <form method="post" action="/CPET_plot">
         <input type="submit" value="PLAY" name="play" id="submitPLAY" class="button_1"/>
@@ -19,11 +46,7 @@
 <p class="p1"> You will be asked to say if the test is REAL 🫀 or FAKE 🤡</p>
 <p class="p1"> A deep neural network is used to suggest you the ventilatory thresholds </p>
 <p></p>
-<p class="p1"> You can read more how the fake tests are generated <a href="https://www.overleaf.com/read/fcmwscvyhtfq">here</a> </p>
-<p class="p1"> You can read more about the current accuracy of the threshold detection algorithm <a href="https://rpubs.com/andrea_zignoli/oxynet_post_process_stats">here</a> </p>
+<p class="p1"> You can read more how the fake tests are generated <a href="https://medium.com/@andrea.zignoli/automatic-generation-of-cardiopulmonary-exercise-tests-with-deep-learning-d1f2cab4e765">here</a> </p>
 <p></p>
-<p> Share 👉 Learn 👉 Improve 💡</p>
-<p></p>
-<p> <a href="http://oxynet.net/">Oxynet website</a> · <a href="https://github.com/andreazignoli/pyoxynet">Pyoxynet code repository</a> </p>
 </body>
 </html>

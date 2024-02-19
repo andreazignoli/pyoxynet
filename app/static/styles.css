@@ -18,6 +18,10 @@ input[type=button], input[type=submit], input[type=reset] {
   cursor: pointer;
 }
 
+#submitINTERPRET{
+  background-color: #51a1ff;
+}
+
 #submitPLAY{
   background-color: #08cf65;
 }
@@ -34,6 +38,7 @@ input[type=button], input[type=submit], input[type=reset] {
   background-color: #ff5521;
 }
 
+.button_0 {border-radius: 4px;}
 .button_1 {border-radius: 4px;}
 
 .column {
@@ -59,4 +64,16 @@ input[type=button], input[type=submit], input[type=reset] {
   margin-left: auto;
   margin-right: auto;
   width: 50%;
+}
+
+.custom-line {
+  border-top: 2px solid black; /* Adjust thickness and color of the line */
+  width: auto; /* Make the line span the width of the content */
+  margin: 0 auto; /* Center the line horizontally */
+}
+
+.bottom-line {
+  border-top: 1px solid #404040; /* Adjust thickness and color of the line */
+  width: auto; /* Make the line span the width of the content */
+  margin: 0 auto; /* Center the line horizontally */
 }
