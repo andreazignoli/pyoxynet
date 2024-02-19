@@ -1178,6 +1178,31 @@ class Test:
             print("The name of the participant is: " + self.name + '.\n'    "She is " + str(
                 self.age) + ' years old.\nWeight: ' + str(self.weight) + ' kg\nHeight: ' + str(self.height) + ' cm')
 
+    def create_raw_data_frame(self):
+
+        self.raw_data_frame = pd.DataFrame()
+
+        self.raw_data_frame['time'] = self.time
+        self.raw_data_frame['VO2'] = self.VO2
+        self.raw_data_frame['VCO2'] = self.VCO2
+        self.raw_data_frame['VE'] = self.VE
+        self.raw_data_frame['HR'] = self.HR
+        self.raw_data_frame['RF'] = self.Rf
+        self.raw_data_frame['PetO2'] = self.PetO2
+        self.raw_data_frame['PetCO2'] = self.PetCO2
+
+        # variables normalised on VO2
+        self.raw_data_frame['VEVO2'] = self.VE / self.VO2
+        self.raw_data_frame['VCO2VO2'] = self.VCO2 / self.VO2
+        self.raw_data_frame['PetO2VO2'] = self.PetO2 / self.VO2
+        self.raw_data_frame['PetCO2VO2'] = self.PetCO2 / self.VO2
+
+        if self.metabolimeter == 'VO2Master':
+            # putting to zero
+            self.raw_data_frame['VEVCO2'] = self.VCO2
+        else:
+            self.raw_data_frame['VEVCO2'] = self.VE / self.VCO2
+
     def create_data_frame(self):
 
         self.data_frame = pd.DataFrame()
@@ -1202,6 +1227,7 @@ class Test:
             self.data_frame['VEVCO2_I'] = self.VCO2_I
         else:
             self.data_frame['VEVCO2_I'] = self.VE_I / self.VCO2_I
+            
         self.data_frame['age'] = self.age
 
         # height in cm
