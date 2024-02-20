@@ -313,7 +313,9 @@ def read_csv():
         t.create_raw_data_frame()
 
         # df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, model = 'murias_lab')
-        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(tf_model=tf_model, input_df=df, inference_stride=5)
+        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(tf_model=tf_model,
+                                                                        input_df=t.data_frame,
+                                                                        inference_stride=10)
         
         VT1 = 0
         VT2 = 0
