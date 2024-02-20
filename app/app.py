@@ -15,6 +15,10 @@ app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9098))
 app.secret_key = "super secret key"
 
+UPLOAD_FOLDER = os.path.join('staticFiles', 'uploads')
+# Configure upload file path flask
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 generator = pyoxynet.utilities.load_tf_generator()
 
 @app.route("/swagger")
@@ -279,14 +283,31 @@ def read_csv():
     args = request.args
 
     try:
+        
         file = request.files['file']
-        data = pd.read_csv(file, encoding="ISO-8859-1")
-        t = pyoxynet.Test('')
-        t.set_data_extension('.csv')
-        t.infer_metabolimeter(optional_data=data)
+        filename, file_extension = os.path.splitext(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+        file.save(file.filename)
+
+        t = pyoxynet.Test(filename)
+        t.set_data_extension(file_extension)
+
+        if file_extension == '.csv':
+            df = read_csv(file)
+            print('Just reading a csv file')
+        if file_extension == '.txt':
+            df = read_csv(file, sep="\t", header=None, skiprows=3)
+            print('Just reading a txt file')
+            t.metabolimeter = 'vyiare'
+        if file_extension == '.xlsx' or file_extension == '.xls':
+            print('Attempting to read an Excel file')
+            df = pd.read_excel(file)
+
+        os.remove(file.filename)
+        t.infer_metabolimeter(optional_data=df)
         t.load_file()
         t.create_data_frame()
         t.create_raw_data_frame()
+
         df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, 
                                                                        model = 'murias_lab')
         
@@ -337,7 +358,7 @@ def read_csv():
         if 'file' not in request.files:
             dict_estimates = 'No file part'
         dict_estimates = {}
-        return flask.jsonify('We are sprry to report that something went wrong with your file 🤨')
+        return flask.jsonify('We are sorry to report that something went wrong with your file :-(')
 
 @app.route('/CPET_generation', methods=['GET', 'POST'])
 def CPET_generation():
