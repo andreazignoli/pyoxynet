@@ -19,7 +19,11 @@ UPLOAD_FOLDER = os.path.join('staticFiles', 'uploads')
 # Configure upload file path flask
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Pre-allocate models for generation and inference
 generator = pyoxynet.utilities.load_tf_generator()
+tf_model = pyoxynet.utilities.load_tf_model(n_inputs=5,
+                                            past_points=40,
+                                            model='murias_lab')
 
 @app.route("/swagger")
 def get_swagger():
@@ -308,8 +312,8 @@ def read_csv():
         t.create_data_frame()
         t.create_raw_data_frame()
 
-        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, 
-                                                                       model = 'murias_lab')
+        # df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, model = 'murias_lab')
+        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(tf_model=tf_model, input_df=df, inference_stride=5)
         
         VT1 = 0
         VT2 = 0
