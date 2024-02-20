@@ -700,13 +700,14 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     return df
 
-def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='TCN', plot=False):
+def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='TCN', plot=False, inference_stride=1):
     """Runs the pyoxynet inference
 
     Parameters: 
         tf_model (TF model) : Model uploaded with load_tf_model
         n_inputs (int) : Number of inputs (deafult to Oxynet configuration)
         past_points (int) : Number of past points in the time series (deafult to Oxynet configuration)
+        inference_stride (int) : Stride inference for NN - speed up computation
 
     Returns:
         x (array) : Model output example
@@ -793,7 +794,7 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='T
     PetO2 = []
     PetCO2 = []
 
-    for i in np.arange(1, len(XN) - past_points):
+    for i in np.arange(1, len(XN) - past_points, inference_stride):
         XN_array = np.asarray(XN[i:i+int(past_points)])
         output_data = tf_model(XN_array.reshape(1, past_points, n_inputs))
         p_1.append(output_data.numpy()[0][0])
