@@ -31,6 +31,9 @@ df_answers = pd.DataFrame.from_dict(dict_answers)
 # create an empty array to store the results
 oxynet = []
 
+# Load the model outside the loop
+tf_model = load_tf_model(n_inputs=5, past_points=40, model='murias_lab')
+
 # do the inference and add the results to the array
 for i in range(len(real)):
 
@@ -38,7 +41,7 @@ for i in range(len(real)):
 
         print('Inferencing ' + real[i]['id'])
         df = load_exercise_threshold_app_data(data_dict=[real[i]])
-        df_estimates, dict_estimates = test_pyoxynet(input_df=df, model='murias_lab')
+        df_estimates, dict_estimates = test_pyoxynet(tf_model=tf_model, input_df=df, inference_stride=5)
         # save it to the array
         oxynet.append({
             'id': real[i]['id'],
