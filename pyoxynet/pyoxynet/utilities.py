@@ -700,10 +700,11 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     return df
 
-def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=False):
+def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='TCN', plot=False):
     """Runs the pyoxynet inference
 
     Parameters: 
+        tf_model (TF model) : Model uploaded with load_tf_model
         n_inputs (int) : Number of inputs (deafult to Oxynet configuration)
         past_points (int) : Number of past points in the time series (deafult to Oxynet configuration)
 
@@ -727,7 +728,10 @@ def test_pyoxynet(input_df=[], n_inputs=5, past_points=40, model='TCN', plot=Fal
     data = StringIO(s)
     db_df = pd.read_csv(data)
 
-    tf_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
+    if tf_model == []:
+        tf_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
+    else:
+        pass
 
     if len(input_df) == 0:
         print('Using default pyoxynet data')
