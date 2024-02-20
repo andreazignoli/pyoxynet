@@ -823,12 +823,12 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='T
     tmp_df.loc[tmp_df['p_hv_N'] < 0, 'p_hv_N'] = 0
     tmp_df.loc[tmp_df['p_sv_N'] < 0, 'p_sv_N'] = 0
 
-    # Perform kernel density estimation on the overlap probabilities
-    kde_1 = stats.gaussian_kde(time, weights=tmp_df['p_sv_N'] * tmp_df['p_md_N'])
-    kde_2 = stats.gaussian_kde(time, weights=tmp_df['p_md_N'] * tmp_df['p_hv_N'])
-
-    overlap_ci_1 = [int(np.percentile(kde_1.resample(4000)[0], 25)), int(np.percentile(kde_1.resample(4000)[0], 75))]
-    overlap_ci_2 = [int(np.percentile(kde_2.resample(4000)[0], 25)), int(np.percentile(kde_2.resample(4000)[0], 75))]
+    # # Perform kernel density estimation on the overlap probabilities
+    # kde_1 = stats.gaussian_kde(time, weights=tmp_df['p_sv_N'] * tmp_df['p_md_N'])
+    # kde_2 = stats.gaussian_kde(time, weights=tmp_df['p_md_N'] * tmp_df['p_hv_N'])
+    #
+    # overlap_ci_1 = [int(np.percentile(kde_1.resample(4000)[0], 25)), int(np.percentile(kde_1.resample(4000)[0], 75))]
+    # overlap_ci_2 = [int(np.percentile(kde_2.resample(4000)[0], 25)), int(np.percentile(kde_2.resample(4000)[0], 75))]
 
     mod_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[:5].mean().idxmax()
     sev_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[-5:].mean().idxmax()
@@ -860,14 +860,14 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='T
     out_dict['VT2'] = {}
     out_dict['VT1']['time'] = {}
     out_dict['VT2']['time'] = {}
-    out_dict['VT1_upper'] = {}
-    out_dict['VT1_lower'] = {}
-    out_dict['VT2_upper'] = {}
-    out_dict['VT2_lower'] = {}
+    # out_dict['VT1_upper'] = {}
+    # out_dict['VT1_lower'] = {}
+    # out_dict['VT2_upper'] = {}
+    # out_dict['VT2_lower'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] >= out_df['p_md'])].index[0] - past_points)
-    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv'])].index[-1] - past_points)
+    VT1_index = int(out_df[(out_df['p_hv'] >= out_df['p_md'])].index[0] - int(past_points / inference_stride))
+    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv'])].index[-1] - int(past_points / inference_stride))
 
     VT1_time = int(out_df.iloc[VT1_index]['time'])
     VT2_time = int(out_df.iloc[VT2_index]['time'])
@@ -875,31 +875,31 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='T
     out_dict['VT1']['time'] = VT1_time
     out_dict['VT2']['time'] = VT2_time
 
-    out_dict['VT1_upper']['time'] = overlap_ci_1[1]
-    out_dict['VT1_lower']['time'] = overlap_ci_1[0]
-    out_dict['VT2_upper']['time'] = overlap_ci_2[1]
-    out_dict['VT2_lower']['time'] = overlap_ci_2[0]
+    # out_dict['VT1_upper']['time'] = overlap_ci_1[1]
+    # out_dict['VT1_lower']['time'] = overlap_ci_1[0]
+    # out_dict['VT2_upper']['time'] = overlap_ci_2[1]
+    # out_dict['VT2_lower']['time'] = overlap_ci_2[0]
 
     out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
     out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
-    out_dict['VT1_upper']['HR'] = df[df.time == overlap_ci_1[1]]['HR_I'].values[0]
-    out_dict['VT1_lower']['HR'] = df[df.time == overlap_ci_1[0]]['HR_I'].values[0]
-    out_dict['VT2_upper']['HR'] = df[df.time == overlap_ci_2[1]]['HR_I'].values[0]
-    out_dict['VT2_lower']['HR'] = df[df.time == overlap_ci_2[0]]['HR_I'].values[0]
+    # out_dict['VT1_upper']['HR'] = df[df.time == overlap_ci_1[1]]['HR_I'].values[0]
+    # out_dict['VT1_lower']['HR'] = df[df.time == overlap_ci_1[0]]['HR_I'].values[0]
+    # out_dict['VT2_upper']['HR'] = df[df.time == overlap_ci_2[1]]['HR_I'].values[0]
+    # out_dict['VT2_lower']['HR'] = df[df.time == overlap_ci_2[0]]['HR_I'].values[0]
 
     out_dict['VT1']['VE'] = out_df.iloc[VT1_index]['VE']
     out_dict['VT2']['VE'] = out_df.iloc[VT2_index]['VE']
-    out_dict['VT1_upper']['VE'] = out_df[out_df.time == overlap_ci_1[1]]['VE'].values[0]
-    out_dict['VT1_lower']['VE'] = out_df[out_df.time == overlap_ci_1[0]]['VE'].values[0]
-    out_dict['VT2_upper']['VE'] = out_df[out_df.time == overlap_ci_2[1]]['VE'].values[0]
-    out_dict['VT2_lower']['VE'] = out_df[out_df.time == overlap_ci_2[0]]['VE'].values[0]
+    # out_dict['VT1_upper']['VE'] = out_df[out_df.time == overlap_ci_1[1]]['VE'].values[0]
+    # out_dict['VT1_lower']['VE'] = out_df[out_df.time == overlap_ci_1[0]]['VE'].values[0]
+    # out_dict['VT2_upper']['VE'] = out_df[out_df.time == overlap_ci_2[1]]['VE'].values[0]
+    # out_dict['VT2_lower']['VE'] = out_df[out_df.time == overlap_ci_2[0]]['VE'].values[0]
 
     out_dict['VT1']['VO2'] = out_df.iloc[VT1_index]['VO2_F']
     out_dict['VT2']['VO2'] = out_df.iloc[VT2_index]['VO2_F']
-    out_dict['VT1_upper']['VO2'] = out_df[out_df.time == overlap_ci_1[1]]['VO2_F'].values[0]
-    out_dict['VT1_lower']['VO2'] = out_df[out_df.time == overlap_ci_1[0]]['VO2_F'].values[0]
-    out_dict['VT2_upper']['VO2'] = out_df[out_df.time == overlap_ci_2[1]]['VO2_F'].values[0]
-    out_dict['VT2_lower']['VO2'] = out_df[out_df.time == overlap_ci_2[0]]['VO2_F'].values[0]
+    # out_dict['VT1_upper']['VO2'] = out_df[out_df.time == overlap_ci_1[1]]['VO2_F'].values[0]
+    # out_dict['VT1_lower']['VO2'] = out_df[out_df.time == overlap_ci_1[0]]['VO2_F'].values[0]
+    # out_dict['VT2_upper']['VO2'] = out_df[out_df.time == overlap_ci_2[1]]['VO2_F'].values[0]
+    # out_dict['VT2_lower']['VO2'] = out_df[out_df.time == overlap_ci_2[0]]['VO2_F'].values[0]
 
     return out_df, out_dict
 
