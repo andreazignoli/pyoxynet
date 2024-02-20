@@ -6,3 +6,4 @@ chardet
 openpyxl
 xlrd
 flask_swagger
+matplotlib
