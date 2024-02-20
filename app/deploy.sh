@@ -1,5 +1,6 @@
 #!/bin/sh
-docker build -t flask-pyoxynet .
+docker build --platform linux/amd64 -t flask-pyoxynet .
+# docker build -t flask-pyoxynet .
 # docker run -p 9098:9098 flask-pyoxynet
 # aws lightsail create-container-service --service-name flask-service --power small --scale 1
 aws lightsail push-container-image --service-name flask-service --label flask-pyoxynet --image flask-pyoxynet
