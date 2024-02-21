@@ -21,7 +21,7 @@ UPLOAD_FOLDER = os.path.join('staticFiles', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Pre-allocate models for generation and inference
-generator = pyoxynet.utilities.load_tf_generator()
+# generator = pyoxynet.utilities.load_tf_generator()
 tf_model = pyoxynet.utilities.load_tf_model(n_inputs=5,
                                             past_points=40,
                                             model='murias_lab')
