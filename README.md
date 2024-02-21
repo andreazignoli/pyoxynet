@@ -182,7 +182,7 @@ curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail
 But if you have your file in csv format you can type:
 
 ```sh
-curl -X POST -F 'file=@my_cool_CPET_file.csv' https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_csv
+curl -X POST -F 'file=@YOUR_CSV_FILE.csv' https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/curl_csv
 ```
 
 It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possible to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possible to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation). The app can also be used as test to check how realistic the fake examples.
