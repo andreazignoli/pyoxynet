@@ -10,6 +10,7 @@ import pandas as pd
 import plotly.graph_objs as go
 import plotly
 from faker import Faker
+import pandas as pd
 
 app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9098))
@@ -272,6 +273,52 @@ def read_json_ET():
         dict_estimates = {}
 
     return flask.jsonify(dict_estimates)
+
+
+@app.route('/curl_csv', methods=['POST'])
+def curl_csv():
+    """
+    This is the description of curl_csv.
+    ---
+    responses:
+        200:
+            You get a dict back
+        400:
+            Something wrong with file
+        500:
+            Something wrong with data processing
+    """
+
+    # Check if a file was uploaded
+    if 'file' not in request.files:
+        return 'No file part', 400
+
+    file = request.files['file']
+
+    # If the user does not select a file, the browser may submit an empty file without a filename
+    if file.filename == '':
+        return 'No selected file', 400
+
+    # If the file is valid, process it
+    if file:
+        # Read and process the contents of the CSV file
+        try:
+            # Example: Read the CSV file using pandas
+            df = pd.read_csv(file)
+            t = pyoxynet.Test('idle')
+            t.set_data_extension('.csv')
+            t.infer_metabolimeter(optional_data=df)
+            t.load_file()
+            t.create_data_frame()
+            t.create_raw_data_frame()
+            print(t.data_frame)
+            df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(tf_model=tf_model, input_df=t.data_frame, inference_stride=10)
+            
+            return flask.jsonify(dict_estimates), 200
+        except Exception as e:
+            return f'Error processing file: {str(e)}', 500
+    else:
+        return 'Invalid file', 400
 
 @app.route('/read_csv', methods=['GET', 'POST'])
 def read_csv():
