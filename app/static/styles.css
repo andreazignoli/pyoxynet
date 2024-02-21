@@ -38,6 +38,10 @@ input[type=button], input[type=submit], input[type=reset] {
   background-color: #ff5521;
 }
 
+#submit_BACK_HOME{
+  background-color: #08cf65;
+}
+
 .button_0 {border-radius: 4px;}
 .button_1 {border-radius: 4px;}
 
@@ -75,5 +79,21 @@ input[type=button], input[type=submit], input[type=reset] {
 .bottom-line {
   border-top: 1px solid #404040; /* Adjust thickness and color of the line */
   width: auto; /* Make the line span the width of the content */
-  margin: 0 auto; /* Center the line horizontally */
+  margin: 20px auto; /* Center the line horizontally */
 }
+
+@font-face {
+  font-family: '3DAnimals';
+  src: url('3DAnimals.ttf') format('truetype');
+}
+
+/* Apply the custom font to elements with the "big-e" class */
+.big-e {
+  font-family: '3DAnimals', sans-serif; /* Specify the custom font and fallback font */
+  font-size: 300px; /* Adjust the font size as needed */
+  text-align: center; /* Center the text horizontally */
+  line-height: 1; /* Set line height to 1 to avoid extra spacing */
+  margin-bottom: 0px;
+}
+
+

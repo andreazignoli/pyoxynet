@@ -4,13 +4,33 @@
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="static/styles.css">
     <title>Home Page</title>
+    <style>
+        body {
+            /* Set background image */
+            background-image: url('static/background_homepage.png');
+            /* Specify background image size */
+            background-size: cover;
+            /* Center the background image */
+            background-position: center;
+            /* Add a background color as a fallback */
+            background-color: #f8f8f8; /* Light gray */
+            /* Set background to fixed so it doesn't scroll */
+            background-attachment: fixed;
+            /* Adjust background image opacity */
+            opacity: 1;
+        }
+        /* Additional styles can be added for other elements */
+    </style>
 </head>
 <body>
-<img src="static/logo_BW.png" style="width:200px;height:200px;" class="center">
+
+<div class="big-e">E</div>
 
 <p> Share 👉 Learn 👉 Improve 💡</p>
 <p></p>
 <p> <a href="http://oxynet.net/">Oxynet website</a> · <a href="https://github.com/andreazignoli/pyoxynet">Pyoxynet code repository</a> </p>
+<p></p>
+
 <hr class="bottom-line">
 
 <h2>🦆 CPET data INTERPRETATION powered by Oxynet and Pyoxynet 🤖</h2>
@@ -52,8 +72,9 @@
 <p class="p1"> You can read more how the tests are interpreted <a href="https://medium.com/@andrea.zignoli/automatic-interpretation-of-cardiopulmonary-exercise-tests-with-deep-learning-2c9b3920ad51">here</a> </p>
 <p></p>
 
-<hr class="custom-line">
+<hr class="bottom-line">
 
+<!--
 <h2>🦆 CPET data GENERATION powered by Oxynet and Pyoxynet 🤖</h2>
 
 <form method="post" action="/CPET_plot">
@@ -68,5 +89,12 @@
 <p></p>
 <p class="p1"> You can read more how the fake tests are generated <a href="https://medium.com/@andrea.zignoli/automatic-generation-of-cardiopulmonary-exercise-tests-with-deep-learning-d1f2cab4e765">here</a> </p>
 <p></p>
+
+-->
+
+<footer style="text-align: center; font-size: small;">
+    Photo by <a href="https://unsplash.com/@pawel_czerwinski?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Pawel Czerwinski</a> on <a href="https://unsplash.com/photos/a-white-background-with-pink-and-blue-paint-OG44d93iNJk?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+</footer>
+
 </body>
 </html>

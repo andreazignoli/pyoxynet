@@ -7,10 +7,58 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
 </head>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disclaimer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        .disclaimer-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .disclaimer-text {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        body {
+            /* Set background image */
+            background-image: url('static/background_homepage.png');
+            /* Specify background image size */
+            background-size: cover;
+            /* Center the background image */
+            background-position: center;
+            /* Add a background color as a fallback */
+            background-color: #f8f8f8; /* Light gray */
+            /* Set background to fixed so it doesn't scroll */
+            background-attachment: fixed;
+            /* Adjust background image opacity */
+            opacity: 1;
+        }
+        .chart-container {
+        border: 1px solid #ccc; /* Add border */
+        border-radius: 10px; /* Add rounded corners */
+        padding: 10px; /* Add padding */
+        background-color: #f9f9f9; /* Add background color */
+        margin-bottom: 20px; /* Add some space between charts */
+    }
+    </style>
+</head>
+
 <body>
 
 <div class="container">
-    <h2>Results of the interpretation</h2>
+    <h2>Oxynet just did some magic: here the results of the interpretation 🪄</h2>
     <ul>
         <h4>VT<sub>1</sub>: {{CPET_data.VT1.VO2}} mlO<sub>2</sub>/min ({{CPET_data.VT1.perc_VO2}} %VO<sub>2MAX</sub>)
         <br>VT<sub>2</sub>: {{CPET_data.VT2.VO2}} mlO<sub>2</sub>/min ({{CPET_data.VT2.perc_VO2}} %VO<sub>2MAX</sub>)</h4>
@@ -19,64 +67,89 @@
 
 <div class="row">
     <div class="column">
-        <div class="chart" id="plot_VCO2vsVO2">
-            <script>
-                var graphs = {{VCO2vsVO2 | safe}};
-                Plotly.plot('plot_VCO2vsVO2',graphs,{});
-            </script>
+        <div class="chart-container">
+            <div class="chart" id="plot_VCO2vsVO2" style="background-color: transparent;">
+                <script>
+                    var graphs = {{VCO2vsVO2 | safe}};
+                    Plotly.plot('plot_VCO2vsVO2',graphs,{});
+                </script>
+            </div>
         </div>
     </div>
     <div class="column">
-        <div class="chart" id="plot_VEvsVCO2">
-            <script>
-                var graphs = {{VEvsVO2 | safe}};
-                Plotly.plot('plot_VEvsVCO2',graphs,{});
-            </script>
+        <div class="chart-container">
+            <div class="chart" id="plot_VEvsVCO2">
+                <script>
+                    var graphs = {{VEvsVO2 | safe}};
+                    Plotly.plot('plot_VEvsVCO2',graphs,{});
+                </script>
+            </div>
         </div>
     </div>
     <div class="column">
-        <div class="chart" id="plot_VEVO2">
-            <script>
-                var graphs = {{VEVO2 | safe}};
-                Plotly.plot('plot_VEVO2',graphs,{});
-            </script>
+        <div class="chart-container">
+            <div class="chart" id="plot_VEVO2">
+                <script>
+                    var graphs = {{VEVO2 | safe}};
+                    Plotly.plot('plot_VEVO2',graphs,{});
+                </script>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="row">
     <div class="column">
-        <div class="chart" id="plot_PetO2">
-            <script>
-                var graphs = {{PetO2 | safe}};
-                Plotly.plot('plot_PetO2',graphs,{});
-            </script>
+        <div class="chart-container">
+            <div class="chart" id="plot_PetO2">
+                <script>
+                    var graphs = {{PetO2 | safe}};
+                    Plotly.plot('plot_PetO2',graphs,{});
+                </script>
+            </div>
         </div>
     </div>
     <div class="column">
-        <div class="chart" id="plot_PetCO2">
-            <script>
-                var graphs = {{PetCO2 | safe}};
-                Plotly.plot('plot_PetCO2',graphs,{});
-            </script>
+        <div class="chart-container">
+            <div class="chart" id="plot_PetCO2">
+                <script>
+                    var graphs = {{PetCO2 | safe}};
+                    Plotly.plot('plot_PetCO2',graphs,{});
+                </script>
+            </div>
         </div>
     </div>
     <div class="column">
-        <div class="chart" id="plot_VEVCO2">
-            <script>
-                var graphs = {{VEVCO2 | safe}};
-                Plotly.plot('plot_VEVCO2',graphs,{});
-            </script>
+        <div class="chart-container">
+            <div class="chart" id="plot_VEVCO2">
+                <script>
+                    var graphs = {{VEVCO2 | safe}};
+                    Plotly.plot('plot_VEVCO2',graphs,{});
+                </script>
+            </div>
         </div>
     </div>
 </div>
 
 <body>
     <form action="/">
-        <input type="submit" value="Go back home 🏠" name="back_home" id="back_home" class="button_1"/>
+        <input type="submit" value="Go back home 🏠" name="back_home" id="submit_BACK_HOME" class="button_1"/>
     </form>
 </body>
 
+<hr class="bottom-line">
+
+<div class="disclaimer-container">
+    <h2>Disclaimer</h2>
+    <p class="disclaimer-text">All content found on this website, including: text, images, tables, or other formats are created for informational purposes only. The information provided by this software is not intended to be a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider with any questions you may have regarding a medical condition. Never disregard professional medical advice or delay in seeking it because of something has been provided by this software.</p>
+    <p class="disclaimer-text">Publication: If this software is adding value to your research, please cite: Oxynet: a collective intelligence that detects ventilatory thresholds in cardiopulmonary exercise tests, Zignoli et al., European Journal of Sport Science, 2020, <a href="https://doi.org/10.1080/17461391.2020.1866081">DOI: 10.1080/17461391.2020.1866081</a>.</p>
+    <p class="disclaimer-text">Contribute: If you think you can contribute to the project as an expert in cardiopulmonary exercising testing please email: <a href="mailto:andrea.zignoli@unitn.it">📧 andrea.zignoli@unitn.it</a>.</p>
 </div>
+</div>
+
+<footer style="text-align: center; font-size: small;">
+    Photo by <a href="https://unsplash.com/@pawel_czerwinski?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Pawel Czerwinski</a> on <a href="https://unsplash.com/photos/a-white-background-with-pink-and-blue-paint-OG44d93iNJk?utm_content=creditCopyText&utm_medium=referral&utm_source=unsplash">Unsplash</a>
+</footer>
+
 </body>
 </html>
