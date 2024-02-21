@@ -19,7 +19,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=['importlib-resources', 'pandas', 
     'uniplot', 'scipy', 'tensorflow', 'shap', 'chardet', 
-    'xlrd', 'openpyxl'],
+    'xlrd', 'openpyxl', 'matplotlib'],
     classifiers=[
         "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
