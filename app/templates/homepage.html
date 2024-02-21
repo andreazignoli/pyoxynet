@@ -17,11 +17,31 @@
 
 <body>
     <h3>Upload a file and then click on "INTERPRET"</h3>
-    <form action="/read_csv" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="INTERPRET" name="interpret" id="submitINTERPRET" class="button_0"/>
+    <form action="/read_csv" method="post" enctype="multipart/form-data" id="uploadForm">
+        <input type="file" name="file" id="fileInput">
+        <input type="submit" value="INTERPRET" name="interpret" id="submitINTERPRET" class="button_0" onclick="showWaitMessage(event)"/>
+        <p id="waitMessage" style="display: none; font-weight: bold; font-size: 20px;"> 🙏 PLEASE WAIT UNTIL COMPLETION 🚀 </p>
     </form>
+
+    <script>
+        function showWaitMessage(event) {
+            // Prevent the default form submission behavior
+            event.preventDefault();
+            // Hide the file input and submit button
+            document.getElementById("fileInput").style.display = "none";
+            document.getElementById("submitINTERPRET").style.display = "none";
+            // Show the wait message
+            document.getElementById("waitMessage").style.display = "block";
+            // Submit the form after a delay (you can adjust the delay as needed)
+            setTimeout(function() {
+                document.getElementById("uploadForm").submit();
+            }, 1000); // 1000 milliseconds = 1 second
+        }
+    </script>
 </body>
+
+
+
 
 <p></p>
 <h3>🔨 How does this work? 🔧</h3>
