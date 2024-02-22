@@ -11,6 +11,7 @@ import plotly.graph_objs as go
 import plotly
 from faker import Faker
 import pandas as pd
+import tensorflow as tf
 
 app = flask.Flask(__name__)
 port = int(os.getenv("PORT", 9098))
@@ -19,19 +20,6 @@ app.secret_key = "super secret key"
 UPLOAD_FOLDER = os.path.join('staticFiles', 'uploads')
 # Configure upload file path flask
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Pre-allocate models for generation and inference
-# generator = pyoxynet.utilities.load_tf_generator()
-tf_model = pyoxynet.utilities.load_tf_model(n_inputs=5,
-                                            past_points=40,
-                                            model='murias_lab')
-
-@app.route("/swagger")
-def get_swagger():
-    swag = swagger(app)
-    swag['info']['title'] = 'Your API Title'
-    swag['info']['version'] = '1.0'
-    return swag
 
 def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
@@ -236,6 +224,180 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
 
     return graphJSON
 
+def test_tf_lite_model(interpreter):
+    """Test if the model is running correclty
+
+    Parameters: 
+        interpreter (loaded tf.lite.Interpreter) : Loaded interpreter TFLite model
+
+    Returns:
+        x (array) : Model output example
+
+    """
+    import numpy as np
+
+    # Allocate tensors.
+    interpreter.allocate_tensors()
+
+    # Get input and output tensors.
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    # Test the model on random input data.
+    input_shape = input_details[0]['shape']
+    input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
+
+    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.invoke()
+
+    return interpreter.get_tensor(output_details[0]['index'])
+
+def tf_lite_model_inference(tf_lite_model=[], input_df=[], past_points=40, n_inputs=5, inference_stride=1):
+    """Runs the pyoxynet inference
+
+    Parameters:
+        tf_model (TF model) : Tf lite model
+        inference_stride (int) : Stride inference for NN - speed up computation
+
+    Returns:
+        x (array) : Model output example
+
+    """
+
+    df = input_df
+
+    # retrieve interpreter details
+    input_details = tf_lite_model.get_input_details()
+    output_details = tf_lite_model.get_output_details()
+
+    # some adjustments to input df
+    # TODO: create dedicated function for this
+    df = df.drop_duplicates('time')
+    df['timestamp'] = pd.to_datetime(df['time'], unit='s')
+    df = df.set_index('timestamp')
+    df = df.resample('1S').mean()
+    df = df.interpolate()
+    df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().fillna(method='bfill').fillna(
+        method='ffill')
+    df = df.reset_index()
+    df = df.drop('timestamp', axis=1)
+
+    if 'VCO2VO2_I' not in df.columns:
+        df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
+    filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I']
+    XN = df.copy()
+    XN['VO2_I'] = (XN['VO2_I'] - XN['VO2_I'].min()) / (
+            XN['VO2_I'].max() - XN['VO2_I'].min())
+    XN['VCO2_I'] = (XN['VCO2_I'] - XN['VCO2_I'].min()) / (
+            XN['VCO2_I'].max() - XN['VCO2_I'].min())
+    XN['VE_I'] = (XN['VE_I'] - XN['VE_I'].min()) / (
+            XN['VE_I'].max() - XN['VE_I'].min())
+    XN['PetO2_I'] = (XN['PetO2_I'] - XN['PetO2_I'].min()) / (
+            XN['PetO2_I'].max() - XN['PetO2_I'].min())
+    XN['PetCO2_I'] = (XN['PetCO2_I'] - XN['PetCO2_I'].min()) / (
+            XN['PetCO2_I'].max() - XN['PetCO2_I'].min())
+    XN = XN.filter(filter_vars, axis=1)
+
+    p_1 = []
+    p_2 = []
+    p_3 = []
+    time = []
+    VO2 = []
+    VCO2 = []
+    VE = []
+    PetO2 = []
+    PetCO2 = []
+
+    for i in np.arange(1, len(XN) - past_points, inference_stride):
+        XN_array = np.asarray(XN[i:i+int(past_points)])
+        input_data = np.reshape(XN_array, input_details[0]['shape'])
+        input_data = input_data.astype(np.float32)
+        tf_lite_model.allocate_tensors()
+        tf_lite_model.set_tensor(input_details[0]['index'], input_data)
+        tf_lite_model.invoke()
+        output_data = tf_lite_model.get_tensor(output_details[0]['index'])
+        p_1.append(output_data[0][0])
+        p_2.append(output_data[0][1])
+        p_3.append(output_data[0][2])
+        time.append(df.time[i] + past_points)
+
+        # ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'domain']
+        VO2.append(np.mean(XN_array[-1, 0]) * (df['VO2_I'].max() - df['VO2_I'].min()) + df['VO2_I'].min())
+        VCO2.append(np.mean(XN_array[-1, 1]) * (df['VCO2_I'].max() - df['VCO2_I'].min()) + df['VCO2_I'].min())
+        VE.append(np.mean(XN_array[-1, 2]) * (df['VE_I'].max() - df['VE_I'].min()) + df['VE_I'].min())
+        PetO2.append(np.mean(XN_array[-1, 3]) * (df['PetO2_I'].max() - df['PetO2_I'].min()) + df['PetO2_I'].min())
+        PetCO2.append(np.mean(XN_array[-1, 4]) * (df['PetCO2_I'].max() - df['PetCO2_I'].min()) + df['PetCO2_I'].min())
+
+    tmp_df = pd.DataFrame()
+    tmp_df['time'] = time
+    tmp_df['p_md'] = pyoxynet.utilities.optimal_filter(np.asarray(time), np.asarray(p_1), 100)
+    tmp_df['p_hv'] = pyoxynet.utilities.optimal_filter(np.asarray(time), np.asarray(p_2), 100)
+    tmp_df['p_sv'] = pyoxynet.utilities.optimal_filter(np.asarray(time), np.asarray(p_3), 100)
+
+    # compute the normalised probabilities
+    tmp_df['p_md_N'] = np.asarray(p_1) / (np.asarray(p_1) + np.asarray(p_2) + np.asarray(p_3))
+    tmp_df['p_hv_N'] = np.asarray(p_2) / (np.asarray(p_1) + np.asarray(p_2) + np.asarray(p_3))
+    tmp_df['p_sv_N'] = np.asarray(p_3) / (np.asarray(p_1) + np.asarray(p_2) + np.asarray(p_3))
+
+    tmp_df.loc[tmp_df['p_md_N'] < 0, 'p_md_N'] = 0
+    tmp_df.loc[tmp_df['p_hv_N'] < 0, 'p_hv_N'] = 0
+    tmp_df.loc[tmp_df['p_sv_N'] < 0, 'p_sv_N'] = 0
+
+    mod_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[:5].mean().idxmax()
+    sev_col = tmp_df[['p_md', 'p_hv', 'p_sv']].iloc[-5:].mean().idxmax()
+    for labels_ in ['p_md', 'p_hv', 'p_sv']:
+        if labels_ not in [mod_col, sev_col]:
+            hv_col = labels_
+
+    out_df = pd.DataFrame()
+    out_df['time'] = time
+    out_df['p_md'] = tmp_df[mod_col]
+    out_df['p_hv'] = tmp_df[hv_col]
+    out_df['p_sv'] = tmp_df[sev_col]
+    out_df['VO2'] = VO2
+    out_df['VCO2'] = VCO2
+    out_df['VE'] = VE
+    out_df['PetO2'] = PetO2
+    out_df['PetCO2'] = PetCO2
+    out_df['VO2_F'] = pyoxynet.utilities.optimal_filter(np.asarray(time), np.asarray(VO2), 100)
+
+    out_dict = {}
+    out_dict['VT1'] = {}
+    out_dict['VT2'] = {}
+    out_dict['VT1']['time'] = {}
+    out_dict['VT2']['time'] = {}
+
+    # FIXME: hard coded
+    VT1_index = int(out_df[(out_df['p_hv'] >= out_df['p_md'])].index[0] - int(past_points / inference_stride))
+    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv'])].index[-1] - int(past_points / inference_stride))
+
+    VT1_time = int(out_df.iloc[VT1_index]['time'])
+    VT2_time = int(out_df.iloc[VT2_index]['time'])
+
+    out_dict['VT1']['time'] = VT1_time
+    out_dict['VT2']['time'] = VT2_time
+
+    out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
+    out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
+
+    out_dict['VT1']['VE'] = out_df.iloc[VT1_index]['VE']
+    out_dict['VT2']['VE'] = out_df.iloc[VT2_index]['VE']
+
+    out_dict['VT1']['VO2'] = out_df.iloc[VT1_index]['VO2_F']
+    out_dict['VT2']['VO2'] = out_df.iloc[VT2_index]['VO2_F']
+
+    return out_df, out_dict
+
+# Pre-allocate tf-lite model inference
+tf_lite_model = tf.lite.Interpreter('tf_lite_models/tfl_model.tflite')
+
+@app.route("/swagger")
+def get_swagger():
+    swag = swagger(app)
+    swag['info']['title'] = 'Your API Title'
+    swag['info']['version'] = '1.0'
+    return swag
+
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     args = request.args
@@ -253,8 +415,11 @@ def read_json():
 
     try:
         request_data = request.get_json(force=True)
+        print(isinstance(request_data, dict))
         df = pd.DataFrame.from_dict(request_data)
-        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=df)
+        df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model,
+                                                               input_df=df,
+                                                               inference_stride=2)
     except:
         dict_estimates = {}
 
@@ -268,12 +433,13 @@ def read_json_ET():
     try:
         request_data = request.get_json(force=True)
         df = pyoxynet.utilities.load_exercise_threshold_app_data(data_dict=request_data)
-        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=df)
+        df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model,
+                                                               input_df=df,
+                                                               inference_stride=2)
     except:
         dict_estimates = {}
 
     return flask.jsonify(dict_estimates)
-
 
 @app.route('/curl_csv', methods=['POST'])
 def curl_csv():
@@ -311,8 +477,7 @@ def curl_csv():
             t.load_file()
             t.create_data_frame()
             t.create_raw_data_frame()
-            print(t.data_frame)
-            df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(tf_model=tf_model, input_df=t.data_frame, inference_stride=10)
+            df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model, input_df=t.data_frame, inference_stride=2)
             
             return flask.jsonify(dict_estimates), 200
         except Exception as e:
@@ -360,9 +525,7 @@ def read_csv():
         t.create_raw_data_frame()
 
         # df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, model = 'murias_lab')
-        df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(tf_model=tf_model,
-                                                                        input_df=t.data_frame,
-                                                                        inference_stride=10)
+        df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model, input_df=t.data_frame, inference_stride=2)
         
         VT1 = 0
         VT2 = 0
