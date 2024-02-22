@@ -220,7 +220,7 @@ def optimal_filter(t, y, my_lambda):
     return x
 
 def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
-    """This function loads the saved tflite models.
+    """This function loads the saved tf models.
 
     Args:
        n_inputs (int):  Number of input variables.
@@ -396,54 +396,6 @@ def load_tf_generator():
     except:
         print('Could not find a model that could satisfy the input size required')
         return None
-
-def pip_install_tflite():
-    """Makes sure TFLite is installed by executing a pip install command from the command line (sub-optimal solution)
-
-    Parameters: 
-        none
-
-    Returns:
-        none
-
-    """
-    import os
-    import pkg_resources
-    installed_packages = pkg_resources.working_set
-    installed_packages_list = sorted(["%s" % (i.key) for i in installed_packages])
-
-    if 'tflite-runtime' in installed_packages_list:
-        print('Tflite runtime already present in the package list (skipping)')
-    else:
-        os.system("pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime")
-
-def test_tfl_model(interpreter):
-    """Test if the model is running correclty
-
-    Parameters: 
-        interpreter (loaded tf.lite.Interpreter) : Loaded interpreter TFLite model
-
-    Returns:
-        x (array) : Model output example
-
-    """
-    import numpy as np
-
-    # Allocate tensors.
-    interpreter.allocate_tensors()
-
-    # Get input and output tensors.
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-
-    # Test the model on random input data.
-    input_shape = input_details[0]['shape']
-    input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
-
-    interpreter.set_tensor(input_details[0]['index'], input_data)
-    interpreter.invoke()
-
-    return interpreter.get_tensor(output_details[0]['index'])
 
 def load_csv_data(csv_file='data_test.csv'):
     """Loads data from csv file (returns test data if no arguments)
