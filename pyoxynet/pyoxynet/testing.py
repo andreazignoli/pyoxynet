@@ -586,9 +586,12 @@ class Test:
                 self.VO2[i - 2] = float(df.VO2.values[i])
                 self.VCO2[i - 2] = float(df.VCO2.values[i])
                 try:
-                    self.HR[i - 2] = float(df.HR.values[i])
+                    try:
+                        self.HR[i - 2] = float(df.HR.values[i])
+                    except:
+                        self.HR[i - 2] = float(df.HF.values[i])
                 except:
-                    self.HR[i - 2] = float(df.HF.values[i])
+                    self.HR[i - 2] = 0
                 try:
                     self.Rf[i - 2] = float(df.Rf.values[i])
                 except:
