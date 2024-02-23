@@ -1,0 +1,13 @@
+summary: Say hello
+description: A very polite endpoint that says hello to the world.
+tags:
+  - Greetings
+
+responses:
+  200:
+    description: Successful response with a greeting message.
+    content:
+      text/plain:
+        schema:
+          type: string
+          example: Hello World!

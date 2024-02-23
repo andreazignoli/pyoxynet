@@ -1,10 +1,8 @@
 import flask
 import os
-from flask import Flask, request, render_template, session, redirect, url_for
-import flask_swagger
-from flask_swagger import swagger
+from flask import Flask, request, render_template, session, redirect, url_for, jsonify
+from flasgger import Swagger, swag_from
 import pyoxynet
-# import pyoxynet import utilities
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
@@ -14,6 +12,7 @@ import pandas as pd
 import tensorflow as tf
 
 app = flask.Flask(__name__)
+Swagger(app)
 port = int(os.getenv("PORT", 9098))
 app.secret_key = "super secret key"
 
@@ -99,7 +98,7 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0, 0, 0]):
     fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VO2_I", y=var_list,
                      color_discrete_sequence=['white', 'gray'])
     fig.update_traces(marker=dict(size=8, line=dict(width=1, color='black'), color='#51a1ff', opacity=0.7))
-    
+
     if VT1 > 0:
         fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
     if VT2 > 0:
@@ -227,7 +226,7 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
 def test_tf_lite_model(interpreter):
     """Test if the model is running correclty
 
-    Parameters: 
+    Parameters:
         interpreter (loaded tf.lite.Interpreter) : Loaded interpreter TFLite model
 
     Returns:
@@ -391,13 +390,6 @@ def tf_lite_model_inference(tf_lite_model=[], input_df=[], past_points=40, n_inp
 # Pre-allocate tf-lite model inference
 tf_lite_model = tf.lite.Interpreter('tf_lite_models/tfl_model.tflite')
 
-@app.route("/swagger")
-def get_swagger():
-    swag = swagger(app)
-    swag['info']['title'] = 'Your API Title'
-    swag['info']['version'] = '1.0'
-    return swag
-
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     args = request.args
@@ -425,36 +417,30 @@ def read_json():
 
     return flask.jsonify(dict_estimates)
 
-@app.route('/read_json_ET', methods=['GET', 'POST'])
+@app.route('/read_json_ET', methods=['POST', 'GET'])
+@swag_from('swagger/read_json_ET.yml')
 def read_json_ET():
-    # Reads from json in ET formats
-    args = request.args
-
+    # Reads data from JSON in ET formats
     try:
-        request_data = request.get_json(force=True)
+        if request.method == 'POST':
+            request_data = request.get_json(force=True)
+        elif request.method == 'GET':
+            request_data = request.args.get('data')
+
+        if request_data is None:
+            return 'No JSON data provided', 400
+
         df = pyoxynet.utilities.load_exercise_threshold_app_data(data_dict=request_data)
         df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model,
                                                                input_df=df,
                                                                inference_stride=2)
-    except:
-        dict_estimates = {}
-
-    return flask.jsonify(dict_estimates)
+        return flask.jsonify(dict_estimates), 200
+    except Exception as e:
+        return f'Error processing JSON data: {str(e)}', 500
 
 @app.route('/curl_csv', methods=['POST'])
+@swag_from('swagger/curl_csv.yml')
 def curl_csv():
-    """
-    This is the description of curl_csv.
-    ---
-    responses:
-        200:
-            You get a dict back
-        400:
-            Something wrong with file
-        500:
-            Something wrong with data processing
-    """
-
     # Check if a file was uploaded
     if 'file' not in request.files:
         return 'No file part', 400
@@ -478,7 +464,7 @@ def curl_csv():
             t.create_data_frame()
             t.create_raw_data_frame()
             df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model, input_df=t.data_frame, inference_stride=2)
-            
+
             return flask.jsonify(dict_estimates), 200
         except Exception as e:
             return f'Error processing file: {str(e)}', 500
@@ -487,19 +473,12 @@ def curl_csv():
 
 @app.route('/read_csv', methods=['GET', 'POST'])
 def read_csv():
-    """
-    This is the description of read_csv.
-    ---
-    responses:
-      200:
-        description: A successful response
-    """
 
     # Reads from csv and uses the pyoxynet parser
     args = request.args
 
     try:
-        
+
         file = request.files['file']
         filename, file_extension = os.path.splitext(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
         file.save(file.filename)
@@ -526,7 +505,7 @@ def read_csv():
 
         # df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, model = 'murias_lab')
         df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model, input_df=t.data_frame, inference_stride=2)
-        
+
         VT1 = 0
         VT2 = 0
         VO2VT1 = 0
@@ -568,7 +547,7 @@ def read_csv():
                                        PetO2=plot_PetO2,
                                        PetCO2=plot_PetCO2,
                                        VEVO2=plot_VEVO2,
-                                       VEVCO2=plot_VEVCO2, 
+                                       VEVCO2=plot_VEVCO2,
                                        CPET_data=dict_estimates)
     except:
         if 'file' not in request.files:
@@ -610,7 +589,7 @@ def CPET_plot():
                     print('Test was REAL')
                     session['test_type'] = 'REAL'
 
-                df_oxynet, out_dict = pyoxynet.utilities.test_pyoxynet(input_df=df, 
+                df_oxynet, out_dict = pyoxynet.utilities.test_pyoxynet(input_df=df,
                                                                        model = 'murias_lab')
 
                 VT1 = int(float(CPET_data['VT1']))
@@ -659,6 +638,7 @@ def CPET_plot():
                 return render_template('response.html', value=reply)
 
 @app.route("/", methods=['GET', 'POST'])
+@swag_from('swagger/homepage.yml')
 def HelloWorld():
 
     session['test_type'] = 'NONE'
@@ -679,6 +659,7 @@ def HelloWorld():
     return render_template('homepage.html')
 
 @app.route('/say_hello')
+@swag_from('swagger/say_hello.yml')
 def say_hello():
     # A very polite end point that says hello!
     return 'Hello World!'

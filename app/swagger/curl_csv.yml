@@ -1,0 +1,35 @@
+summary: CSV Processing
+description: Operations related to processing CSV files.
+tags:
+  - name: CSV Processing
+
+paths:
+  /curl_csv:
+    post:
+      summary: Upload CSV File
+      description: Uploads a CSV file for processing.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Successfully processed CSV file.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estimates:
+                    type: object
+                    description: Dictionary of estimates generated from the CSV data.
+        '400':
+          description: Bad request. No file uploaded or invalid file.
+        '500':
+          description: Internal server error. Error occurred while processing the file.

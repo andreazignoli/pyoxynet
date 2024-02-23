@@ -1,9 +1,9 @@
 flask
+flasgger
 pyoxynet
 plotly
 faker
 chardet
 openpyxl
 xlrd
-flask_swagger
 matplotlib
