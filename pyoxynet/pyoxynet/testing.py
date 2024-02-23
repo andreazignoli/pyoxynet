@@ -571,6 +571,7 @@ class Test:
 
             # get the time in seconds
             # convert time data from "HH:MM:SS" to seconds
+            df['t'] = df['t'].astype(str)
             for i in df.index[2:n_rows]:
                 try:
                     if df.t[0] == 's':
