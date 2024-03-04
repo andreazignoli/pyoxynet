@@ -1,57 +1,35 @@
-swagger: '2.0'
-info:
-  title: Read JSON ET Data API
-  description: Endpoint for reading JSON data in ET format and performing inference
-  version: '1.0.0'
+summary: JSON Processing
+description: Operations related to processing json data.
+tags:
+  - name: JSON Processing
+
 paths:
   /read_json_ET:
     post:
-      summary: Read and process JSON data (POST method)
-      description: Reads JSON data in ET format from the request body and performs inference.
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: data
-          description: JSON data in ET format
-          required: true
-          schema:
-            type: object
-            example: {"key1": "value1", "key2": "value2"}
+      summary: Upload json data
+      description: Uploads a payload for processing.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
       responses:
         '200':
-          description: Successful inference.
-          schema:
-            type: object
-            properties:
-              estimates:
+          description: Successfully processed json data.
+          content:
+            application/json:
+              schema:
                 type: object
-                description: Dictionary of inference estimates.
+                properties:
+                  estimates:
+                    type: object
+                    description: Dictionary of estimates generated from the json data.
         '400':
-          description: Bad request. Invalid JSON data format.
-
-    get:
-      summary: Read and process JSON data (GET method)
-      description: Reads JSON data in ET format from the query parameter and performs inference.
-      produces:
-        - application/json
-      parameters:
-        - in: query
-          name: data
-          description: JSON data in ET format
-          required: true
-          type: string
-          example: {"key1": "value1", "key2": "value2"}
-      responses:
-        '200':
-          description: Successful inference.
-          schema:
-            type: object
-            properties:
-              estimates:
-                type: object
-                description: Dictionary of inference estimates.
-        '400':
-          description: Bad request. Invalid JSON data format.
+          description: Bad request. No data uploaded or invalid data.
+        '500':
+          description: Internal server error. Error occurred while processing the data.

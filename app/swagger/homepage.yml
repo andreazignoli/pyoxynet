@@ -1,22 +1,24 @@
-summary: Render the homepage
-description: Render the homepage with options to start a test.
-tags:
-  - Home
-
 parameters:
-  - name: session_id
-    in: query
+  - name: palette
+    in: path
     type: string
-    required: false
-    description: Unique session identifier.
-
+    enum: ['all', 'rgb', 'cmyk']
+    required: true
+    default: all
+definitions:
+  Palette:
+    type: object
+    properties:
+      palette_name:
+        type: array
+        items:
+          $ref: '#/definitions/Color'
+  Color:
+    type: string
 responses:
   200:
-    description: Homepage rendered successfully.
-    content:
-      text/html:
-        schema:
-          type: string
-          example: Homepage rendered successfully.
-  405:
-    description: Method Not Allowed. The HTTP method is not supported for this endpoint.
+    description: A list of colors (may be filtered by palette)
+    schema:
+      $ref: '#/definitions/Palette'
+    examples:
+      rgb: ['red', 'green', 'blue']
