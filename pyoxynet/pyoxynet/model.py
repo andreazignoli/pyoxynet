@@ -72,17 +72,14 @@ class Model(tf.keras.Model):
 
         self.conv1 = tf.keras.layers.Conv1D(filters=64, kernel_size=6, padding='causal')
         self.p1 = tf.keras.layers.MaxPooling1D(pool_size=2, strides=2, padding='same')
-        self.avg1 = tf.keras.layers.AveragePooling1D(pool_size=2, strides=2, padding='same')
         self.bn1 = tf.keras.layers.BatchNormalization()
-        self.f1 = tf.keras.layers.Flatten()
         self.drop1 = tf.keras.layers.Dropout(rate=0.2)
 
         self.conv2 = tf.keras.layers.Conv1D(filters=64, kernel_size=6, padding="causal")
         self.p2 = tf.keras.layers.MaxPooling1D(pool_size=2, strides=2, padding='same')
-        self.avg2 = tf.keras.layers.AveragePooling1D(pool_size=2, strides=2, padding='same')
         self.bn2 = tf.keras.layers.BatchNormalization()
-        self.f2 = tf.keras.layers.Flatten()
         self.drop2 = tf.keras.layers.Dropout(rate=0.2)
+        self.f2 = tf.keras.layers.Flatten()
 
         self.d1 = tf.keras.layers.Dense(64, kernel_regularizer='l2', activation='relu')
         self.drop3 = tf.keras.layers.Dropout(rate=0.2)
@@ -100,28 +97,26 @@ class Model(tf.keras.Model):
 
     def call(self, inputs, training=None):
 
-        x = self.conv1(inputs)
-        # x = self.avg1(x)
-        x = self.p1(x)
+        x = self.conv1(inputs, training=training)
+        x = self.p1(x, training=training)
         x = self.bn1(x, training=training)
         x = self.drop1(x, training=training)
 
-        x = self.conv2(x)
-        # x = self.avg2(x)
-        x = self.p2(x)
+        x = self.conv2(x, training=training)
+        x = self.p2(x, training=training)
         x = self.bn2(x, training=training)
         x = self.drop2(x, training=training)
         x = self.f2(x, training=training)
 
-        x = self.d1(x)
+        x = self.d1(x, training=training)
         x = self.drop3(x, training=training)
         x = self.bn3(x, training=training)
 
-        x = self.d2(x)
+        x = self.d2(x, training=training)
         x = self.drop4(x, training=training)
         x = self.bn4(x, training=training)
 
-        x = self.d3(x)
+        x = self.d3(x, training=training)
         x = self.drop5(x, training=training)
         x = self.bn5(x, training=training)
 
