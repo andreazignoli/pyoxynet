@@ -974,9 +974,9 @@ def create_probabilities(duration=600,
                                      [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
             p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
 
-    p_mF = optimal_filter(t, p_mF, 100)
-    p_hF = optimal_filter(t, p_hF, 50)
-    p_sF = optimal_filter(t, p_sF, 100)
+    p_mF = optimal_filter(t, p_mF, 4000)
+    p_hF = optimal_filter(t, p_hF, 4000)
+    p_sF = optimal_filter(t, p_sF, 4000)
 
     if normalization:
         p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (0, 1))
@@ -1149,7 +1149,9 @@ def generate_CPET(generator,
     xp = [0, VT1, VT2, duration]
     yp = [0, y1, y2, 1]
 
-    p_mF, p_hF, p_sF = create_probabilities(d, VT1, VT2, generator=True)
+    p_mF, p_hF, p_sF = create_probabilities(d, VT1, VT2,
+                                            initial_step=True,
+                                            generator=True)
 
     # # # IMPORTANT: normalization only in > 0.5
     # p_hF[p_hF > 0.5] = np.interp(p_hF[p_hF > 0.5], (0.5, p_hF.max()), (0.5, 1))
