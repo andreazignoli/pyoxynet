@@ -15,45 +15,46 @@ from os import walk
 
 ##################
 
-file_dir = '/Users/andreazignoli/Downloads/test-oxynet-main/real/'
-filenames = next(walk(file_dir), (None, None, []))[2]
+if False:
+    file_dir = '/Users/andreazignoli/Downloads/test-oxynet-main/test/'
+    filenames = next(walk(file_dir), (None, None, []))[2]
 
-# read all json from filenames and add them to an array
-real = []
-for filename in filenames:
-    with open(file_dir + filename) as f:
-        real.append(json.load(f))
+    # read all json from filenames and add them to an array
+    real = []
+    for filename in filenames:
+        with open(file_dir + filename) as f:
+            real.append(json.load(f))
 
-with open('/Users/andreazignoli/Downloads/test-oxynet-main/experts.json') as f:
-    dict_answers = json.load(f)
-df_answers = pd.DataFrame.from_dict(dict_answers)
+    with open('/Users/andreazignoli/Downloads/test-oxynet-main/experts.json') as f:
+        dict_answers = json.load(f)
+    df_answers = pd.DataFrame.from_dict(dict_answers)
 
-# create an empty array to store the results
-oxynet = []
+    # create an empty array to store the results
+    oxynet = []
 
-# Load the model outside the loop
-tf_model = load_tf_model(n_inputs=5, past_points=40, model='murias_lab')
+    # Load the model outside the loop
+    tf_model = load_tf_model(n_inputs=5, past_points=40, model='murias_lab')
 
-# do the inference and add the results to the array
-for i in range(len(real)):
+    # do the inference and add the results to the array
+    for i in range(len(real)):
 
-    try:
+        try:
 
-        print('Inferencing ' + real[i]['id'])
-        df = load_exercise_threshold_app_data(data_dict=[real[i]])
-        df_estimates, dict_estimates = test_pyoxynet(tf_model=tf_model, input_df=df, inference_stride=5)
-        # save it to the array
-        oxynet.append({
-            'id': real[i]['id'],
-            'oxynet': dict_estimates
-        })
+            print('Inferencing ' + real[i]['id'])
+            df = load_exercise_threshold_app_data(data_dict=[real[i]])
+            df_estimates, dict_estimates = test_pyoxynet(tf_model=tf_model, input_df=df, inference_stride=5)
+            # save it to the array
+            oxynet.append({
+                'id': real[i]['id'],
+                'oxynet': dict_estimates
+            })
 
-    except:
-        pass
+        except:
+            pass
 
-# save the array to json
-with open('/Users/andreazignoli/Downloads/test-oxynet-main/oxynet.json', 'w') as outfile:
-    json.dump(oxynet, outfile)
+    # save the array to json
+    with open('/Users/andreazignoli/Downloads/test-oxynet-main/oxynet.json', 'w') as outfile:
+        json.dump(oxynet, outfile)
 
 # file_path = '/Users/andreazignoli/oxynet-interpreter-tf2/training_data/ARC_VO2_FOL.csv'
 # df = pd.read_csv(file_path)
@@ -76,7 +77,7 @@ VT2_FAKE = []
 VT1_NN = []
 VT2_NN = []
 
-save_files = True
+save_files = False
 
 for i in np.arange(40):
     try:
