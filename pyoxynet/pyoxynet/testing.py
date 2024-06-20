@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from pandas import read_csv
 from scipy.ndimage import uniform_filter1d
+import csv
 
 class Test:
 
@@ -29,7 +30,10 @@ class Test:
 
         try:
             if self.data_extension == '.csv':
+
                 df = read_csv(self.filename + self.data_extension)
+                if len(df.columns) == 1:
+                    df = read_csv(self.filename + self.data_extension, delimiter=";")
                 print('Just reading a csv file')
             if self.data_extension == '.txt':
                 df = read_csv(self.filename + self.data_extension, sep="\t", header=None, skiprows=3)
@@ -147,6 +151,10 @@ class Test:
             if " V'O2   " in df.columns and " V'CO2  " in df.columns:
                 print('Most probably we have an file coming from the Uni of Ess')
                 self.metabolimeter = 'uni_of_essex'
+
+            if "T(sec)" in df.columns and "PHASE" in df.columns:
+                print('Most probably we have an rowing file coming')
+                self.metabolimeter = 'rowing_ben'
 
         except:
             pass
@@ -1126,6 +1134,60 @@ class Test:
                     self.PetO2[i - 2] = np.nan
                     self.PetCO2[i - 2] = np.nan
                     self.Rf[i - 2] = np.nan
+
+        if self.metabolimeter == 'rowing_ben':
+
+            df = self.df
+            print('Reading data rowing file with no age nor BMI data !!!!')
+
+            starting_index = [1]
+            n_rows = df[df.columns[0]].last_valid_index() - 3
+
+            # print('Reading age')
+            my_array = np.where(df[df.columns[6]].notnull() == True, df.index, 0)
+            res = next(x for x, val in enumerate(my_array) if val > 0.6)
+
+            self.age = float(0)
+            # print('Gender')
+            self.gender = 'N'
+            # print('Weight')
+            self.weight = float(0)
+            # print('Height')
+            self.height = float(0)
+
+            self.time = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+            self.VO2 = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+            self.VCO2 = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+            self.HR = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+            self.VE = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+            self.PetO2 = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+            self.PetCO2 = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+            self.load = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+            self.Rf = np.zeros((n_rows - starting_index[0],), dtype=np.float32)
+
+            for i in np.arange(starting_index[0],n_rows):
+                try:
+                    self.time[i - starting_index[0]] = df[df.columns[0]].values[i]
+                except:
+                    self.time[i - starting_index[0]] = np.nan
+                try:
+                    # print(i)
+                    self.VO2[i - starting_index[0]] = float(df[df.columns[3]].values[i])
+                    self.VCO2[i - starting_index[0]] = float(df[df.columns[4]].values[i])
+                    self.VE[i - starting_index[0]] = float(df[df.columns[6]].values[i])
+                    self.HR[i - starting_index[0]] = float(df[df.columns[2]].values[i])
+                    self.PetO2[i - starting_index[0]] = float(df[df.columns[11]].values[i])
+                    self.PetCO2[i - starting_index[0]] = float(df[df.columns[12]].values[i])
+                    self.Rf[i - starting_index[0]] = float(df[df.columns[16]].values[i])
+                except:
+                    self.time[i - starting_index[0]] = np.nan
+                    self.VO2[i - starting_index[0]] = np.nan
+                    self.VCO2[i - starting_index[0]] = np.nan
+                    self.VE[i - starting_index[0]] = np.nan
+                    self.HR[i - starting_index[0]] = np.nan
+                    self.PetO2[i - starting_index[0]] = np.nan
+                    self.PetCO2[i - starting_index[0]] = np.nan
+                    self.Rf[i - starting_index[0]] = np.nan
 
         self.time = np.nan_to_num(self.time)
         self.VO2 = np.nan_to_num(self.VO2)
