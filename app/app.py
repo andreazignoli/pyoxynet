@@ -5,6 +5,7 @@ from flasgger import Swagger, swag_from
 import pyoxynet
 import numpy as np
 import pandas as pd
+from pandas import read_csv
 import plotly.graph_objs as go
 import plotly
 from faker import Faker
@@ -471,8 +472,8 @@ def curl_csv():
     else:
         return 'Invalid file', 400
 
-@app.route('/read_csv', methods=['GET', 'POST'])
-def read_csv():
+@app.route('/read_csv_app', methods=['GET', 'POST'])
+def read_csv_app():
 
     # Reads from csv and uses the pyoxynet parser
     args = request.args
@@ -487,7 +488,16 @@ def read_csv():
         t.set_data_extension(file_extension)
 
         if file_extension == '.csv':
-            df = read_csv(file)
+            try:
+                df = read_csv(file)
+            except:
+                try:
+                    df = pd.read_csv(file.filename, delimiter=';')
+                except:
+                    try:
+                        df = pd.read_csv(file.filename)
+                    except:
+                        pass
             print('Just reading a csv file')
         if file_extension == '.txt':
             df = read_csv(file, sep="\t", header=None, skiprows=3)
@@ -523,6 +533,10 @@ def read_csv():
         VT2_oxynet = dict_estimates['VT2']['time']
         VO2VT1_oxynet = dict_estimates['VT1']['VO2']
         VO2VT2_oxynet = dict_estimates['VT2']['VO2']
+
+        # Trim at VE max
+        max_ve_index = t.raw_data_frame['VE'].idxmax()
+        t.raw_data_frame = t.raw_data_frame.loc[:max_ve_index]
 
         # Rename ONLY for viz purposes
         # TODO: fix this sh*t
