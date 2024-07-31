@@ -15,6 +15,41 @@ from os import walk
 
 ##################
 
+test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/Cycling_Athlete_A_submax_178.csv'
+filename, file_extension = os.path.splitext(test_file)
+t = testing.Test(filename)
+t.set_data_extension(file_extension)
+t.infer_metabolimeter()
+t.load_file()
+t.create_data_frame()
+exercise_threshold_names = {"time": "t",
+                            "VO2_I": "VO2",
+                            "VCO2_I": "VCO2",
+                            "VE_I": "VE",
+                            "VCO2VO2_I": "R",
+                            "VEVO2_I": "VE/VO2",
+                            "VEVCO2_I": "VE/VCO2",
+                            "PetO2_I": "PetO2",
+                            "PetCO2_I": "PetCO2",
+                            "HR_I": "HR",
+                            "RF_I": "RF"}
+t.data_frame = t.data_frame.rename(columns=exercise_threshold_names)
+data = dict()
+data['data'] = dict()
+data['data'] = t.data_frame.to_dict(orient='records')
+# Writing to sample.json
+for file_id in ['test_SASI_01']:
+    json_object = json.dumps(data)
+    with open('/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/json_ET/' + file_id + '.json', "w") as outfile:
+        outfile.write(json_object)
+
+
+
+#
+df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame, model='CNN')
+pass
+here=0
+
 if False:
     file_dir = '/Users/andreazignoli/Downloads/test-oxynet-main/test/'
     filenames = next(walk(file_dir), (None, None, []))[2]
@@ -123,18 +158,6 @@ sys.exit()
 
 #test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
 #filename, file_extension = os.path.splitext(test_file)
-
-test_file = '/Users/andreazignoli/Downloads/CPET_files_try_me/4.xls'
-filename, file_extension = os.path.splitext(test_file)
-t = testing.Test(filename)
-t.set_data_extension(file_extension)
-t.infer_metabolimeter()
-t.load_file()
-t.create_data_frame()
-#
-df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame, model='CNN')
-pass
-here=0
 
 if False:
     # test_file = '/Users/andreazignoli/Downloads/Standard_Test_1_2022.12.05_16.54.00_.xml'
