@@ -31,17 +31,25 @@ def get_sec(time_str):
 
     """
 
-    my_time_str = time_str.replace('.', ':')
-    try:
-        h, m, s = my_time_str.split(':')
-        return int(h) * 3600 + int(m) * 60 + int(s)
-    except:
+    # my_time_str = time_str.replace('.', ':')
+    my_time_str = time_str
+
+    if ':' in time_str:
         try:
-            h, m, s, ms = my_time_str.split(':')
+            h, m, s = my_time_str.split(':')
             return int(h) * 3600 + int(m) * 60 + int(s)
         except:
-            m, s = my_time_str.split(':')
-            return int(m) * 60 + int(s)
+            try:
+                h, m, s, ms = my_time_str.split(':')
+                return int(h) * 3600 + int(m) * 60 + int(s)
+            except:
+                m, s = my_time_str.split(':')
+                return int(m) * 60 + int(s)
+
+    if '.' in time_str:
+        m = int(float(time_str))
+        s = (float(time_str) - m) * 60
+        return int(m) * 60 + int(s)
 
 def normalize(df, min_target=-1, max_target=1):
     """Pandas df normalisation
