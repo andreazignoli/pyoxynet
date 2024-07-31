@@ -29,8 +29,7 @@ class Test:
         import chardet
 
         try:
-            if self.data_extension == '.csv':
-
+            if self.data_extension == '.csv' or self.data_extension == '.CSV':
                 df = read_csv(self.filename + self.data_extension)
                 if len(df.columns) == 1:
                     df = read_csv(self.filename + self.data_extension, delimiter=";")
@@ -50,6 +49,12 @@ class Test:
                 df = optional_data
 
         self.df = df
+
+        if 'Victorian Institute of Sport' in df.columns:
+            self.metabolimeter = 'VIS'
+
+        if 'New South Wales Institute of Sport' in df.columns:
+            self.metabolimeter = 'NSWIS'
 
         if 'South Australian Sports Institute' in df.columns:
             self.metabolimeter = 'SASI'
@@ -168,9 +173,20 @@ class Test:
         df = self.df
         filter_size = self.filter_size
 
-        if self.metabolimeter == 'SASI':
+        if self.metabolimeter == 'SASI' or self.metabolimeter == 'NSWIS' or self.metabolimeter == 'VIS':
 
-            starting_index = df[df['South Australian Sports Institute'] == 'min  '].index
+            try:
+                starting_index = df[df['South Australian Sports Institute'] == 'min  '].index
+            except:
+                pass
+            try:
+                starting_index = df[df['New South Wales Institute of Sport'] == 'min  '].index
+            except:
+                pass
+            try:
+                starting_index = df[df['Victorian Institute of Sport'] == 'min  '].index
+            except:
+                pass
             ventilatory_data = df[starting_index[0]+1:-1]
 
             # print('Weight')
