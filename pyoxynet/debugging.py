@@ -15,7 +15,7 @@ from os import walk
 
 ##################
 
-test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/Cycling_Athlete_A_submax_178.csv'
+test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/VIS PARVO VT PRO 15.CSV'
 filename, file_extension = os.path.splitext(test_file)
 t = testing.Test(filename)
 t.set_data_extension(file_extension)
@@ -35,6 +35,8 @@ exercise_threshold_names = {"time": "t",
                             "RF_I": "RF"}
 t.data_frame = t.data_frame.rename(columns=exercise_threshold_names)
 data = dict()
+data['metabolimeter'] = t.metabolimeter
+data['VO2max'] = str(int(max(t.VO2_F)))
 data['data'] = dict()
 data['data'] = t.data_frame.to_dict(orient='records')
 # Writing to sample.json
@@ -42,8 +44,6 @@ for file_id in ['test_SASI_01']:
     json_object = json.dumps(data)
     with open('/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/json_ET/' + file_id + '.json', "w") as outfile:
         outfile.write(json_object)
-
-
 
 #
 df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame, model='CNN')
