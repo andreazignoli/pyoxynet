@@ -51,6 +51,9 @@ class Test:
 
         self.df = df
 
+        if 'South Australian Sports Institute' in df.columns:
+            self.metabolimeter = 'SASI'
+
         if 'VO2_I' in df.columns:
             self.metabolimeter = 'generated_pyoxynet'
 
@@ -164,6 +167,50 @@ class Test:
         from . import utilities
         df = self.df
         filter_size = self.filter_size
+
+        if self.metabolimeter == 'SASI':
+
+            starting_index = df[df['South Australian Sports Institute'] == 'min  '].index
+            ventilatory_data = df[starting_index[0]+1:-1]
+
+            # print('Weight')
+            self.weight = 70
+            # print('Height')
+            self.height = 180
+            # print('Age')
+            self.age = 40
+            # print('Gender')
+            self.gender = 'M'
+
+            # print('Reading data')
+            n_rows = len(ventilatory_data.index)
+            # initialise variables
+            self.time = np.zeros((n_rows,), dtype=np.float32)
+            self.VO2 = np.zeros((n_rows,), dtype=np.float32)
+            self.VCO2 = np.zeros((n_rows,), dtype=np.float32)
+            self.HR = np.zeros((n_rows,), dtype=np.float32)
+            self.Rf = np.zeros((n_rows,), dtype=np.float32)
+            self.VE = np.zeros((n_rows,), dtype=np.float32)
+            self.PetO2 = np.zeros((n_rows,), dtype=np.float32)
+            self.PetCO2 = np.zeros((n_rows,), dtype=np.float32)
+            self.load = np.zeros((n_rows,), dtype=np.float32)
+
+            i = 0
+            for time_sec in ventilatory_data[ventilatory_data.columns[0]].values:
+                # print(i)
+                try:
+                    self.time[i] = utilities.get_sec(time_sec)
+                    self.VO2[i] = float(ventilatory_data[ventilatory_data.columns[2]].values[i]) * 1000
+                    self.VCO2[i] = float(ventilatory_data[ventilatory_data.columns[4]].values[i]) * 1000
+                    self.HR[i] = 0
+                    self.load[i] = 0
+                    self.VE[i] = float(ventilatory_data[ventilatory_data.columns[1]].values[i])
+                    self.Rf[i] = float(ventilatory_data[ventilatory_data.columns[10]].values[i])
+                    self.PetO2[i] = float(ventilatory_data[ventilatory_data.columns[6]].values[i])
+                    self.PetCO2[i] = float(ventilatory_data[ventilatory_data.columns[5]].values[i])
+                    i += 1
+                except:
+                    pass
 
         if self.metabolimeter == 'vintus':
 
