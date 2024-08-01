@@ -21,6 +21,11 @@ UPLOAD_FOLDER = os.path.join('staticFiles', 'uploads')
 # Configure upload file path flask
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Dictionary to store pre-loaded TFLite models
+models = {
+    'model_1': tf.lite.Interpreter('tf_lite_models/tfl_model.tflite')
+}
+
 def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
     import plotly.express as px
@@ -225,7 +230,7 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     return graphJSON
 
 def test_tf_lite_model(interpreter):
-    """Test if the model is running correclty
+    """Test if the model is running correctly
 
     Parameters:
         interpreter (loaded tf.lite.Interpreter) : Loaded interpreter TFLite model
@@ -265,6 +270,9 @@ def tf_lite_model_inference(tf_lite_model=[], input_df=[], past_points=40, n_inp
     """
 
     df = input_df
+
+    model_id = 'model_1'
+    tf_lite_model = models.get(model_id)
 
     # retrieve interpreter details
     input_details = tf_lite_model.get_input_details()
@@ -388,9 +396,6 @@ def tf_lite_model_inference(tf_lite_model=[], input_df=[], past_points=40, n_inp
 
     return out_df, out_dict
 
-# Pre-allocate tf-lite model inference
-tf_lite_model = tf.lite.Interpreter('tf_lite_models/tfl_model.tflite')
-
 @app.route('/search', methods=['GET', 'POST'])
 def search():
     args = request.args
@@ -410,6 +415,10 @@ def read_json():
         request_data = request.get_json(force=True)
         print(isinstance(request_data, dict))
         df = pd.DataFrame.from_dict(request_data)
+
+        model_id = 'model_1'
+        tf_lite_model = models.get(model_id)
+
         df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model,
                                                                input_df=df,
                                                                inference_stride=2)
@@ -432,6 +441,10 @@ def read_json_ET():
             return 'No JSON data provided', 400
 
         df = pyoxynet.utilities.load_exercise_threshold_app_data(data_dict=request_data)
+
+        model_id = 'model_1'
+        tf_lite_model = models.get(model_id)
+
         df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model,
                                                                input_df=df,
                                                                inference_stride=2)
@@ -464,6 +477,10 @@ def curl_csv():
             t.load_file()
             t.create_data_frame()
             t.create_raw_data_frame()
+
+            model_id = 'model_1'
+            tf_lite_model = models.get(model_id)
+
             df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model, input_df=t.data_frame, inference_stride=2)
 
             return flask.jsonify(dict_estimates), 200
@@ -512,6 +529,9 @@ def read_csv_app():
         t.load_file()
         t.create_data_frame()
         t.create_raw_data_frame()
+
+        model_id = 'model_1'
+        tf_lite_model = models.get(model_id)
 
         # df_estimates, dict_estimates = pyoxynet.utilities.test_pyoxynet(input_df=t.data_frame, model = 'murias_lab')
         df_estimates, dict_estimates = tf_lite_model_inference(tf_lite_model=tf_lite_model, input_df=t.data_frame, inference_stride=2)
