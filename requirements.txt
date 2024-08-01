@@ -20,3 +20,4 @@ faker
 chardet
 openpyxl
 xlrd
+flasgger
