@@ -212,19 +212,31 @@ class Test:
             self.load = np.zeros((n_rows,), dtype=np.float32)
 
             i = 0
+            max_time = 0
+            # Protection mechanism in place for "2-in-1" tests
+            # TODO: good for every kind of institution/metabolimeter TBH
             for time_sec in ventilatory_data[ventilatory_data.columns[0]].values:
-                # print(i)
                 try:
-                    self.time[i] = utilities.get_sec(time_sec)
-                    self.VO2[i] = float(ventilatory_data[ventilatory_data.columns[2]].values[i]) * 1000
-                    self.VCO2[i] = float(ventilatory_data[ventilatory_data.columns[4]].values[i]) * 1000
-                    self.HR[i] = 0
-                    self.load[i] = 0
-                    self.VE[i] = float(ventilatory_data[ventilatory_data.columns[1]].values[i])
-                    self.Rf[i] = float(ventilatory_data[ventilatory_data.columns[10]].values[i])
-                    self.PetO2[i] = float(ventilatory_data[ventilatory_data.columns[6]].values[i])
-                    self.PetCO2[i] = float(ventilatory_data[ventilatory_data.columns[5]].values[i])
-                    i += 1
+                    if len(time_sec.split(':')) > 2:
+                        time_stamp = utilities.get_sec(':'.join(time_sec.split(':')[:2]))
+                    else:
+                        time_stamp = utilities.get_sec(time_sec)
+
+                    if time_stamp > max_time & (time_stamp - max_time) < 20:
+                        max_time = time_stamp
+                        self.time[i] = time_stamp
+                        self.VO2[i] = float(ventilatory_data[ventilatory_data.columns[2]].values[i]) * 1000
+                        self.VCO2[i] = float(ventilatory_data[ventilatory_data.columns[4]].values[i]) * 1000
+                        self.HR[i] = 0
+                        self.load[i] = 0
+                        self.VE[i] = float(ventilatory_data[ventilatory_data.columns[1]].values[i])
+                        self.Rf[i] = float(ventilatory_data[ventilatory_data.columns[10]].values[i])
+                        self.PetO2[i] = float(ventilatory_data[ventilatory_data.columns[6]].values[i])
+                        self.PetCO2[i] = float(ventilatory_data[ventilatory_data.columns[5]].values[i])
+                        i += 1
+                    else:
+                        break
+
                 except:
                     pass
 
