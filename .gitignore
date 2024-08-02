@@ -19,6 +19,9 @@ dist
 venv
 pyoxynet/pyoxynet/__pycache__
 app/__pycache__
+app/*.CSV
+app/*.csv
+
 .idea
 *.pyc
 
