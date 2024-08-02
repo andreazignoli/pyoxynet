@@ -35,7 +35,7 @@ def CPET_var_plot_vs_CO2(df, var_list=[]):
     for lab_ in var_list:
         labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
 
-    fig = px.scatter(df.iloc[np.arange(0, len(df), 5)],
+    fig = px.scatter(df.iloc[np.arange(0, len(df))],
                      x="VCO2_I",
                      y=var_list, color_discrete_sequence=['white', 'gray'])
     fig.update_traces(marker=dict(size=8, line=dict(width=2, color='DarkSlateGrey')))
@@ -101,7 +101,7 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0, 0, 0]):
     for lab_ in var_list:
         labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
 
-    fig = px.scatter(df.iloc[np.arange(0, len(df), 5)], x="VO2_I", y=var_list,
+    fig = px.scatter(df.iloc[np.arange(0, len(df))], x="VO2_I", y=var_list,
                      color_discrete_sequence=['white', 'gray'])
     fig.update_traces(marker=dict(size=8, line=dict(width=1, color='black'), color='#51a1ff', opacity=0.7))
 
@@ -174,7 +174,7 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     for lab_ in var_list:
         labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
 
-    fig = px.line(df.iloc[np.arange(0, len(df), 5)], x="time", y=var_list,
+    fig = px.line(df.iloc[np.arange(0, len(df))], x="time", y=var_list,
                   color_discrete_sequence=['white', 'gray', 'black'])
     fig.update_traces(marker=dict(size=8, line=dict(width=2, color='DarkSlateGrey')))
     fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
@@ -504,25 +504,25 @@ def read_csv_app():
         t = pyoxynet.Test(filename)
         t.set_data_extension(file_extension)
 
-        if file_extension == '.csv':
+        if file_extension == '.csv' or file_extension == '.CSV':
             try:
-                df = read_csv(file)
+                df = read_csv(file.filename)
             except:
                 try:
-                    df = pd.read_csv(file.filename, delimiter=';')
+                    df = read_csv(file.filename)
                 except:
                     try:
-                        df = pd.read_csv(file.filename)
+                        df = pd.read_csv(file.filename, delimiter=';')
                     except:
                         pass
             print('Just reading a csv file')
         if file_extension == '.txt':
-            df = read_csv(file, sep="\t", header=None, skiprows=3)
+            df = read_csv(file.filename, sep="\t", header=None, skiprows=3)
             print('Just reading a txt file')
             t.metabolimeter = 'vyiare'
         if file_extension == '.xlsx' or file_extension == '.xls':
             print('Attempting to read an Excel file')
-            df = pd.read_excel(file)
+            df = pd.read_excel(file.filename)
 
         os.remove(file.filename)
         t.infer_metabolimeter(optional_data=df)
