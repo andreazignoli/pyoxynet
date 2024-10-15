@@ -48,7 +48,7 @@
     <br />
     <a href="https://www.overleaf.com/read/zgsfxmvcbhkz">Overleaf</a>
     ·
-    <a href="https://oxynetresearch.promfacility.eu">Web app</a>
+    <a href="https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/">Web app</a>
     ·
     <a href="https://pypi.org/project/pyoxynet/">Pypi</a>
     ·
@@ -127,7 +127,7 @@ If you want to see how *Pyoxynet* can work on sample data:
 import pyoxynet
 
 # Load the TFL model
-tfl_model = pyoxynet.load_tf_model()
+tfl_model = pyoxynet.load_tf_model(n_inputs=5, past_points=40, model='CNN')
 
 # Make inference on a random input
 test_tfl_model(tfl_model)
@@ -157,11 +157,11 @@ test_pyoxynet(input_df=df)
 
 Fake data provided during the *generation* include oxygen uptake (VO2), exhaled CO2 (VCO2), minute ventilation (VE), heart rate (HR), respiratory frequency (RF), and end tidal O2 (PetO2) and CO2(PetCO2) (*generation therefore does not provide and ventilatory equivalents*):
 
-| VO2 | VCO2 | VE | HR | RF | PetO2 | PetCO2 |
-|-----|------|----|----|----|-------|--------|
-|     |      |    |    |    |       |        |
-|     |      |    |    |    |       |        |
-|     |      |    |    |    |       |        |
+| VO2  | VCO2  | VE   | PetO2  | PetCO2  |
+|------|-------|------|--------|---------|
+|      |       |      |        |         |
+|      |       |      |        |         |
+|      |       |      |        |         |
 
 Importantly, given that RF data is generated, a complete breath-by-breath dataset can be generated. In the gif below, different epochs/steps of the training process are presented for the Conditional Adversarial Neural Network available in *Pyoxynet*. 
 
