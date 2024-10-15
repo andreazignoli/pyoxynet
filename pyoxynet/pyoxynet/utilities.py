@@ -227,7 +227,7 @@ def optimal_filter(t, y, my_lambda):
 
     return x
 
-def load_tf_model(n_inputs=6, past_points=40, model='CNN'):
+def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
     """This function loads the saved tf models.
 
     Args:
