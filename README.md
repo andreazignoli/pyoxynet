@@ -130,10 +130,7 @@ import pyoxynet
 tfl_model = pyoxynet.load_tf_model(n_inputs=5, past_points=40, model='CNN')
 
 # Make inference on a random input
-test_tfl_model(tfl_model)
-
-# Plot the inference on a test dataset
-pyoxynet.test_pyoxynet()
+pyoxynet.test_pyoxynet(tfl_model)
 ```
 
 _For more examples, please refer to the package [Documentation](https://pyoxynet.readthedocs.io/en/latest/index.html)_
