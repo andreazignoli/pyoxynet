@@ -15,7 +15,9 @@ from os import walk
 
 ##################
 
-source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/original/'
+# source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/not_labelled/original/training_testing'
+source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/promotus_original'
+
 items = os.listdir(source_dir)
 files = [item for item in items if os.path.isfile(os.path.join(source_dir, item))]
 random.shuffle(files)
@@ -34,47 +36,49 @@ for file_ in files:
         t.load_file()
         t.create_data_frame()
 
-        exercise_threshold_names = {"time": "t",
-                                    "VO2_I": "VO2",
-                                    "VCO2_I": "VCO2",
-                                    "VE_I": "VE",
-                                    "VCO2VO2_I": "R",
-                                    "VEVO2_I": "VE/VO2",
-                                    "VEVCO2_I": "VE/VCO2",
-                                    "PetO2_I": "PetO2",
-                                    "PetCO2_I": "PetCO2",
-                                    "HR_I": "HR",
-                                    "RF_I": "RF"}
-        t.data_frame = t.data_frame.rename(columns=exercise_threshold_names)
-        data = dict()
-        data['institute'] = t.metabolimeter
-        data['original_file_name'] = file_
-        data['VO2max'] = str(int(max(t.VO2_F)))
-        data['data'] = dict()
-        data['data'] = t.data_frame.to_dict(orient='records')
+        # exercise_threshold_names = {"time": "t",
+        #                             "VO2_I": "VO2",
+        #                             "VCO2_I": "VCO2",
+        #                             "VE_I": "VE",
+        #                             "VCO2VO2_I": "R",
+        #                             "VEVO2_I": "VE/VO2",
+        #                             "VEVCO2_I": "VE/VCO2",
+        #                             "PetO2_I": "PetO2",
+        #                             "PetCO2_I": "PetCO2",
+        #                             "HR_I": "HR",
+        #                             "RF_I": "RF"}
+        # t.data_frame = t.data_frame.rename(columns=exercise_threshold_names)
 
-        # Writing to sample.json
-        if t.metabolimeter == 'SASI':
-            n_SASI += 1
-            fileID = f"test_file_SASI_{n_SASI:03d}"
-        if t.metabolimeter == 'NSWIS':
-            n_NSWIS += 1
-            fileID = f"test_file_NSWIS_{n_NSWIS:03d}"
-        if t.metabolimeter == 'VIS':
-            n_VIS += 1
-            fileID = f"test_file_VIS_{n_VIS:03d}"
+        df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame)
 
-        json_object = json.dumps(data)
-        t.data_frame.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/csv_ET/all_files/' + fileID + '.csv')
-        with open('/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/json_ET/all_files/' +
-                  fileID + '.json', "w") as outfile:
-            outfile.write(json_object)
-        print(test_file)
+        # data = dict()
+        # data['institute'] = t.metabolimeter
+        # data['original_file_name'] = file_
+        # data['VO2max'] = str(int(max(t.VO2_F)))
+        # data['data'] = dict()
+        # data['data'] = t.data_frame.to_dict(orient='records')
+        #
+        # # Writing to sample.json
+        # if t.metabolimeter == 'SASI':
+        #     n_SASI += 1
+        #     fileID = f"test_file_SASI_{n_SASI:03d}"
+        # if t.metabolimeter == 'NSWIS':
+        #     n_NSWIS += 1
+        #     fileID = f"test_file_NSWIS_{n_NSWIS:03d}"
+        # if t.metabolimeter == 'VIS':
+        #     n_VIS += 1
+        #     fileID = f"test_file_VIS_{n_VIS:03d}"
+        #
+        # json_object = json.dumps(data)
+        # t.data_frame.to_csv('/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/csv_ET/all_files/' + fileID + '.csv')
+        # with open('/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/json_ET/all_files/' +
+        #           fileID + '.json', "w") as outfile:
+        #     outfile.write(json_object)
+        # print(test_file)
         here=0
     except:
         print('Skipping:' + test_file)
 
-df_estimates, dict_estimates = utilities.test_pyoxynet(input_df=t.data_frame, model='CNN')
 pass
 here=0
 
