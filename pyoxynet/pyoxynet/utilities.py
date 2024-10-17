@@ -4,6 +4,7 @@ from scipy.stats import beta
 from scipy.interpolate import UnivariateSpline
 from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
+import tempfile
 
 def PrintHello(hello='hello'):
     """This function prints to screen.
@@ -309,14 +310,22 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
         tfl_model_binaries = importlib_resources.read_binary(regressor, 'transformer.pickle')
 
     try:
-        if not os.path.isdir('/tmp/model'):
-            os.mkdir('/tmp/model')
-        if not os.path.isdir('/tmp/model/variables'):
-            os.mkdir('/tmp/model/variables')
-        open('/tmp/model/saved_model.pb', 'wb').write(saved_model_binaries)
-        open('/tmp/model/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
-        open('/tmp/model/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
-        open('/tmp/model/variables/variables.index', 'wb').write(variables_index_binaries)
+        temp_dir = tempfile.mkdtemp()
+        model_dir = os.path.join(temp_dir, 'model')
+        variables_dir = os.path.join(model_dir, 'variables')
+        os.makedirs(variables_dir, exist_ok=True)
+
+        with open(os.path.join(model_dir, 'saved_model.pb'), 'wb') as f:
+            f.write(saved_model_binaries)
+
+        with open(os.path.join(model_dir, 'keras_metadata.pb'), 'wb') as f:
+            f.write(keras_metadata_model_binaries)
+
+        with open(os.path.join(variables_dir, 'variables.data-00000-of-00001'), 'wb') as f:
+            f.write(variables_data_binaries)
+
+        with open(os.path.join(variables_dir, 'variables.index'), 'wb') as f:
+            f.write(variables_index_binaries)
 
         from .model import Model, TCN, LSTMGRUModel
         if model == 'CNN':
