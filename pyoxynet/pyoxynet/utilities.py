@@ -329,17 +329,17 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
 
         from .model import Model, TCN, LSTMGRUModel
         if model == 'CNN':
-            model = tf.keras.models.load_model('/tmp/model/')
+            model = tf.keras.models.load_model(model_dir)
             my_model = Model(n_classes=3, n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'LSTMGRUModel':
-            model = tf.keras.models.load_model('/tmp/model/')
+            model = tf.keras.models.load_model(model_dir)
             my_model = LSTMGRUModel(n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'TCN':
-            model = tf.keras.models.load_model('/tmp/model/')
+            model = tf.keras.models.load_model(model_dir)
             num_classes = 3
             num_filters = 128
             kernel_size = 3
@@ -349,7 +349,7 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'murias_lab':
-            model = tf.keras.models.load_model('/tmp/model/')
+            model = tf.keras.models.load_model(model_dir)
             my_model = LSTMGRUModel(n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
