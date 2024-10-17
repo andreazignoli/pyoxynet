@@ -37,19 +37,19 @@ def get_sec(time_str):
     if ':' in time_str:
         try:
             h, m, s = my_time_str.split(':')
-            return int(h) * 3600 + int(m) * 60 + int(s)
+            return int(h) * 3600 + int(m) * 60 + int(float(s))
         except:
             try:
                 h, m, s, ms = my_time_str.split(':')
-                return int(h) * 3600 + int(m) * 60 + int(s)
+                return int(h) * 3600 + int(m) * 60 + int(float(s))
             except:
                 m, s = my_time_str.split(':')
-                return int(m) * 60 + int(s)
+                return int(m) * 60 + int(float(s))
 
     if '.' in time_str:
         m = int(float(time_str))
         s = (float(time_str) - m) * 60
-        return int(m) * 60 + int(s)
+        return int(m) * 60 + int(float(s))
 
 def normalize(df, min_target=-1, max_target=1):
     """Pandas df normalisation
@@ -660,7 +660,7 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     return df
 
-def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='TCN', plot=False, inference_stride=1):
+def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='CNN', plot=False, inference_stride=1):
     """Runs the pyoxynet inference
 
     Parameters: 
