@@ -10,7 +10,7 @@ long_description = (this_directory/"README.md").read_text()
 
 setuptools.setup(
     name="pyoxynet",
-    version="0.0.19.0",
+    version="0.0.19.2",
     author="Andrea Zignoli",
     author_email="andrea.zignoli@unitn.it",
     description="Python package of the Oxynet project",
@@ -26,7 +26,13 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     include_package_data=True,
-    package_data={'': ['regressor/*', 'generator/*', 'data_test/*', 'murias_lab/*', 'TCN/*', 'LSTMGRUModel/*']},
+    package_data={'': ['regressor/*', 
+                       'generator/*', 
+                       'data_test/*', 
+                       'murias_lab/*', 
+                       'TCN/*', 
+                       'LSTMGRUModel/*', 
+                       'AIS/*']},
     #exclude_package_data={
     #    '': 'debugging.py.c'},
     python_requires='>=3.8',

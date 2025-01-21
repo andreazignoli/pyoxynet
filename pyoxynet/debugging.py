@@ -17,6 +17,7 @@ from os import walk
 
 # source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/not_labelled/original/training_testing'
 source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/promotus_original'
+source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/juan_dan_danilo'
 
 items = os.listdir(source_dir)
 files = [item for item in items if os.path.isfile(os.path.join(source_dir, item))]

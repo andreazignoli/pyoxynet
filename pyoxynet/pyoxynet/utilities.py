@@ -243,7 +243,7 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
     import importlib_resources
     import pickle
     from io import BytesIO
-    from pyoxynet import regressor, TCN, LSTMGRUModel, murias_lab
+    from pyoxynet import regressor, TCN, LSTMGRUModel, murias_lab, AIS
     import tensorflow as tf
     import os
 
@@ -303,6 +303,21 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
             keras_metadata_model_binaries = importlib_resources.files(murias_lab).joinpath('keras_metadata.pb').read_bytes()
             variables_data_binaries = importlib_resources.files(murias_lab).joinpath('variables.data-00000-of-00001').read_bytes()
             variables_index_binaries = importlib_resources.files(murias_lab).joinpath('variables.index').read_bytes()
+            
+    if model == 'AIS':
+        # load the classic Oxynet model configuration
+        print('Model custom trained on data from AIS')
+        print('This is an CNN model')
+        try:
+            saved_model_binaries = importlib_resources.read_binary(AIS, 'saved_model.pb')
+            keras_metadata_model_binaries = importlib_resources.read_binary(AIS, 'keras_metadata.pb')
+            variables_data_binaries = importlib_resources.read_binary(AIS, 'variables.data-00000-of-00001')
+            variables_index_binaries = importlib_resources.read_binary(AIS, 'variables.index')
+        except:
+            saved_model_binaries = importlib_resources.files(AIS).joinpath('saved_model.pb').read_bytes()
+            keras_metadata_model_binaries = importlib_resources.files(AIS).joinpath('keras_metadata.pb').read_bytes()
+            variables_data_binaries = importlib_resources.files(AIS).joinpath('variables.data-00000-of-00001').read_bytes()
+            variables_index_binaries = importlib_resources.files(AIS).joinpath('variables.index').read_bytes()
 
     if model == 'transformer':
         # load the classic Oxynet model configuration
@@ -328,6 +343,7 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
             f.write(variables_index_binaries)
 
         from .model import Model, TCN, LSTMGRUModel
+        
         if model == 'CNN':
             model = tf.keras.models.load_model(model_dir)
             my_model = Model(n_classes=3, n_input=n_inputs)
@@ -351,6 +367,11 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
         if model == 'murias_lab':
             model = tf.keras.models.load_model(model_dir)
             my_model = LSTMGRUModel(n_input=n_inputs)
+            my_model.build(input_shape=(1, past_points, n_inputs))
+            my_model.set_weights(model.get_weights())
+        if model == 'AIS':
+            model = tf.keras.models.load_model(model_dir)
+            my_model = Model(n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
 
