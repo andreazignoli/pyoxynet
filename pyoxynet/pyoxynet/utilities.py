@@ -371,7 +371,7 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
             my_model.set_weights(model.get_weights())
         if model == 'AIS':
             model = tf.keras.models.load_model(model_dir)
-            my_model = Model(n_input=n_inputs)
+            my_model = Model(n_classes=3, n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
 

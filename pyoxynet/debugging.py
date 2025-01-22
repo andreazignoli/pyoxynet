@@ -16,12 +16,66 @@ from os import walk
 ##################
 
 # source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/not_labelled/original/training_testing'
-source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/promotus_original'
-source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/juan_dan_danilo'
+# source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/promotus_original'
+# source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/juan_dan_danilo'
+source_dir = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/not_labelled/original/validation/'
 
 items = os.listdir(source_dir)
 files = [item for item in items if os.path.isfile(os.path.join(source_dir, item))]
 random.shuffle(files)
+
+if True:
+    file_dir = source_dir
+    filenames = next(walk(file_dir), (None, None, []))[2]
+
+    # # read all json from filenames and add them to an array
+    # real = []
+    # for filename in filenames:
+    #     with open(file_dir + filename) as f:
+    #         real.append(json.load(f))
+
+    # with open('/Users/andreazignoli/Downloads/test-oxynet-main/experts.json') as f:
+    #     dict_answers = json.load(f)
+    # df_answers = pd.DataFrame.from_dict(dict_answers)
+
+    # create an empty array to store the results
+    oxynet = []
+
+    # Load the model outside the loop
+    CNN_tf_model = load_tf_model(n_inputs=5, past_points=40, model='CNN')
+    murias_tf_model = load_tf_model(n_inputs=5, past_points=40, model='murias_lab')
+    AIS_tf_model = load_tf_model(n_inputs=5, past_points=40, model='AIS')
+
+    # do the inference and add the results to the array
+    for i in filenames:
+
+        try:
+
+            print('Inferencing ' + str(i))
+            # df = load_exercise_threshold_app_data(data_dict=[real[i]])
+            test_file = os.path.join(source_dir, i)
+            # test_file = '/Users/andreazignoli/oxynet-interpreter-tf2/additional_data/govus/VIS PARVO VT PRO 15.CSV'
+            filename, file_extension = os.path.splitext(test_file)
+            t = testing.Test(filename)
+            t.set_data_extension(file_extension)
+            t.infer_metabolimeter()
+            t.load_file()
+            t.create_data_frame()
+            
+            df_estimates, dict_estimates = test_pyoxynet(tf_model=AIS_tf_model, input_df=t.data_frame)
+
+        except:
+            pass
+
+    # # save the array to json
+    # with open('/Users/andreazignoli/Downloads/test-oxynet-main/oxynet.json', 'w') as outfile:
+    #     json.dump(oxynet, outfile)
+
+# file_path = '/Users/andreazignoli/oxynet-interpreter-tf2/training_data/ARC_VO2_FOL.csv'
+# df = pd.read_csv(file_path)
+# df_est, dict_est = test_pyoxynet(df, model='TCN')
+
+here=0
 
 n_SASI = 0
 n_NSWIS = 0
@@ -82,52 +136,6 @@ for file_ in files:
 
 pass
 here=0
-
-if False:
-    file_dir = '/Users/andreazignoli/Downloads/test-oxynet-main/test/'
-    filenames = next(walk(file_dir), (None, None, []))[2]
-
-    # read all json from filenames and add them to an array
-    real = []
-    for filename in filenames:
-        with open(file_dir + filename) as f:
-            real.append(json.load(f))
-
-    with open('/Users/andreazignoli/Downloads/test-oxynet-main/experts.json') as f:
-        dict_answers = json.load(f)
-    df_answers = pd.DataFrame.from_dict(dict_answers)
-
-    # create an empty array to store the results
-    oxynet = []
-
-    # Load the model outside the loop
-    tf_model = load_tf_model(n_inputs=5, past_points=40, model='murias_lab')
-
-    # do the inference and add the results to the array
-    for i in range(len(real)):
-
-        try:
-
-            print('Inferencing ' + real[i]['id'])
-            df = load_exercise_threshold_app_data(data_dict=[real[i]])
-            df_estimates, dict_estimates = test_pyoxynet(tf_model=tf_model, input_df=df, inference_stride=5)
-            # save it to the array
-            oxynet.append({
-                'id': real[i]['id'],
-                'oxynet': dict_estimates
-            })
-
-        except:
-            pass
-
-    # save the array to json
-    with open('/Users/andreazignoli/Downloads/test-oxynet-main/oxynet.json', 'w') as outfile:
-        json.dump(oxynet, outfile)
-
-# file_path = '/Users/andreazignoli/oxynet-interpreter-tf2/training_data/ARC_VO2_FOL.csv'
-# df = pd.read_csv(file_path)
-# df_est, dict_est = test_pyoxynet(df, model='TCN')
-
 
 ##################
 
