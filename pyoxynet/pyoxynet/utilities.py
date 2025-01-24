@@ -243,7 +243,7 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
     import importlib_resources
     import pickle
     from io import BytesIO
-    from pyoxynet import regressor, TCN, LSTMGRUModel, murias_lab, AIS
+    from pyoxynet import regressor, TCN, LSTMGRUModel, murias_lab, AIS, NSWIS
     import tensorflow as tf
     import os
 
@@ -318,6 +318,21 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
             keras_metadata_model_binaries = importlib_resources.files(AIS).joinpath('keras_metadata.pb').read_bytes()
             variables_data_binaries = importlib_resources.files(AIS).joinpath('variables.data-00000-of-00001').read_bytes()
             variables_index_binaries = importlib_resources.files(AIS).joinpath('variables.index').read_bytes()
+            
+    if model == 'NSWIS':
+        # load the classic Oxynet model configuration
+        print('Model custom trained on data from NSWIS')
+        print('This is an CNN model')
+        try:
+            saved_model_binaries = importlib_resources.read_binary(NSWIS, 'saved_model.pb')
+            keras_metadata_model_binaries = importlib_resources.read_binary(NSWIS, 'keras_metadata.pb')
+            variables_data_binaries = importlib_resources.read_binary(NSWIS, 'variables.data-00000-of-00001')
+            variables_index_binaries = importlib_resources.read_binary(NSWIS, 'variables.index')
+        except:
+            saved_model_binaries = importlib_resources.files(NSWIS).joinpath('saved_model.pb').read_bytes()
+            keras_metadata_model_binaries = importlib_resources.files(NSWIS).joinpath('keras_metadata.pb').read_bytes()
+            variables_data_binaries = importlib_resources.files(NSWIS).joinpath('variables.data-00000-of-00001').read_bytes()
+            variables_index_binaries = importlib_resources.files(NSWIS).joinpath('variables.index').read_bytes()
 
     if model == 'transformer':
         # load the classic Oxynet model configuration
@@ -370,6 +385,11 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
             my_model.build(input_shape=(1, past_points, n_inputs))
             my_model.set_weights(model.get_weights())
         if model == 'AIS':
+            model = tf.keras.models.load_model(model_dir)
+            my_model = Model(n_classes=3, n_input=n_inputs)
+            my_model.build(input_shape=(1, past_points, n_inputs))
+            my_model.set_weights(model.get_weights())
+        if model == 'NSWIS':
             model = tf.keras.models.load_model(model_dir)
             my_model = Model(n_classes=3, n_input=n_inputs)
             my_model.build(input_shape=(1, past_points, n_inputs))
