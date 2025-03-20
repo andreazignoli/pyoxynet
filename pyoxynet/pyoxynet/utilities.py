@@ -622,7 +622,7 @@ def draw_real_test(resting='random'):
 
     return df, data
 
-def load_exercise_threshold_app_data(data_dict={}):
+def load_exercise_threshold_app_data(data_dict={}, filter_size = 20):
     """Loads data from data dict with format provided by https://www.exercisethresholds.com/
 
     Parameters:
@@ -673,8 +673,8 @@ def load_exercise_threshold_app_data(data_dict={}):
 
     # rolling averages to filter the data
     # This filter size should be equal to the one used by the Test class
-    # We do not train the NN on filtered data, just saying
-    filter_size = 1
+    # Keep the filter size consistent with the one used in the Test class * March 2025 AZ
+    # filter_size = 20
     #
     VO2_F = uniform_filter1d(VO2_I, size=filter_size)
     VCO2_F = uniform_filter1d(VCO2_I, size=filter_size)
