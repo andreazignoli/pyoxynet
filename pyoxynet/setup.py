@@ -1,7 +1,4 @@
 import setuptools
-from setuptools import setup, find_packages
-from setuptools.command.install import install as InstallCommand
-import os
 
 # read the contents of your README file
 from pathlib import Path
