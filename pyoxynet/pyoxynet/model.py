@@ -1,4 +1,11 @@
-import tensorflow as tf
+# Try to import TensorFlow (required for model classes)
+try:
+    import tensorflow as tf
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    tf = None
+    TENSORFLOW_AVAILABLE = False
+    raise ImportError("TensorFlow is required for model classes. Install with: pip install pyoxynet[full]")
 
 class generator(tf.keras.Model):
     def __init__(self, n_input=7, n_past_points=40, n_labels=3, data_noise_dim=50):

@@ -14,11 +14,17 @@ pyoxynet/pyoxynet/tfl_models/*.pickle
 !pyoxynet/pyoxynet/tfl_models/generator.pickle
 !pyoxynet/pyoxynet/tfl_models/transformer.pickle
 
+# Build artifacts
 pyoxynet.egg-info
-dist
+*.egg-info/
+dist/
+build/
 venv
+
+# Python cache
 pyoxynet/pyoxynet/__pycache__
 app/__pycache__
+__pycache__/
 app/*.CSV
 app/*.csv
 

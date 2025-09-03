@@ -6,6 +6,24 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 import tempfile
 
+# Try to import TensorFlow (full version first, then TensorFlow Lite)
+try:
+    import tensorflow as tf
+    TENSORFLOW_AVAILABLE = True
+    TENSORFLOW_LITE_ONLY = False
+except ImportError:
+    try:
+        # Fallback to TensorFlow Lite runtime only
+        import tflite_runtime.interpreter as tflite
+        tf = None
+        TENSORFLOW_AVAILABLE = False
+        TENSORFLOW_LITE_ONLY = True
+    except ImportError:
+        tf = None
+        tflite = None
+        TENSORFLOW_AVAILABLE = False
+        TENSORFLOW_LITE_ONLY = False
+
 def PrintHello(hello='hello'):
     """This function prints to screen.
 
@@ -244,8 +262,10 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
     import pickle
     from io import BytesIO
     from pyoxynet import regressor, TCN, LSTMGRUModel, murias_lab, AIS, NSWIS
-    import tensorflow as tf
     import os
+    
+    if not TENSORFLOW_AVAILABLE:
+        raise ImportError("TensorFlow is required for this function. Install with: pip install pyoxynet[full]")
 
     if model == 'CNN':
         # load the classic Oxynet model configuration
@@ -415,8 +435,10 @@ def load_tf_generator():
     import pickle
     from io import BytesIO
     from pyoxynet import generator
-    import tensorflow as tf
     import os
+    
+    if not TENSORFLOW_AVAILABLE:
+        raise ImportError("TensorFlow is required for this function. Install with: pip install pyoxynet[full]")
 
     # load the classic Oxynet model configuration
     print('Classic Oxynet configuration model uploaded')

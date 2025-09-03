@@ -18,10 +18,16 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     packages=setuptools.find_packages(),
     install_requires=['importlib-resources', 'pandas', 
-    'uniplot', 'scipy', 'tensorflow', 'shap', 'chardet', 
+    'uniplot', 'scipy', 'shap', 'chardet', 
     'xlrd', 'openpyxl', 'matplotlib'],
+    extras_require={
+        "full": ["tensorflow"],  # Full TensorFlow for advanced features
+    },
     classifiers=[
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10", 
+        "Programming Language :: Python :: 3.11",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
@@ -35,5 +41,5 @@ setuptools.setup(
                        'AIS/*']},
     #exclude_package_data={
     #    '': 'debugging.py.c'},
-    python_requires='>=3.8',
+    python_requires='>=3.8,<3.12',
 )
