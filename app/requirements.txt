@@ -1,9 +1,13 @@
+--extra-index-url https://google-coral.github.io/py-repo/
+
 flask
 flasgger
-pyoxynet
 plotly
 faker
 chardet
 openpyxl
 xlrd
 matplotlib
+pyoxynet[tflite]==0.1.5
+tflite-runtime
+numpy==1.26.4
