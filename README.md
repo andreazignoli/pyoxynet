@@ -62,7 +62,7 @@
 
 *Pyoxynet* is a collection of algorithms developed in the context of the *Oxynet* project. All the algorithms are constituted by deep neural networks, i.e. models conceived to process cardiopulmonary exercise test data (CPET). 
 
-All the models are [Keras](https://keras.io/) models trained and tested with [Tensorflow](https://www.tensorflow.org/), and they are included in *Pyoxynet* only in their [TFLite](https://www.tensorflow.org/lite) inference version in versions <11.6. TFLite has been intentionally adopted to keep the package light and fast. However, after version 11.6 the [Tensorflow](https://www.tensorflow.org/) models are directly used.
+All the models are [Keras](https://keras.io/) models trained and tested with [Tensorflow](https://www.tensorflow.org/). Starting from version 0.1.5, *Pyoxynet* offers flexible deployment options with [TFLite](https://www.tensorflow.org/lite) as the recommended inference engine for production environments due to its lightweight footprint and optimized performance.
 
 To date, mainly two type of models are implemented: 
 
@@ -76,27 +76,50 @@ There is no need to clone this repo if you don't want to. You can just install t
 
 ### Pip install the package
 
-☝️ This package was developed under **Python 3.8**, so it might not work properly under older versions. The reason why the 3.8 version is not updated to more recent versions is related to the way packages are now distributed and installed for versions >3.8.   
+⚠️ **Important**: Starting from version 0.1.5, pyoxynet requires **Python 3.10** and **NumPy < 2.0** for optimal performance with TensorFlow Lite support.
 
-To the best of my knowledge, this is the best solution for those Python users who would like to have *Oxynet* algorithms always on the tip of their fingers. Assuming you have pip installed on your machine, begin with: 
+*Pyoxynet* now offers three installation options to match your specific needs:
 
+#### Lite version (default) - Recommended
+Perfect for data processing and analysis without model inference:
 ```sh
 pip install pyoxynet
 ```
 
-Or, alternatively, 
+#### TFLite version - For production inference
+Lightweight model inference with ~90% smaller footprint than full TensorFlow:
+```sh
+pip install "pyoxynet[tflite]" --extra-index-url https://google-coral.github.io/py-repo/
+```
 
+#### Full version - For development and training  
+Complete TensorFlow support for model training and advanced features:
+```sh
+pip install "pyoxynet[full]"
+```
+
+#### Alternative installation
+You can also install directly from the repository:
 ```sh
 pip install git+https://github.com/andreazignoli/pyoxynet.git#subdirectory=pyoxynet
 ```
 
-Packages that require addition extra url cannot be installed via *setuptools*, which lately allows and suggests to use *pip* when possible. To workaround this problem, TFLite is automatically installed with the following command the first time *pyoxynet* is imported:
+### Architecture Benefits in v0.1.5
+
+- **Faster deployment**: Reduced package size and installation time
+- **Better performance**: TFLite optimized inference for production environments  
+- **Flexibility**: Choose only the dependencies you need
+- **API compatibility**: Internal API uses TFLite for lightweight, fast predictions
+
+### Troubleshooting
+
+**NumPy Compatibility Issue**: If you encounter errors like "_ARRAY_API not found" or "numpy.core.multiarray failed to import" when using TFLite, install NumPy 1.x:
 
 ```sh
-pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
+pip install "numpy<2"
 ```
 
-Currently, The TFLite installation process is completed with a line command inside Python, *which is not the best solution* (I know...please get in touch if you know how to work around this). However, this is not a problem anymore after version 11.6 (TFLite is no longer adopted).
+This occurs because `tflite-runtime` was compiled against NumPy 1.x and is not yet compatible with NumPy 2.x. The app's requirements.txt automatically handles this by pinning to `numpy==1.26.4`.
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
