@@ -10,10 +10,10 @@ long_description = (this_directory/"README.md").read_text()
 
 setuptools.setup(
     name="pyoxynet",
-    version="0.0.19.5",
+    version="0.1.0",
     author="Andrea Zignoli",
     author_email="andrea.zignoli@unitn.it",
-    description="Python package of the Oxynet project",
+    description="AI-powered CPET analysis for exercise physiology research - lightweight and full installations available",
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=setuptools.find_packages(),
