@@ -10,7 +10,12 @@ import plotly.graph_objs as go
 import plotly
 from faker import Faker
 import pandas as pd
-import tensorflow as tf
+import tflite_runtime.interpreter as tflite
+import warnings
+
+# Suppress divide by zero warnings from numpy
+np.seterr(divide='ignore', invalid='ignore')
+warnings.filterwarnings('ignore', category=RuntimeWarning, message='divide by zero encountered')
 
 app = flask.Flask(__name__)
 Swagger(app)
@@ -23,7 +28,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Dictionary to store pre-loaded TFLite models
 models = {
-    'model_1': tf.lite.Interpreter('tf_lite_models/tfl_model.tflite')
+    'model_1': tflite.Interpreter(model_path='tf_lite_models/tfl_model.tflite')
 }
 
 def CPET_var_plot_vs_CO2(df, var_list=[]):
@@ -283,15 +288,18 @@ def tf_lite_model_inference(tf_lite_model=[], input_df=[], past_points=40, n_inp
     df = df.drop_duplicates('time')
     df['timestamp'] = pd.to_datetime(df['time'], unit='s')
     df = df.set_index('timestamp')
-    df = df.resample('1S').mean()
+    df = df.resample('1s').mean()
     df = df.interpolate()
-    df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().fillna(method='bfill').fillna(
-        method='ffill')
+    df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().bfill().ffill()
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
 
     if 'VCO2VO2_I' not in df.columns:
-        df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
+        # Avoid division by zero
+        with np.errstate(divide='ignore', invalid='ignore'):
+            df['VCO2VO2_I'] = np.where(df['VO2_I'] != 0, 
+                                      df['VCO2_I'].values/df['VO2_I'].values, 
+                                      0)
     filter_vars = ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I']
     XN = df.copy()
     XN['VO2_I'] = (XN['VO2_I'] - XN['VO2_I'].min()) / (
