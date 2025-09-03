@@ -3,7 +3,4 @@ flasgger
 pyoxynet
 plotly
 faker
-chardet
-openpyxl
-xlrd
-matplotlib
+tflite_runtime

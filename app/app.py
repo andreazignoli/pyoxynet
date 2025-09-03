@@ -10,7 +10,17 @@ import plotly.graph_objs as go
 import plotly
 from faker import Faker
 import pandas as pd
-import tensorflow as tf
+# Use TensorFlow Lite runtime instead of full TensorFlow
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    # Fallback to tensorflow if available
+    try:
+        import tensorflow as tf
+        tflite = tf.lite
+    except ImportError:
+        tflite = None
+        print("Warning: Neither tflite_runtime nor tensorflow available")
 
 app = flask.Flask(__name__)
 Swagger(app)
@@ -22,9 +32,19 @@ UPLOAD_FOLDER = os.path.join('staticFiles', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Dictionary to store pre-loaded TFLite models
-models = {
-    'model_1': tf.lite.Interpreter('tf_lite_models/tfl_model.tflite')
-}
+models = {}
+
+# Load TFLite model with error handling
+if tflite:
+    try:
+        models['model_1'] = tflite.Interpreter('tf_lite_models/tfl_model.tflite')
+        print("✅ TFLite model loaded successfully")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not load TFLite model: {e}")
+        models['model_1'] = None
+else:
+    print("⚠️  Warning: TensorFlow Lite not available")
+    models['model_1'] = None
 
 def CPET_var_plot_vs_CO2(df, var_list=[]):
     import json
@@ -600,7 +620,21 @@ def CPET_generation():
 
 @app.route('/CPET_plot', methods=['GET', 'POST'])
 def CPET_plot():
-
+    
+    # Initialize session variables if they don't exist
+    if 'test_type' not in session:
+        session['test_type'] = 'NONE'
+    if 'correct' not in session:
+        session['correct'] = 0
+    if 'wrong' not in session:
+        session['wrong'] = 0
+    if 'tot_test' not in session:
+        session['tot_test'] = 0
+    
+    if request.method == 'GET':
+        # Handle GET requests - redirect to homepage or return a simple response
+        return redirect('/')
+    
     if request.method == 'POST':
         if request.form.get('action1') == session['test_type'] or request.form.get('action2') == session['test_type']:
             session['correct'] = session['correct'] + 1
@@ -614,10 +648,16 @@ def CPET_plot():
                 fitness_group = args.get("fitness_group", default=None, type=int)
 
                 if random.randint(0, 1) == 1:
-                    generator = pyoxynet.utilities.load_tf_generator()
-                    df, CPET_data = pyoxynet.utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group, noise_factor=None)
-                    print('Test was FAKE')
-                    session['test_type'] = 'FAKE'
+                    try:
+                        generator = pyoxynet.utilities.load_tf_generator()
+                        df, CPET_data = pyoxynet.utilities.generate_CPET(generator, plot=False, fitness_group=fitness_group, noise_factor=None)
+                        print('Test was FAKE')
+                        session['test_type'] = 'FAKE'
+                    except Exception as e:
+                        print(f'⚠️  Could not generate fake data: {e}. Using real data instead.')
+                        df, CPET_data = pyoxynet.utilities.draw_real_test()
+                        print('Test was REAL (fallback)')
+                        session['test_type'] = 'REAL'
                 else:
                     df, CPET_data = pyoxynet.utilities.draw_real_test()
                     print('Test was REAL')

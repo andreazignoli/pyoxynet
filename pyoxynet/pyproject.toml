@@ -1,6 +1,45 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyoxynet"
+version = "0.1.0"
+authors = [
+    {name = "Andrea Zignoli", email = "andrea.zignoli@unitn.it"}
+]
+description = "AI-powered CPET analysis for exercise physiology research - lightweight and full installations available"
+readme = "README.md"
+requires-python = ">=3.8,<3.12"
+license = {text = "CC BY-NC-SA 4.0"}
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "importlib-resources",
+    "pandas",
+    "uniplot",
+    "scipy",
+    "shap",
+    "chardet",
+    "xlrd",
+    "openpyxl",
+    "matplotlib"
+]
+
+[project.optional-dependencies]
+full = ["tensorflow"]
+
+[project.urls]
+Homepage = "https://github.com/andreazignoli/pyoxynet"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+"*" = ["regressor/*", "generator/*", "data_test/*", "murias_lab/*", "TCN/*", "LSTMGRUModel/*", "AIS/*"]
