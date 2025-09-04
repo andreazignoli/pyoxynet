@@ -14,21 +14,21 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
-COPY . .
+# Copy the Flask application code to /app
+COPY app /app
 
 # Create necessary directories
-RUN mkdir -p staticFiles/uploads
+RUN mkdir -p /app/staticFiles/uploads
 
 # Set environment variables
-ENV FLASK_APP=app/app.py
+ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
 # Expose port
 EXPOSE $PORT
 
-# Change to app directory for proper model path resolution
-WORKDIR /app/app
+# Set working directory to the Flask app
+WORKDIR /app
 
 # Run the application
-CMD gunicorn --bind 0.0.0.0:$PORT app:app
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT app:app"]
