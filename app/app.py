@@ -101,13 +101,15 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0, 0, 0]):
     VT1_oxynet = VT[2]
     VT2_oxynet = VT[3]
 
+    print(var_list)
+    print(df)
+
     labels_dict = {}
 
     for lab_ in var_list:
         labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
 
-    fig = px.scatter(df.iloc[np.arange(0, len(df))], x="VO2_I", y=var_list,
-                     color_discrete_sequence=['white', 'gray'])
+    fig = px.scatter(df.iloc[np.arange(0, len(df))], x="VO2_I", y=var_list)
     fig.update_traces(marker=dict(size=8, line=dict(width=1, color='black'), color='#51a1ff', opacity=0.7))
 
     if VT1 > 0:
@@ -575,6 +577,8 @@ def read_csv_app():
         t.raw_data_frame = t.raw_data_frame.rename(columns={'PetCO2': 'PetCO2_I'})
         t.raw_data_frame = t.raw_data_frame.rename(columns={'VEVCO2': 'VEVCO2_I'})
         t.raw_data_frame = t.raw_data_frame.rename(columns={'VEVO2': 'VEVO2_I'})
+
+        print(t.raw_data_frame)
 
         plot_VEvsVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VE_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
         plot_VCO2vsVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])

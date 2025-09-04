@@ -1,4 +1,9 @@
 flask
-build
-twine
-sphinx
+flask-swagger
+flasgger
+pandas
+numpy
+plotly>=5.0,<6.0
+tflite-runtime
+faker
+gunicorn
