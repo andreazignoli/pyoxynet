@@ -48,7 +48,7 @@
     <br />
     <a href="https://www.overleaf.com/read/zgsfxmvcbhkz">Overleaf</a>
     ·
-    <a href="https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/">Web app</a>
+    <a href="https://pyoxynet-lite-app-b415901c79ab.herokuapp.com/">Web app</a>
     ·
     <a href="https://pypi.org/project/pyoxynet/">Pypi</a>
     ·
@@ -191,23 +191,23 @@ Importantly, given that RF data is generated, a complete breath-by-breath datase
 
 ## Flask-Pyoxynet inference app and API
 
-A [Flask](https://flask.palletsprojects.com/en/2.0.x/) inference/generation app called Flask-Pyoxynet has been deployed on a [Amazon Lightsail](https://aws.amazon.com/getting-started/hands-on/serve-a-flask-app/) private server. Currently, flask-pyoxynet runs on Lightsail containers service. 
+A [Flask](https://flask.palletsprojects.com/en/2.0.x/) inference/generation app called Flask-Pyoxynet has been deployed on [Heroku](https://www.heroku.com/) using containerized deployment with Docker. The app runs the lightweight TFLite version of Pyoxynet for optimal performance and reduced resource usage.
 
 It is possible therefore to call Flask-Pyoxynet from a terminal, and provide data in json format or in csv format. In case of json format you can have:
 
 ```sh
-curl -X POST https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/read_json_ET -d @test_data.json
+curl -X POST https://pyoxynet-lite-app-b415901c79ab.herokuapp.com/read_json_ET -d @test_data.json
 ```
 
 But if you have your file in csv format you can type:
 
 ```sh
-curl -X POST -F 'file=@YOUR_CSV_FILE.csv' https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/curl_csv
+curl -X POST -F 'file=@YOUR_CSV_FILE.csv' https://pyoxynet-lite-app-b415901c79ab.herokuapp.com/curl_csv
 ```
 
-It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possible to directly check the *generated* example at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_plot). It is also possible to directly retrieve *generated* data in *json* format at this [address](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com/CPET_generation). The app can also be used as test to check how realistic the fake examples.
+It is possible to check the required keys of the json dictionary in *app/test_data/test_data.json*. Alternatively, it is possible to directly check the *generated* example at this [address](https://pyoxynet-lite-app-b415901c79ab.herokuapp.com/CPET_plot). It is also possible to directly retrieve *generated* data in *json* format at this [address](https://pyoxynet-lite-app-b415901c79ab.herokuapp.com/CPET_generation). The app can also be used as test to check how realistic the fake examples.
 
-👉 [TRY THE APP HERE](https://flask-service.ci6m7bo8luvmq.eu-central-1.cs.amazonlightsail.com) 👈
+👉 [TRY THE APP HERE](https://pyoxynet-lite-app-b415901c79ab.herokuapp.com/) 👈
 
 <!-- ROADMAP -->
 ## Roadmap
