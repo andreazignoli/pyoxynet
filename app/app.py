@@ -603,6 +603,13 @@ def read_csv_app():
         plot_VEVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VEVO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
         plot_VEVCO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VEVCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
 
+        # Check if 'load' column exists and create load vs time plot
+        plot_load = None
+        show_load_plot = False
+        if 'load' in t.raw_data_frame.columns:
+            plot_load = CPET_var_plot(t.raw_data_frame, var_list=['load'], VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
+            show_load_plot = True
+
         return render_template('plot_interpretation.html',
                                        VCO2vsVO2=plot_VCO2vsVO2,
                                        VEvsVO2=plot_VEvsVO2,
@@ -610,7 +617,9 @@ def read_csv_app():
                                        PetCO2=plot_PetCO2,
                                        VEVO2=plot_VEVO2,
                                        VEVCO2=plot_VEVCO2,
-                                       CPET_data=dict_estimates)
+                                       CPET_data=dict_estimates,
+                                       load_plot=plot_load,
+                                       show_load_plot=show_load_plot)
     except:
         if 'file' not in request.files:
             dict_estimates = 'No file part'
