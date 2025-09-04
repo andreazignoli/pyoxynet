@@ -19,7 +19,6 @@ COPY . .
 
 # Create necessary directories
 RUN mkdir -p staticFiles/uploads
-RUN mkdir -p tf_lite_models
 
 # Set environment variables
 ENV FLASK_APP=app/app.py
@@ -28,5 +27,8 @@ ENV FLASK_ENV=production
 # Expose port
 EXPOSE $PORT
 
+# Change to app directory for proper model path resolution
+WORKDIR /app/app
+
 # Run the application
-CMD gunicorn --bind 0.0.0.0:$PORT app.app:app
+CMD gunicorn --bind 0.0.0.0:$PORT app:app

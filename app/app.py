@@ -27,8 +27,24 @@ UPLOAD_FOLDER = os.path.join('staticFiles', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Dictionary to store pre-loaded TFLite models
+# Use absolute path that works both locally and in Docker
+current_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(current_dir, 'tf_lite_models', 'tfl_model.tflite')
+
+print(f"Current directory: {current_dir}")
+print(f"Looking for model at: {model_path}")
+print(f"Model file exists: {os.path.exists(model_path)}")
+
+if not os.path.exists(model_path):
+    # Try parent directory
+    parent_model_path = os.path.join(current_dir, '..', 'tf_lite_models', 'tfl_model.tflite')
+    print(f"Trying parent directory: {parent_model_path}")
+    print(f"Parent model file exists: {os.path.exists(parent_model_path)}")
+    if os.path.exists(parent_model_path):
+        model_path = parent_model_path
+
 models = {
-    'model_1': tflite.Interpreter(model_path='tf_lite_models/tfl_model.tflite')
+    'model_1': tflite.Interpreter(model_path=model_path)
 }
 
 def CPET_var_plot_vs_CO2(df, var_list=[]):
