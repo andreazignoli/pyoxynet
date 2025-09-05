@@ -433,22 +433,56 @@ def create_substrate_vs_vo2max_plot(df):
     if not percent_vo2max:  # No valid points found
         return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
     
+    # Create polynomial fits (3rd degree with y-intercept = 0)
+    # For polynomial with y-intercept = 0: y = ax + bx² + cx³
+    percent_vo2max_array = np.array(percent_vo2max)
+    fat_rates_array = np.array(fat_oxidation_rates)
+    cho_rates_array = np.array(cho_consumption_rates)
+    
+    # Create design matrix for polynomial without constant term (forces y-intercept = 0)
+    X = np.column_stack([percent_vo2max_array, percent_vo2max_array**2, percent_vo2max_array**3])
+    
+    # Fit polynomials using least squares
+    fat_coeffs = np.linalg.lstsq(X, fat_rates_array, rcond=None)[0]
+    cho_coeffs = np.linalg.lstsq(X, cho_rates_array, rcond=None)[0]
+    
+    # Generate smooth curves for plotting
+    x_smooth = np.linspace(min(percent_vo2max), max(percent_vo2max), 100)
+    fat_fitted = fat_coeffs[0]*x_smooth + fat_coeffs[1]*x_smooth**2 + fat_coeffs[2]*x_smooth**3
+    cho_fitted = cho_coeffs[0]*x_smooth + cho_coeffs[1]*x_smooth**2 + cho_coeffs[2]*x_smooth**3
+    
     # Create subplot with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # Add fat oxidation trace on primary y-axis
+    # Add fat oxidation data points on primary y-axis
     fig.add_trace(
-        go.Scatter(x=percent_vo2max, y=fat_oxidation_rates, name="Fat Oxidation", 
-                  mode='markers+lines', marker=dict(size=10, color='#ff6b35'),
-                  line=dict(color='#ff6b35', width=2)),
+        go.Scatter(x=percent_vo2max, y=fat_oxidation_rates, name="Fat Oxidation (Data)", 
+                  mode='markers', marker=dict(size=8, color='#ff6b35'),
+                  showlegend=True),
         secondary_y=False,
     )
     
-    # Add CHO consumption trace on secondary y-axis
+    # Add fat oxidation fitted curve on primary y-axis
     fig.add_trace(
-        go.Scatter(x=percent_vo2max, y=cho_consumption_rates, name="CHO Consumption", 
-                  mode='markers+lines', marker=dict(size=10, color='#2ECC71'),
-                  line=dict(color='#2ECC71', width=2)),
+        go.Scatter(x=x_smooth, y=fat_fitted, name="Fat Oxidation (Fit)", 
+                  mode='lines', line=dict(color='#ff6b35', width=3, dash='solid'),
+                  showlegend=True),
+        secondary_y=False,
+    )
+    
+    # Add CHO consumption data points on secondary y-axis
+    fig.add_trace(
+        go.Scatter(x=percent_vo2max, y=cho_consumption_rates, name="CHO Consumption (Data)", 
+                  mode='markers', marker=dict(size=8, color='#2ECC71'),
+                  showlegend=True),
+        secondary_y=True,
+    )
+    
+    # Add CHO consumption fitted curve on secondary y-axis
+    fig.add_trace(
+        go.Scatter(x=x_smooth, y=cho_fitted, name="CHO Consumption (Fit)", 
+                  mode='lines', line=dict(color='#2ECC71', width=3, dash='solid'),
+                  showlegend=True),
         secondary_y=True,
     )
     
@@ -485,11 +519,26 @@ def create_substrate_vs_vo2max_plot(df):
     
     # Update layout
     fig.update_layout(
-        title="Substrate Utilization vs % VO₂max",
+        title="Substrate Utilization vs % VO₂max with Polynomial Fits",
         plot_bgcolor='white',
         paper_bgcolor='white',
-        legend=dict(x=0.02, y=0.98),
-        hovermode='x unified'
+        legend=dict(x=0.02, y=0.98, bgcolor='rgba(255,255,255,0.8)'),
+        hovermode='x unified',
+        annotations=[
+            dict(
+                text=f"Polynomial fits (y-intercept = 0):<br>" +
+                     f"Fat: y = {fat_coeffs[0]:.4f}x + {fat_coeffs[1]:.6f}x² + {fat_coeffs[2]:.8f}x³<br>" +
+                     f"CHO: y = {cho_coeffs[0]:.4f}x + {cho_coeffs[1]:.6f}x² + {cho_coeffs[2]:.8f}x³",
+                xref="paper", yref="paper",
+                x=0.98, y=0.02,
+                xanchor='right', yanchor='bottom',
+                showarrow=False,
+                font=dict(size=10, color='#666'),
+                bgcolor='rgba(255,255,255,0.8)',
+                bordercolor='#ddd',
+                borderwidth=1
+            )
+        ]
     )
     
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
