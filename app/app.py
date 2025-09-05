@@ -370,6 +370,130 @@ def create_fat_oxidation_plot(df):
     
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+def create_substrate_vs_vo2max_plot(df):
+    """
+    Create substrate utilization plot vs %VO2max
+    
+    Parameters:
+        df (DataFrame): Raw CPET data with load, VO2_I, VCO2_I columns
+        
+    Returns:
+        str: JSON string for plotly plot
+    """
+    import json
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+    import numpy as np
+    
+    # Calculate VO2max as the maximum of 20-second rolling average
+    # Assuming data is sampled every second, 20-second window
+    rolling_vo2 = df['VO2_I'].rolling(window=20, min_periods=10).mean()
+    vo2_max = rolling_vo2.max()
+    
+    # Find load change points (where load increases)
+    load_diff = df['load'].diff()
+    change_points = df[load_diff > 0].index.tolist()
+    
+    # Add the end point to capture the last steady state
+    if len(df) - 1 not in change_points:
+        change_points.append(len(df) - 1)
+    
+    percent_vo2max = []
+    fat_oxidation_rates = []
+    cho_consumption_rates = []
+    
+    for point in change_points:
+        # Get 60 samples before this change point (or all available)
+        start_idx = max(0, point - 60)
+        end_idx = point
+        
+        if end_idx - start_idx < 10:  # Skip if too few samples
+            continue
+            
+        # Get the data slice
+        slice_data = df.iloc[start_idx:end_idx]
+        
+        # Calculate averages
+        avg_vo2 = slice_data['VO2_I'].mean() * 0.001  # Convert to L/min
+        avg_vco2 = slice_data['VCO2_I'].mean() * 0.001  # Convert to L/min
+        
+        # Calculate %VO2max
+        percent_vo2 = (avg_vo2 * 1000 / vo2_max) * 100  # Convert back to ml/min for %
+        
+        # Calculate fat oxidation rate: 1.695*VO2 - 1.701*VCO2 (g/min)
+        fat_rate = 1.695 * avg_vo2 - 1.701 * avg_vco2
+        
+        # Calculate CHO consumption rate: 4.585*VCO2 - 3.226*VO2 (g/min)
+        cho_rate = 4.585 * avg_vco2 - 3.226 * avg_vo2
+        
+        percent_vo2max.append(percent_vo2)
+        fat_oxidation_rates.append(fat_rate)
+        cho_consumption_rates.append(cho_rate)
+    
+    if not percent_vo2max:  # No valid points found
+        return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    # Create subplot with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    # Add fat oxidation trace on primary y-axis
+    fig.add_trace(
+        go.Scatter(x=percent_vo2max, y=fat_oxidation_rates, name="Fat Oxidation", 
+                  mode='markers+lines', marker=dict(size=10, color='#ff6b35'),
+                  line=dict(color='#ff6b35', width=2)),
+        secondary_y=False,
+    )
+    
+    # Add CHO consumption trace on secondary y-axis
+    fig.add_trace(
+        go.Scatter(x=percent_vo2max, y=cho_consumption_rates, name="CHO Consumption", 
+                  mode='markers+lines', marker=dict(size=10, color='#2ECC71'),
+                  line=dict(color='#2ECC71', width=2)),
+        secondary_y=True,
+    )
+    
+    # Set x-axis title with grid styling
+    fig.update_xaxes(
+        title_text="% VO₂max", 
+        showgrid=True, 
+        gridwidth=1, 
+        gridcolor='lightgray',
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
+    
+    # Set y-axes titles with grid styling
+    fig.update_yaxes(
+        title_text="Fat Oxidation Rate (g/min)", 
+        secondary_y=False, 
+        showgrid=True, 
+        gridwidth=1, 
+        gridcolor='lightgray',
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
+    fig.update_yaxes(
+        title_text="CHO Consumption Rate (g/min)", 
+        secondary_y=True, 
+        showgrid=False,
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
+    
+    # Update layout
+    fig.update_layout(
+        title="Substrate Utilization vs % VO₂max",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        legend=dict(x=0.02, y=0.98),
+        hovermode='x unified'
+    )
+    
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
 def create_load_with_gas_exchange_plot(df, VT=[300, 400]):
     """
     Create load vs time plot with VO2 and VCO2 on secondary y-axis
@@ -814,6 +938,7 @@ def read_csv_app():
         # Check if 'load' column exists and create load vs time plot
         plot_load = None
         plot_fat_oxidation = None
+        plot_substrate_vo2max = None
         show_load_plot = False
         show_fat_plot = False
         
@@ -824,6 +949,7 @@ def read_csv_app():
             # Create fat oxidation analysis if we have the required columns
             if 'VO2_I' in t.raw_data_frame.columns and 'VCO2_I' in t.raw_data_frame.columns:
                 plot_fat_oxidation = create_fat_oxidation_plot(t.raw_data_frame)
+                plot_substrate_vo2max = create_substrate_vs_vo2max_plot(t.raw_data_frame)
                 show_fat_plot = True
 
         return render_template('plot_interpretation.html',
@@ -837,6 +963,7 @@ def read_csv_app():
                                        load_plot=plot_load,
                                        show_load_plot=show_load_plot,
                                        fat_oxidation_plot=plot_fat_oxidation,
+                                       substrate_vo2max_plot=plot_substrate_vo2max,
                                        show_fat_plot=show_fat_plot)
     except:
         if 'file' not in request.files:
