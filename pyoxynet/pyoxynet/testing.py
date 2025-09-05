@@ -3,6 +3,7 @@ import numpy as np
 from pandas import read_csv
 from scipy.ndimage import uniform_filter1d
 import csv
+from . import utilities
 
 class Test:
 
@@ -169,7 +170,6 @@ class Test:
 
     def load_file(self):
 
-        from . import utilities
         df = self.df
         filter_size = self.filter_size
 
@@ -688,6 +688,10 @@ class Test:
                     self.VE[i - 2] = float(df.VE_ergo.values[i])
                 self.PetO2[i - 2] = float(df.PetO2.values[i])
                 self.PetCO2[i - 2] = float(df.PetCO2.values[i])
+                try:
+                    self.load[i - 2] = float(df.Potenza.values[i])
+                except:
+                    pass
 
         if self.metabolimeter == 'cortex_bruce':
 
@@ -1310,6 +1314,13 @@ class Test:
         self.PetO2_I = np.interp(self.time_I, self.time_F, self.PetO2_F)
         self.PetCO2_I = np.interp(self.time_I, self.time_F, self.PetCO2_F)
 
+        try:
+            self.load = np.nan_to_num(self.load)
+            self.load_F = self.load[:max_VE_idx]
+            self.load_I = np.interp(self.time_I, self.time_F, self.load_F)
+        except:
+            pass
+
     def print_details(self):
         if self.gender == "M":
             print("The name of the participant is: " + self.name + '.\n'
@@ -1338,6 +1349,11 @@ class Test:
         self.raw_data_frame['PetO2VO2'] = self.PetO2 / self.VO2
         self.raw_data_frame['PetCO2VO2'] = self.PetCO2 / self.VO2
 
+        try:
+            self.raw_data_frame['load'] = self.load
+        except:
+            pass
+
         if self.metabolimeter == 'VO2Master':
             # putting to zero
             self.raw_data_frame['VEVCO2'] = self.VCO2
@@ -1356,6 +1372,11 @@ class Test:
         self.data_frame['RF_I'] = self.Rf_I
         self.data_frame['PetO2_I'] = self.PetO2_I
         self.data_frame['PetCO2_I'] = self.PetCO2_I
+
+        try:
+            self.data_frame['load_I'] = self.load_I
+        except:
+            pass
 
         # variables normalised on VO2
         self.data_frame['VEVO2_I'] = self.VE_I / self.VO2_I
