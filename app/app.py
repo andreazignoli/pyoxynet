@@ -336,27 +336,27 @@ def create_load_with_gas_exchange_plot(df, VT=[300, 400]):
     # Create subplot with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # Add load trace on primary y-axis
-    fig.add_trace(
-        go.Scatter(x=df["time"], y=df["load"], name="Load", 
-                  line=dict(color='#ff6b35', width=3)),
-        secondary_y=False,
-    )
-    
-    # Add VO2 and VCO2 traces on secondary y-axis
+    # Add VO2 and VCO2 traces on secondary y-axis first (behind load)
     if 'VO2_I' in df.columns:
         fig.add_trace(
             go.Scatter(x=df["time"], y=df["VO2_I"], name="VO₂", 
-                      line=dict(color='#2E86C1', width=2)),
+                      line=dict(color='#3498DB', width=2)),  # Blue-ish
             secondary_y=True,
         )
     
     if 'VCO2_I' in df.columns:
         fig.add_trace(
             go.Scatter(x=df["time"], y=df["VCO2_I"], name="VCO₂", 
-                      line=dict(color='#28B463', width=2)),
+                      line=dict(color='#E74C3C', width=2)),  # Red-ish
             secondary_y=True,
         )
+    
+    # Add load trace on primary y-axis last (on top)
+    fig.add_trace(
+        go.Scatter(x=df["time"], y=df["load"], name="Load", 
+                  line=dict(color='#ff6b35', width=3)),
+        secondary_y=False,
+    )
     
     # Add vertical lines for thresholds
     fig.add_vline(x=VT1_oxynet, line_width=2, line_color="dodgerblue", 
