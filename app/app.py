@@ -303,7 +303,7 @@ def create_fat_oxidation_plot(df):
     
     # Create the plot
     fig = px.scatter(x=avg_loads, y=fat_oxidation_rates,
-                    labels={'x': 'Average Load (Watts)', 'y': 'Fat Oxidation Rate (ml/min)'},
+                    labels={'x': 'Average Load (Watts)', 'y': 'Fat Oxidation Rate (gFAT/min)'},
                     title='Fat Oxidation Rate vs Load')
     
     fig.update_traces(marker=dict(size=10, color='#ff6b35'))
@@ -312,6 +312,72 @@ def create_fat_oxidation_plot(df):
         yaxis=dict(title='Fat Oxidation Rate (ml/min)', showgrid=True),
         plot_bgcolor='white',
         paper_bgcolor='white'
+    )
+    
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+def create_load_with_gas_exchange_plot(df, VT=[300, 400]):
+    """
+    Create load vs time plot with VO2 and VCO2 on secondary y-axis
+    
+    Parameters:
+        df (DataFrame): Raw CPET data with time, load, VO2_I, VCO2_I columns
+        VT (list): Ventilatory thresholds [VT1, VT2, VT1_oxynet, VT2_oxynet]
+        
+    Returns:
+        str: JSON string for plotly plot
+    """
+    import json
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+    
+    VT1, VT2, VT1_oxynet, VT2_oxynet = VT
+    
+    # Create subplot with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    # Add load trace on primary y-axis
+    fig.add_trace(
+        go.Scatter(x=df["time"], y=df["load"], name="Load", 
+                  line=dict(color='#ff6b35', width=3)),
+        secondary_y=False,
+    )
+    
+    # Add VO2 and VCO2 traces on secondary y-axis
+    if 'VO2_I' in df.columns:
+        fig.add_trace(
+            go.Scatter(x=df["time"], y=df["VO2_I"], name="VO₂", 
+                      line=dict(color='#2E86C1', width=2)),
+            secondary_y=True,
+        )
+    
+    if 'VCO2_I' in df.columns:
+        fig.add_trace(
+            go.Scatter(x=df["time"], y=df["VCO2_I"], name="VCO₂", 
+                      line=dict(color='#28B463', width=2)),
+            secondary_y=True,
+        )
+    
+    # Add vertical lines for thresholds
+    fig.add_vline(x=VT1_oxynet, line_width=2, line_color="dodgerblue", 
+                  annotation_text="VT1", annotation_position="top")
+    fig.add_vline(x=VT2_oxynet, line_width=2, line_color="red", 
+                  annotation_text="VT2", annotation_position="top")
+    
+    # Set x-axis title
+    fig.update_xaxes(title_text="Time (min)", showgrid=True)
+    
+    # Set y-axes titles
+    fig.update_yaxes(title_text="Load (Watts)", secondary_y=False, showgrid=True)
+    fig.update_yaxes(title_text="Gas Exchange (ml/min)", secondary_y=True, showgrid=False)
+    
+    # Update layout
+    fig.update_layout(
+        title="Load vs Time with Gas Exchange",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        legend=dict(x=0.02, y=0.98),
+        hovermode='x unified'
     )
     
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
@@ -674,7 +740,7 @@ def read_csv_app():
         show_fat_plot = False
         
         if 'load' in t.raw_data_frame.columns:
-            plot_load = CPET_var_plot(t.raw_data_frame, var_list=['load'], VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
+            plot_load = create_load_with_gas_exchange_plot(t.raw_data_frame, VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
             show_load_plot = True
             
             # Create fat oxidation analysis if we have the required columns
