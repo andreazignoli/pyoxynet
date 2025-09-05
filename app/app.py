@@ -197,11 +197,10 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     for lab_ in var_list:
         labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
 
-    fig = px.line(df.iloc[np.arange(0, len(df))], x="time", y=var_list,
-                  color_discrete_sequence=['white', 'gray', 'black'])
+    fig = px.line(df.iloc[np.arange(0, len(df))], x="time", y=var_list)
     fig.update_traces(marker=dict(size=8, line=dict(width=2, color='DarkSlateGrey')))
-    fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
-    fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
+    # fig.add_vline(x=VT1, line_width=3, line_dash="dash", line_color="dodgerblue", annotation_text="VT1")
+    # fig.add_vline(x=VT2, line_width=3, line_dash="dash", line_color="red", annotation_text="VT2")
     fig.add_vline(x=VT1_oxynet, line_width=1, line_color="dodgerblue")
     fig.add_vline(x=VT2_oxynet, line_width=1, line_color="red")
 
@@ -251,6 +250,71 @@ def CPET_var_plot(df, var_list=[], VT=[300, 400]):
     graphJSON = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     return graphJSON
+
+def create_fat_oxidation_plot(df):
+    """
+    Create fat oxidation rate plot based on load change points
+    
+    Parameters:
+        df (DataFrame): Raw CPET data with load, VO2_I, VCO2_I columns
+        
+    Returns:
+        str: JSON string for plotly plot
+    """
+    import json
+    import plotly.express as px
+    import numpy as np
+    
+    # Find load change points (where load increases)
+    load_diff = df['load'].diff()
+    change_points = df[load_diff > 0].index.tolist()
+    
+    # Add the end point to capture the last steady state
+    if len(df) - 1 not in change_points:
+        change_points.append(len(df) - 1)
+    
+    avg_loads = []
+    fat_oxidation_rates = []
+    
+    for point in change_points:
+        # Get 60 samples before this change point (or all available)
+        start_idx = max(0, point - 60)
+        end_idx = point
+        
+        if end_idx - start_idx < 10:  # Skip if too few samples
+            continue
+            
+        # Get the data slice
+        slice_data = df.iloc[start_idx:end_idx]
+        
+        # Calculate averages
+        avg_load = slice_data['load'].mean()
+        avg_vo2 = slice_data['VO2_I'].mean()
+        avg_vco2 = slice_data['VCO2_I'].mean()
+        
+        # Calculate fat oxidation rate: 1.67*VO2 - 1.67*VCO2
+        fat_rate = 1.67 * avg_vo2 - 1.67 * avg_vco2
+        
+        avg_loads.append(avg_load)
+        fat_oxidation_rates.append(fat_rate)
+    
+    if not avg_loads:  # No valid points found
+        return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    # Create the plot
+    fig = px.scatter(x=avg_loads, y=fat_oxidation_rates,
+                    labels={'x': 'Average Load (Watts)', 'y': 'Fat Oxidation Rate (ml/min)'},
+                    title='Fat Oxidation Rate vs Load')
+    
+    fig.update_traces(marker=dict(size=10, color='#ff6b35'))
+    fig.update_layout(
+        xaxis=dict(title='Average Load (Watts)', showgrid=True),
+        yaxis=dict(title='Fat Oxidation Rate (ml/min)', showgrid=True),
+        plot_bgcolor='white',
+        paper_bgcolor='white'
+    )
+    
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 def test_tf_lite_model(interpreter):
     """Test if the model is running correctly
@@ -605,10 +669,18 @@ def read_csv_app():
 
         # Check if 'load' column exists and create load vs time plot
         plot_load = None
+        plot_fat_oxidation = None
         show_load_plot = False
+        show_fat_plot = False
+        
         if 'load' in t.raw_data_frame.columns:
             plot_load = CPET_var_plot(t.raw_data_frame, var_list=['load'], VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
             show_load_plot = True
+            
+            # Create fat oxidation analysis if we have the required columns
+            if 'VO2_I' in t.raw_data_frame.columns and 'VCO2_I' in t.raw_data_frame.columns:
+                plot_fat_oxidation = create_fat_oxidation_plot(t.raw_data_frame)
+                show_fat_plot = True
 
         return render_template('plot_interpretation.html',
                                        VCO2vsVO2=plot_VCO2vsVO2,
@@ -619,7 +691,9 @@ def read_csv_app():
                                        VEVCO2=plot_VEVCO2,
                                        CPET_data=dict_estimates,
                                        load_plot=plot_load,
-                                       show_load_plot=show_load_plot)
+                                       show_load_plot=show_load_plot,
+                                       fat_oxidation_plot=plot_fat_oxidation,
+                                       show_fat_plot=show_fat_plot)
     except:
         if 'file' not in request.files:
             dict_estimates = 'No file part'
