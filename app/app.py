@@ -275,6 +275,7 @@ def create_fat_oxidation_plot(df):
     
     avg_loads = []
     fat_oxidation_rates = []
+    cho_consumption_rates = []
     
     for point in change_points:
         # Get 60 samples before this change point (or all available)
@@ -289,29 +290,58 @@ def create_fat_oxidation_plot(df):
         
         # Calculate averages
         avg_load = slice_data['load'].mean()
-        avg_vo2 = slice_data['VO2_I'].mean()
-        avg_vco2 = slice_data['VCO2_I'].mean()
+        avg_vo2 = slice_data['VO2_I'].mean() * 0.001  # Convert to L/min
+        avg_vco2 = slice_data['VCO2_I'].mean() * 0.001  # Convert to L/min
         
-        # Calculate fat oxidation rate: 1.67*VO2 - 1.67*VCO2
-        fat_rate = 1.67 * avg_vo2 - 1.67 * avg_vco2
+        # Calculate fat oxidation rate: 1.695*VO2 - 1.701*VCO2 (g/min)
+        fat_rate = 1.695 * avg_vo2 - 1.701 * avg_vco2
+        
+        # Calculate CHO consumption rate: 4.585*VCO2 - 3.226*VO2 (g/min)
+        cho_rate = 4.585 * avg_vco2 - 3.226 * avg_vo2
         
         avg_loads.append(avg_load)
         fat_oxidation_rates.append(fat_rate)
+        cho_consumption_rates.append(cho_rate)
     
     if not avg_loads:  # No valid points found
         return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
     
-    # Create the plot
-    fig = px.scatter(x=avg_loads, y=fat_oxidation_rates,
-                    labels={'x': 'Average Load (Watts)', 'y': 'Fat Oxidation Rate (gFAT/min)'},
-                    title='Fat Oxidation Rate vs Load')
+    # Create subplot with secondary y-axis
+    from plotly.subplots import make_subplots
+    import plotly.graph_objects as go
     
-    fig.update_traces(marker=dict(size=10, color='#ff6b35'))
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    
+    # Add fat oxidation trace on primary y-axis
+    fig.add_trace(
+        go.Scatter(x=avg_loads, y=fat_oxidation_rates, name="Fat Oxidation", 
+                  mode='markers+lines', marker=dict(size=10, color='#ff6b35'),
+                  line=dict(color='#ff6b35', width=2)),
+        secondary_y=False,
+    )
+    
+    # Add CHO consumption trace on secondary y-axis
+    fig.add_trace(
+        go.Scatter(x=avg_loads, y=cho_consumption_rates, name="CHO Consumption", 
+                  mode='markers+lines', marker=dict(size=10, color='#2ECC71'),
+                  line=dict(color='#2ECC71', width=2)),
+        secondary_y=True,
+    )
+    
+    # Set x-axis title
+    fig.update_xaxes(title_text="Average Load (Watts)", showgrid=True)
+    
+    # Set y-axes titles
+    fig.update_yaxes(title_text="Fat Oxidation Rate (g/min)", secondary_y=False, showgrid=True)
+    fig.update_yaxes(title_text="CHO Consumption Rate (g/min)", secondary_y=True, showgrid=False)
+    
+    # Update layout
     fig.update_layout(
-        xaxis=dict(title='Average Load (Watts)', showgrid=True),
-        yaxis=dict(title='Fat Oxidation Rate (ml/min)', showgrid=True),
+        title="Substrate Utilization vs Load",
         plot_bgcolor='white',
-        paper_bgcolor='white'
+        paper_bgcolor='white',
+        legend=dict(x=0.02, y=0.98),
+        hovermode='x unified'
     )
     
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
