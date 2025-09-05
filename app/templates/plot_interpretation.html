@@ -152,44 +152,34 @@
 <!-- Conditional Substrate Utilization Plots -->
 {% if show_fat_plot %}
 <div style="text-align: center; margin: 30px 0;">
-    <h3 style="color: #ff6b35; margin-bottom: 20px;">🔥 Substrate Utilization Analysis</h3>
-    
-    <!-- Two plots side by side -->
-    <div style="display: flex; justify-content: space-between; gap: 20px; max-width: 1600px; margin: 0 auto;">
-        <!-- Plot vs Load -->
-        <div style="flex: 1;">
-            <div class="chart-container">
-                <div class="chart" id="plot_fat_oxidation">
-                    <script>
-                        var graphs = {{fat_oxidation_plot | safe}};
-                        Plotly.plot('plot_fat_oxidation',graphs,{});
-                    </script>
-                </div>
-            </div>
-            <p style="font-size: 12px; color: #666; margin-top: 5px;">
-                Substrate utilization vs Load (Watts)
-            </p>
-        </div>
-        
-        <!-- Plot vs %VO2max -->
-        <div style="flex: 1;">
-            <div class="chart-container">
-                <div class="chart" id="plot_substrate_vo2max">
-                    <script>
-                        var graphs = {{substrate_vo2max_plot | safe}};
-                        Plotly.plot('plot_substrate_vo2max',graphs,{});
-                    </script>
-                </div>
-            </div>
-            <p style="font-size: 12px; color: #666; margin-top: 5px;">
-                Substrate utilization vs % VO₂max
-            </p>
+    <h3 style="color: #ff6b35; margin-bottom: 20px;">🔥 Substrate Utilization vs Load</h3>
+    <div class="chart-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="chart" id="plot_fat_oxidation">
+            <script>
+                var graphs = {{fat_oxidation_plot | safe}};
+                Plotly.plot('plot_fat_oxidation',graphs,{});
+            </script>
         </div>
     </div>
-    
-    <p style="font-size: 14px; color: #666; margin-top: 15px;">
-        Fat oxidation rate (orange) and carbohydrate consumption rate (green) shown as function of both absolute load and relative intensity (%VO₂max).
+    <p style="font-size: 14px; color: #666; margin-top: 10px;">
+        Fat oxidation rate (orange) and carbohydrate consumption rate (green) at different load levels.
         Each point represents the average of 60 samples before load changes during steady-state periods.
+    </p>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <h3 style="color: #ff6b35; margin-bottom: 20px;">🔥 Substrate Utilization vs % VO₂max</h3>
+    <div class="chart-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="chart" id="plot_substrate_vo2max">
+            <script>
+                var graphs = {{substrate_vo2max_plot | safe}};
+                Plotly.plot('plot_substrate_vo2max',graphs,{});
+            </script>
+        </div>
+    </div>
+    <p style="font-size: 14px; color: #666; margin-top: 10px;">
+        Fat oxidation rate (orange) and carbohydrate consumption rate (green) as function of relative exercise intensity.
+        VO₂max calculated as maximum 20-second rolling average during the test.
     </p>
 </div>
 {% endif %}
