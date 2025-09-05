@@ -2,12 +2,13 @@
 
 flask
 flasgger
-plotly
+plotly>=5.0,<6.0
 faker
 chardet
 openpyxl
 xlrd
 matplotlib
-pyoxynet[tflite]==0.1.7
+pyoxynet[tflite]==0.1.8
 tflite-runtime
 numpy==1.26.4
+gunicorn
