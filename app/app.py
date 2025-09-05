@@ -446,6 +446,56 @@ def create_substrate_vs_vo2max_plot(df):
     fat_coeffs = np.linalg.lstsq(X, fat_rates_array, rcond=None)[0]
     cho_coeffs = np.linalg.lstsq(X, cho_rates_array, rcond=None)[0]
     
+    # Find FAT MAX point by finding maximum of polynomial fit
+    # For polynomial y = ax + bx² + cx³, derivative is dy/dx = a + 2bx + 3cx²
+    # Set derivative to zero and solve: a + 2bx + 3cx² = 0
+    # This is a quadratic equation: 3cx² + 2bx + a = 0
+    a, b, c = fat_coeffs[0], fat_coeffs[1], fat_coeffs[2]
+    
+    fatmax_percent_vo2 = None
+    fatmax_rate = None
+    
+    if abs(c) > 1e-10:  # Avoid division by zero
+        # Solve quadratic equation: 3cx² + 2bx + a = 0
+        discriminant = (2*b)**2 - 4*(3*c)*a
+        if discriminant >= 0:
+            x1 = (-2*b + np.sqrt(discriminant)) / (2*3*c)
+            x2 = (-2*b - np.sqrt(discriminant)) / (2*3*c)
+            
+            # Check which solution is in our data range and gives maximum
+            valid_solutions = []
+            for x in [x1, x2]:
+                if min(percent_vo2max) <= x <= max(percent_vo2max):
+                    # Check second derivative to confirm it's a maximum (d²y/dx² = 2b + 6cx < 0)
+                    second_derivative = 2*b + 6*c*x
+                    if second_derivative < 0:  # Maximum (concave down)
+                        y = a*x + b*x**2 + c*x**3
+                        valid_solutions.append((x, y))
+            
+            if valid_solutions:
+                # Take the solution with highest fat oxidation rate if multiple valid solutions
+                fatmax_percent_vo2, fatmax_rate = max(valid_solutions, key=lambda sol: sol[1])
+    
+    # Calculate corresponding load at FAT MAX
+    fatmax_load = None
+    if fatmax_percent_vo2 is not None:
+        # Find the load corresponding to this %VO2max
+        # We need to interpolate from our original data points
+        if len(percent_vo2max) > 1:
+            # Get corresponding loads from original change points
+            loads_at_change_points = []
+            for point in change_points[:len(percent_vo2max)]:
+                loads_at_change_points.append(df.iloc[point]['load'])
+            
+            if len(loads_at_change_points) > 1:
+                # Use numpy interpolation instead of scipy
+                try:
+                    fatmax_load = float(np.interp(fatmax_percent_vo2, percent_vo2max, loads_at_change_points))
+                except:
+                    # Fallback: find closest point
+                    closest_idx = np.argmin(np.abs(np.array(percent_vo2max) - fatmax_percent_vo2))
+                    fatmax_load = loads_at_change_points[closest_idx]
+
     # Generate smooth curves for plotting
     x_smooth = np.linspace(min(percent_vo2max), max(percent_vo2max), 100)
     fat_fitted = fat_coeffs[0]*x_smooth + fat_coeffs[1]*x_smooth**2 + fat_coeffs[2]*x_smooth**3
@@ -462,10 +512,10 @@ def create_substrate_vs_vo2max_plot(df):
         secondary_y=False,
     )
     
-    # Add fat oxidation fitted curve on primary y-axis
+    # Add fat oxidation fitted curve on primary y-axis (subtle)
     fig.add_trace(
         go.Scatter(x=x_smooth, y=fat_fitted, name="Fat Oxidation (Fit)", 
-                  mode='lines', line=dict(color='#ff6b35', width=3, dash='solid'),
+                  mode='lines', line=dict(color='rgba(255, 107, 53, 0.4)', width=2.5, dash='solid'),
                   showlegend=True),
         secondary_y=False,
     )
@@ -478,13 +528,25 @@ def create_substrate_vs_vo2max_plot(df):
         secondary_y=True,
     )
     
-    # Add CHO consumption fitted curve on secondary y-axis
+    # Add CHO consumption fitted curve on secondary y-axis (subtle)
     fig.add_trace(
         go.Scatter(x=x_smooth, y=cho_fitted, name="CHO Consumption (Fit)", 
-                  mode='lines', line=dict(color='#2ECC71', width=3, dash='solid'),
+                  mode='lines', line=dict(color='rgba(46, 204, 113, 0.4)', width=2.5, dash='solid'),
                   showlegend=True),
         secondary_y=True,
     )
+    
+    # Add FAT MAX point if found
+    if fatmax_percent_vo2 is not None and fatmax_rate is not None:
+        fig.add_trace(
+            go.Scatter(x=[fatmax_percent_vo2], y=[fatmax_rate], name="FAT MAX", 
+                      mode='markers+text', 
+                      marker=dict(size=12, color='red', symbol='star', line=dict(color='darkred', width=2)),
+                      text=["FAT MAX"], textposition="top center",
+                      textfont=dict(size=12, color='red'),
+                      showlegend=True),
+            secondary_y=False,
+        )
     
     # Set x-axis title with grid styling
     fig.update_xaxes(
@@ -526,11 +588,13 @@ def create_substrate_vs_vo2max_plot(df):
         hovermode='x unified',
         annotations=[
             dict(
-                text=f"Polynomial fits (y-intercept = 0):<br>" +
-                     f"Fat: y = {fat_coeffs[0]:.4f}x + {fat_coeffs[1]:.6f}x² + {fat_coeffs[2]:.8f}x³<br>" +
-                     f"CHO: y = {cho_coeffs[0]:.4f}x + {cho_coeffs[1]:.6f}x² + {cho_coeffs[2]:.8f}x³",
+                text=(f"<b>FAT MAX:</b><br>" +
+                      f"• {fatmax_percent_vo2:.1f}% VO₂max<br>" +
+                      f"• {fatmax_rate:.3f} g/min<br>" +
+                      (f"• {fatmax_load:.0f}W" if fatmax_load is not None else "• Load: N/A")
+                      if fatmax_percent_vo2 is not None else "No FAT MAX found"),
                 xref="paper", yref="paper",
-                x=0.98, y=0.02,
+                x=0.85, y=0.02,
                 xanchor='right', yanchor='bottom',
                 showarrow=False,
                 font=dict(size=10, color='#666'),
