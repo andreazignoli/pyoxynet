@@ -328,12 +328,36 @@ def create_fat_oxidation_plot(df):
         secondary_y=True,
     )
     
-    # Set x-axis title
-    fig.update_xaxes(title_text="Average Load (Watts)", showgrid=True)
+    # Set x-axis title with grid styling
+    fig.update_xaxes(
+        title_text="Average Load (Watts)", 
+        showgrid=True, 
+        gridwidth=1, 
+        gridcolor='lightgray',
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
     
-    # Set y-axes titles
-    fig.update_yaxes(title_text="Fat Oxidation Rate (g/min)", secondary_y=False, showgrid=True)
-    fig.update_yaxes(title_text="CHO Consumption Rate (g/min)", secondary_y=True, showgrid=False)
+    # Set y-axes titles with grid styling
+    fig.update_yaxes(
+        title_text="Fat Oxidation Rate (g/min)", 
+        secondary_y=False, 
+        showgrid=True, 
+        gridwidth=1, 
+        gridcolor='lightgray',
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
+    fig.update_yaxes(
+        title_text="CHO Consumption Rate (g/min)", 
+        secondary_y=True, 
+        showgrid=False,
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
     
     # Update layout
     fig.update_layout(
@@ -366,18 +390,18 @@ def create_load_with_gas_exchange_plot(df, VT=[300, 400]):
     # Create subplot with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
-    # Add VO2 and VCO2 traces on secondary y-axis first (behind load)
+    # Add VO2 and VCO2 traces on secondary y-axis first (behind load) with softer colors
     if 'VO2_I' in df.columns:
         fig.add_trace(
             go.Scatter(x=df["time"], y=df["VO2_I"], name="VO₂", 
-                      line=dict(color='#3498DB', width=2)),  # Blue-ish
+                      line=dict(color='rgba(70, 130, 180, 0.7)', width=2)),  # Softer steel blue with alpha
             secondary_y=True,
         )
     
     if 'VCO2_I' in df.columns:
         fig.add_trace(
             go.Scatter(x=df["time"], y=df["VCO2_I"], name="VCO₂", 
-                      line=dict(color='#E74C3C', width=2)),  # Red-ish
+                      line=dict(color='rgba(205, 92, 92, 0.7)', width=2)),  # Softer indian red with alpha
             secondary_y=True,
         )
     
@@ -394,12 +418,36 @@ def create_load_with_gas_exchange_plot(df, VT=[300, 400]):
     fig.add_vline(x=VT2_oxynet, line_width=2, line_color="red", 
                   annotation_text="VT2", annotation_position="top")
     
-    # Set x-axis title
-    fig.update_xaxes(title_text="Time (min)", showgrid=True)
+    # Set x-axis title with grid styling
+    fig.update_xaxes(
+        title_text="Time (min)", 
+        showgrid=True, 
+        gridwidth=1, 
+        gridcolor='lightgray',
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
     
-    # Set y-axes titles
-    fig.update_yaxes(title_text="Load (Watts)", secondary_y=False, showgrid=True)
-    fig.update_yaxes(title_text="Gas Exchange (ml/min)", secondary_y=True, showgrid=False)
+    # Set y-axes titles with grid styling
+    fig.update_yaxes(
+        title_text="Load (Watts)", 
+        secondary_y=False, 
+        showgrid=True, 
+        gridwidth=1, 
+        gridcolor='lightgray',
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
+    fig.update_yaxes(
+        title_text="Gas Exchange (ml/min)", 
+        secondary_y=True, 
+        showgrid=False,
+        showline=True,
+        linewidth=1,
+        linecolor='gray'
+    )
     
     # Update layout
     fig.update_layout(
