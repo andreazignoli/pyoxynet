@@ -276,6 +276,10 @@ def create_fat_oxidation_plot(df):
     avg_loads = []
     fat_oxidation_rates = []
     cho_consumption_rates = []
+    eefat_rates = []
+    eecho_rates = []
+    perc_ee_fat = []
+    perc_ee_cho = []
     
     for point in change_points:
         # Get 60 samples before this change point (or all available)
@@ -299,9 +303,28 @@ def create_fat_oxidation_plot(df):
         # Calculate CHO consumption rate: 4.585*VCO2 - 3.226*VO2 (g/min)
         cho_rate = 4.585 * avg_vco2 - 3.226 * avg_vo2
         
+        # Calculate energy expenditure rates using caloric equivalents
+        # EEFAT: fat oxidation rate × 9.75 kcal/g (caloric equivalent from fatty acids)
+        eefat_rate = fat_rate * 9.75
+        # EECHO: CHO consumption rate × 4.18 kcal/g (caloric equivalent from glucose)
+        eecho_rate = cho_rate * 4.18
+        
+        # Calculate percentage of energy expenditure from each substrate
+        total_ee = eefat_rate + eecho_rate
+        if total_ee > 0:
+            perc_fat = (eefat_rate / total_ee) * 100
+            perc_cho = (eecho_rate / total_ee) * 100
+        else:
+            perc_fat = 0
+            perc_cho = 0
+        
         avg_loads.append(avg_load)
         fat_oxidation_rates.append(fat_rate)
         cho_consumption_rates.append(cho_rate)
+        eefat_rates.append(eefat_rate)
+        eecho_rates.append(eecho_rate)
+        perc_ee_fat.append(perc_fat)
+        perc_ee_cho.append(perc_cho)
     
     if not avg_loads:  # No valid points found
         return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
@@ -318,6 +341,12 @@ def create_fat_oxidation_plot(df):
     # Fit polynomials using least squares
     fat_coeffs = np.linalg.lstsq(X, fat_rates_array, rcond=None)[0]
     cho_coeffs = np.linalg.lstsq(X, cho_rates_array, rcond=None)[0]
+    
+    # Fit polynomials for percentage energy expenditure
+    perc_ee_fat_array = np.array(perc_ee_fat)
+    perc_ee_cho_array = np.array(perc_ee_cho)
+    perc_fat_coeffs = np.linalg.lstsq(X, perc_ee_fat_array, rcond=None)[0]
+    perc_cho_coeffs = np.linalg.lstsq(X, perc_ee_cho_array, rcond=None)[0]
     
     # Find FAT MAX point by finding maximum of polynomial fit
     # For polynomial y = ax + bx² + cx³, derivative is dy/dx = a + 2bx + 3cx²
@@ -353,6 +382,25 @@ def create_fat_oxidation_plot(df):
     x_smooth = np.linspace(min(avg_loads), max(avg_loads), 100)
     fat_fitted = fat_coeffs[0]*x_smooth + fat_coeffs[1]*x_smooth**2 + fat_coeffs[2]*x_smooth**3
     cho_fitted = cho_coeffs[0]*x_smooth + cho_coeffs[1]*x_smooth**2 + cho_coeffs[2]*x_smooth**3
+    
+    # Generate smooth curves for percentage energy expenditure
+    perc_ee_fat_smooth = perc_fat_coeffs[0]*x_smooth + perc_fat_coeffs[1]*x_smooth**2 + perc_fat_coeffs[2]*x_smooth**3
+    perc_ee_cho_smooth = perc_cho_coeffs[0]*x_smooth + perc_cho_coeffs[1]*x_smooth**2 + perc_cho_coeffs[2]*x_smooth**3
+    
+    # Filter to only consider workloads > 50W for crossover detection
+    valid_load_indices = x_smooth > 50
+    
+    # Find crossover point where CHO% becomes > FAT%
+    crossover_load = None
+    crossover_fat_rate = None
+    crossover_cho_rate = None
+    
+    crossover_indices = np.where((perc_ee_cho_smooth > perc_ee_fat_smooth) & valid_load_indices)[0]
+    if len(crossover_indices) > 0:
+        crossover_idx = crossover_indices[0]  # First index where CHO > FAT at >50W
+        crossover_load = x_smooth[crossover_idx]
+        crossover_fat_rate = fat_fitted[crossover_idx]
+        crossover_cho_rate = cho_fitted[crossover_idx]
     
     # Create subplot with secondary y-axis
     from plotly.subplots import make_subplots
@@ -404,6 +452,7 @@ def create_fat_oxidation_plot(df):
             secondary_y=False,
         )
     
+    
     # Set x-axis title with grid styling
     fig.update_xaxes(
         title_text="Average Load (Watts)", 
@@ -445,15 +494,17 @@ def create_fat_oxidation_plot(df):
         annotations=[
             dict(
                 text=(f"<b>FAT MAX:</b><br>" +
-                      f"• {fatmax_load:.0f}W<br>" +
-                      f"• {fatmax_rate:.3f} g/min"
-                      if fatmax_load is not None and fatmax_rate is not None else "No FAT MAX found"),
+                      f"• Load: {fatmax_load:.0f}W<br>" +
+                      f"• FAT: {fatmax_rate:.3f} g/min<br>" +
+                      f"• CHO: {np.polyval(np.append(cho_coeffs[::-1], 0), fatmax_load):.3f} g/min"
+                      if fatmax_load is not None and fatmax_rate is not None 
+                      else "No FAT MAX found"),
                 xref="paper", yref="paper",
                 x=0.85, y=0.02,
                 xanchor='right', yanchor='bottom',
                 showarrow=False,
                 font=dict(size=10, color='#666'),
-                bgcolor='rgba(255,255,255,0.8)',
+                bgcolor='rgba(255,255,255,0.9)',
                 bordercolor='#ddd',
                 borderwidth=1
             )
@@ -493,6 +544,10 @@ def create_substrate_vs_vo2max_plot(df):
     percent_vo2max = []
     fat_oxidation_rates = []
     cho_consumption_rates = []
+    eefat_rates = []
+    eecho_rates = []
+    perc_ee_fat = []
+    perc_ee_cho = []
     
     for point in change_points:
         # Get 60 samples before this change point (or all available)
@@ -518,9 +573,28 @@ def create_substrate_vs_vo2max_plot(df):
         # Calculate CHO consumption rate: 4.585*VCO2 - 3.226*VO2 (g/min)
         cho_rate = 4.585 * avg_vco2 - 3.226 * avg_vo2
         
+        # Calculate energy expenditure rates using caloric equivalents
+        # EEFAT: fat oxidation rate × 9.75 kcal/g (caloric equivalent from fatty acids)
+        eefat_rate = fat_rate * 9.75
+        # EECHO: CHO consumption rate × 4.18 kcal/g (caloric equivalent from glucose)
+        eecho_rate = cho_rate * 4.18
+        
+        # Calculate percentage of energy expenditure from each substrate
+        total_ee = eefat_rate + eecho_rate
+        if total_ee > 0:
+            perc_fat = (eefat_rate / total_ee) * 100
+            perc_cho = (eecho_rate / total_ee) * 100
+        else:
+            perc_fat = 0
+            perc_cho = 0
+        
         percent_vo2max.append(percent_vo2)
         fat_oxidation_rates.append(fat_rate)
         cho_consumption_rates.append(cho_rate)
+        eefat_rates.append(eefat_rate)
+        eecho_rates.append(eecho_rate)
+        perc_ee_fat.append(perc_fat)
+        perc_ee_cho.append(perc_cho)
     
     if not percent_vo2max:  # No valid points found
         return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
@@ -537,6 +611,12 @@ def create_substrate_vs_vo2max_plot(df):
     # Fit polynomials using least squares
     fat_coeffs = np.linalg.lstsq(X, fat_rates_array, rcond=None)[0]
     cho_coeffs = np.linalg.lstsq(X, cho_rates_array, rcond=None)[0]
+    
+    # Fit polynomials for percentage energy expenditure
+    perc_ee_fat_array = np.array(perc_ee_fat)
+    perc_ee_cho_array = np.array(perc_ee_cho)
+    perc_fat_coeffs = np.linalg.lstsq(X, perc_ee_fat_array, rcond=None)[0]
+    perc_cho_coeffs = np.linalg.lstsq(X, perc_ee_cho_array, rcond=None)[0]
     
     # Find FAT MAX point by finding maximum of polynomial fit
     # For polynomial y = ax + bx² + cx³, derivative is dy/dx = a + 2bx + 3cx²
@@ -593,6 +673,42 @@ def create_substrate_vs_vo2max_plot(df):
     fat_fitted = fat_coeffs[0]*x_smooth + fat_coeffs[1]*x_smooth**2 + fat_coeffs[2]*x_smooth**3
     cho_fitted = cho_coeffs[0]*x_smooth + cho_coeffs[1]*x_smooth**2 + cho_coeffs[2]*x_smooth**3
     
+    # Generate smooth curves for percentage energy expenditure
+    perc_ee_fat_smooth = perc_fat_coeffs[0]*x_smooth + perc_fat_coeffs[1]*x_smooth**2 + perc_fat_coeffs[2]*x_smooth**3
+    perc_ee_cho_smooth = perc_cho_coeffs[0]*x_smooth + perc_cho_coeffs[1]*x_smooth**2 + perc_cho_coeffs[2]*x_smooth**3
+    
+    # Filter to only consider workloads > 50W for crossover detection
+    # Convert each %VO2max point to corresponding load
+    valid_load_indices = np.zeros_like(x_smooth, dtype=bool)
+    if len(loads_at_change_points) > 1:
+        for i, vo2_percent in enumerate(x_smooth):
+            try:
+                corresponding_load = float(np.interp(vo2_percent, percent_vo2max, loads_at_change_points))
+                valid_load_indices[i] = corresponding_load > 50
+            except:
+                valid_load_indices[i] = False
+    
+    # Find crossover point where CHO% becomes > FAT%
+    crossover_point = None
+    crossover_load = None
+    crossover_fat_rate = None
+    crossover_cho_rate = None
+    
+    crossover_indices = np.where((perc_ee_cho_smooth > perc_ee_fat_smooth) & valid_load_indices)[0]
+    if len(crossover_indices) > 0:
+        crossover_idx = crossover_indices[0]  # First index where CHO > FAT at >50W
+        crossover_point = x_smooth[crossover_idx]
+        crossover_fat_rate = fat_fitted[crossover_idx]
+        crossover_cho_rate = cho_fitted[crossover_idx]
+        
+        # Find corresponding load at crossover %VO2max
+        if len(loads_at_change_points) > 1:
+            try:
+                crossover_load = float(np.interp(crossover_point, percent_vo2max, loads_at_change_points))
+            except:
+                closest_idx = np.argmin(np.abs(np.array(percent_vo2max) - crossover_point))
+                crossover_load = loads_at_change_points[closest_idx]
+    
     # Create subplot with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
@@ -640,6 +756,7 @@ def create_substrate_vs_vo2max_plot(df):
             secondary_y=False,
         )
     
+    
     # Set x-axis title with grid styling
     fig.update_xaxes(
         title_text="% VO₂max", 
@@ -682,20 +799,325 @@ def create_substrate_vs_vo2max_plot(df):
             dict(
                 text=(f"<b>FAT MAX:</b><br>" +
                       f"• {fatmax_percent_vo2:.1f}% VO₂max<br>" +
-                      f"• {fatmax_rate:.3f} g/min<br>" +
-                      (f"• {fatmax_load:.0f}W" if fatmax_load is not None else "• Load: N/A")
+                      f"• FAT: {fatmax_rate:.3f} g/min<br>" +
+                      f"• CHO: {np.polyval(np.append(cho_coeffs[::-1], 0), fatmax_percent_vo2):.3f} g/min<br>" +
+                      (f"• Load: {fatmax_load:.0f}W" if fatmax_load is not None else "• Load: N/A")
                       if fatmax_percent_vo2 is not None else "No FAT MAX found"),
                 xref="paper", yref="paper",
                 x=0.85, y=0.02,
                 xanchor='right', yanchor='bottom',
                 showarrow=False,
                 font=dict(size=10, color='#666'),
-                bgcolor='rgba(255,255,255,0.8)',
+                bgcolor='rgba(255,255,255,0.9)',
                 bordercolor='#ddd',
                 borderwidth=1
             )
         ]
     )
+    
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+def create_energy_contribution_vs_load_plot(df):
+    """
+    Create energy contribution percentage plot vs load
+    
+    Parameters:
+        df (DataFrame): Raw CPET data with load, VO2_I, VCO2_I columns
+        
+    Returns:
+        str: JSON string for plotly plot
+    """
+    import json
+    import plotly.graph_objects as go
+    import numpy as np
+    
+    # Find load change points (where load increases)
+    load_diff = df['load'].diff()
+    change_points = df[load_diff > 0].index.tolist()
+    
+    # Add the end point to capture the last steady state
+    if len(df) - 1 not in change_points:
+        change_points.append(len(df) - 1)
+    
+    avg_loads = []
+    perc_ee_fat = []
+    perc_ee_cho = []
+    
+    for point in change_points:
+        # Get 60 samples before this change point (or all available)
+        start_idx = max(0, point - 60)
+        end_idx = point
+        
+        if end_idx - start_idx < 10:  # Skip if too few samples
+            continue
+            
+        # Get the data slice
+        slice_data = df.iloc[start_idx:end_idx]
+        
+        # Calculate averages
+        avg_load = slice_data['load'].mean()
+        avg_vo2 = slice_data['VO2_I'].mean() * 0.001  # Convert to L/min
+        avg_vco2 = slice_data['VCO2_I'].mean() * 0.001  # Convert to L/min
+        
+        # Calculate fat oxidation rate: 1.695*VO2 - 1.701*VCO2 (g/min)
+        fat_rate = 1.695 * avg_vo2 - 1.701 * avg_vco2
+        
+        # Calculate CHO consumption rate: 4.585*VCO2 - 3.226*VO2 (g/min)
+        cho_rate = 4.585 * avg_vco2 - 3.226 * avg_vo2
+        
+        # Calculate energy expenditure rates using caloric equivalents
+        # EEFAT: fat oxidation rate × 9.75 kcal/g (caloric equivalent from fatty acids)
+        eefat_rate = fat_rate * 9.75
+        # EECHO: CHO consumption rate × 4.18 kcal/g (caloric equivalent from glucose)
+        eecho_rate = cho_rate * 4.18
+        
+        # Calculate percentage of energy expenditure from each substrate
+        total_ee = eefat_rate + eecho_rate
+        if total_ee > 0:
+            perc_fat = (eefat_rate / total_ee) * 100
+            perc_cho = (eecho_rate / total_ee) * 100
+        else:
+            perc_fat = 0
+            perc_cho = 0
+        
+        avg_loads.append(avg_load)
+        perc_ee_fat.append(perc_fat)
+        perc_ee_cho.append(perc_cho)
+    
+    if not avg_loads:  # No valid points found
+        return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    # Create plot
+    fig = go.Figure()
+    
+    # Convert to numpy arrays for fitting
+    x_data = np.array(avg_loads)
+    fat_data = np.array(perc_ee_fat)
+    cho_data = np.array(perc_ee_cho)
+    
+    # Add FAT percentage data points
+    fig.add_trace(go.Scatter(
+        x=avg_loads, 
+        y=perc_ee_fat, 
+        name="FAT % (data)", 
+        mode='markers',
+        marker=dict(size=8, color='#ff6b35'),
+        showlegend=True
+    ))
+    
+    # Fit 3rd degree polynomial to FAT percentage data
+    if len(x_data) >= 4:  # Need at least 4 points for 3rd degree polynomial
+        fat_coeffs = np.polyfit(x_data, fat_data, 3)
+        # Generate smooth curve
+        x_smooth = np.linspace(min(x_data), max(x_data), 100)
+        fat_fit = np.polyval(fat_coeffs, x_smooth)
+        
+        # Add fitted curve for FAT
+        fig.add_trace(go.Scatter(
+            x=x_smooth,
+            y=fat_fit,
+            name="FAT % (fit)",
+            mode='lines',
+            line=dict(width=3, color='rgba(255, 107, 53, 0.6)', dash='solid'),
+            showlegend=True
+        ))
+    
+    # Add CHO percentage data points
+    fig.add_trace(go.Scatter(
+        x=avg_loads, 
+        y=perc_ee_cho, 
+        name="CHO % (data)", 
+        mode='markers',
+        marker=dict(size=8, color='#2ECC71'),
+        showlegend=True
+    ))
+    
+    # Fit 3rd degree polynomial to CHO percentage data
+    if len(x_data) >= 4:  # Need at least 4 points for 3rd degree polynomial
+        cho_coeffs = np.polyfit(x_data, cho_data, 3)
+        # Generate smooth curve
+        cho_fit = np.polyval(cho_coeffs, x_smooth)
+        
+        # Add fitted curve for CHO
+        fig.add_trace(go.Scatter(
+            x=x_smooth,
+            y=cho_fit,
+            name="CHO % (fit)",
+            mode='lines',
+            line=dict(width=3, color='rgba(46, 204, 113, 0.6)', dash='solid'),
+            showlegend=True
+        ))
+    
+    # Update layout
+    fig.update_layout(
+        title="Energy Contribution vs Load",
+        xaxis_title="Load (Watts)",
+        yaxis_title="Energy Contribution (%)",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        legend=dict(x=0.02, y=0.98, bgcolor='rgba(255,255,255,0.8)'),
+        hovermode='x unified',
+        yaxis=dict(range=[0, 100])
+    )
+    
+    # Add grid styling
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+    
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+def create_energy_contribution_vs_vo2max_plot(df):
+    """
+    Create energy contribution percentage plot vs %VO2max
+    
+    Parameters:
+        df (DataFrame): Raw CPET data with load, VO2_I, VCO2_I columns
+        
+    Returns:
+        str: JSON string for plotly plot
+    """
+    import json
+    import plotly.graph_objects as go
+    import numpy as np
+    
+    # Calculate VO2max as the maximum of 20-second rolling average
+    rolling_vo2 = df['VO2_I'].rolling(window=20, min_periods=10).mean()
+    vo2_max = rolling_vo2.max()
+    
+    # Find load change points (where load increases)
+    load_diff = df['load'].diff()
+    change_points = df[load_diff > 0].index.tolist()
+    
+    # Add the end point to capture the last steady state
+    if len(df) - 1 not in change_points:
+        change_points.append(len(df) - 1)
+    
+    percent_vo2max = []
+    perc_ee_fat = []
+    perc_ee_cho = []
+    
+    for point in change_points:
+        # Get 60 samples before this change point (or all available)
+        start_idx = max(0, point - 60)
+        end_idx = point
+        
+        if end_idx - start_idx < 10:  # Skip if too few samples
+            continue
+            
+        # Get the data slice
+        slice_data = df.iloc[start_idx:end_idx]
+        
+        # Calculate averages
+        avg_vo2 = slice_data['VO2_I'].mean() * 0.001  # Convert to L/min
+        avg_vco2 = slice_data['VCO2_I'].mean() * 0.001  # Convert to L/min
+        
+        # Calculate %VO2max
+        percent_vo2 = (avg_vo2 * 1000 / vo2_max) * 100  # Convert back to ml/min for %
+        
+        # Calculate fat oxidation rate: 1.695*VO2 - 1.701*VCO2 (g/min)
+        fat_rate = 1.695 * avg_vo2 - 1.701 * avg_vco2
+        
+        # Calculate CHO consumption rate: 4.585*VCO2 - 3.226*VO2 (g/min)
+        cho_rate = 4.585 * avg_vco2 - 3.226 * avg_vo2
+        
+        # Calculate energy expenditure rates using caloric equivalents
+        # EEFAT: fat oxidation rate × 9.75 kcal/g (caloric equivalent from fatty acids)
+        eefat_rate = fat_rate * 9.75
+        # EECHO: CHO consumption rate × 4.18 kcal/g (caloric equivalent from glucose)
+        eecho_rate = cho_rate * 4.18
+        
+        # Calculate percentage of energy expenditure from each substrate
+        total_ee = eefat_rate + eecho_rate
+        if total_ee > 0:
+            perc_fat = (eefat_rate / total_ee) * 100
+            perc_cho = (eecho_rate / total_ee) * 100
+        else:
+            perc_fat = 0
+            perc_cho = 0
+        
+        percent_vo2max.append(percent_vo2)
+        perc_ee_fat.append(perc_fat)
+        perc_ee_cho.append(perc_cho)
+    
+    if not percent_vo2max:  # No valid points found
+        return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    # Create plot
+    fig = go.Figure()
+    
+    # Convert to numpy arrays for fitting
+    x_data = np.array(percent_vo2max)
+    fat_data = np.array(perc_ee_fat)
+    cho_data = np.array(perc_ee_cho)
+    
+    # Add FAT percentage data points
+    fig.add_trace(go.Scatter(
+        x=percent_vo2max, 
+        y=perc_ee_fat, 
+        name="FAT % (data)", 
+        mode='markers',
+        marker=dict(size=8, color='#ff6b35'),
+        showlegend=True
+    ))
+    
+    # Fit 3rd degree polynomial to FAT percentage data
+    if len(x_data) >= 4:  # Need at least 4 points for 3rd degree polynomial
+        fat_coeffs = np.polyfit(x_data, fat_data, 3)
+        # Generate smooth curve
+        x_smooth = np.linspace(min(x_data), max(x_data), 100)
+        fat_fit = np.polyval(fat_coeffs, x_smooth)
+        
+        # Add fitted curve for FAT
+        fig.add_trace(go.Scatter(
+            x=x_smooth,
+            y=fat_fit,
+            name="FAT % (fit)",
+            mode='lines',
+            line=dict(width=3, color='rgba(255, 107, 53, 0.6)', dash='solid'),
+            showlegend=True
+        ))
+    
+    # Add CHO percentage data points
+    fig.add_trace(go.Scatter(
+        x=percent_vo2max, 
+        y=perc_ee_cho, 
+        name="CHO % (data)", 
+        mode='markers',
+        marker=dict(size=8, color='#2ECC71'),
+        showlegend=True
+    ))
+    
+    # Fit 3rd degree polynomial to CHO percentage data
+    if len(x_data) >= 4:  # Need at least 4 points for 3rd degree polynomial
+        cho_coeffs = np.polyfit(x_data, cho_data, 3)
+        # Generate smooth curve
+        cho_fit = np.polyval(cho_coeffs, x_smooth)
+        
+        # Add fitted curve for CHO
+        fig.add_trace(go.Scatter(
+            x=x_smooth,
+            y=cho_fit,
+            name="CHO % (fit)",
+            mode='lines',
+            line=dict(width=3, color='rgba(46, 204, 113, 0.6)', dash='solid'),
+            showlegend=True
+        ))
+    
+    # Update layout
+    fig.update_layout(
+        title="Energy Contribution vs % VO₂max",
+        xaxis_title="% VO₂max",
+        yaxis_title="Energy Contribution (%)",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        legend=dict(x=0.02, y=0.98, bgcolor='rgba(255,255,255,0.8)'),
+        hovermode='x unified',
+        yaxis=dict(range=[0, 100])
+    )
+    
+    # Add grid styling
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
     
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -939,23 +1361,53 @@ def tf_lite_model_inference(tf_lite_model=[], input_df=[], past_points=40, n_inp
     out_dict['VT2']['time'] = {}
 
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] >= out_df['p_md'])].index[0] - int(past_points / inference_stride))
-    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv'])].index[-1] - int(past_points / inference_stride))
+    try:
+        VT1_condition = out_df['p_hv'] >= out_df['p_md']
+        VT2_condition = out_df['p_sv'] <= out_df['p_hv']
+        
+        VT1_matches = out_df[VT1_condition].index
+        VT2_matches = out_df[VT2_condition].index
+        
+        if len(VT1_matches) == 0 or len(VT2_matches) == 0:
+            # Return default values when inference fails
+            out_dict['VT1']['time'] = 0
+            out_dict['VT2']['time'] = 0
+            out_dict['VT1']['HR'] = 0
+            out_dict['VT2']['HR'] = 0
+            out_dict['VT1']['VE'] = 0
+            out_dict['VT2']['VE'] = 0
+            out_dict['VT1']['VO2'] = 0
+            out_dict['VT2']['VO2'] = 0
+            return out_df, out_dict
+        
+        VT1_index = int(VT1_matches[0] - int(past_points / inference_stride))
+        VT2_index = int(VT2_matches[-1] - int(past_points / inference_stride))
 
-    VT1_time = int(out_df.iloc[VT1_index]['time'])
-    VT2_time = int(out_df.iloc[VT2_index]['time'])
+        VT1_time = int(out_df.iloc[VT1_index]['time'])
+        VT2_time = int(out_df.iloc[VT2_index]['time'])
 
-    out_dict['VT1']['time'] = VT1_time
-    out_dict['VT2']['time'] = VT2_time
+        out_dict['VT1']['time'] = VT1_time
+        out_dict['VT2']['time'] = VT2_time
 
-    out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
-    out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
+        out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
+        out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
 
-    out_dict['VT1']['VE'] = out_df.iloc[VT1_index]['VE']
-    out_dict['VT2']['VE'] = out_df.iloc[VT2_index]['VE']
+        out_dict['VT1']['VE'] = out_df.iloc[VT1_index]['VE']
+        out_dict['VT2']['VE'] = out_df.iloc[VT2_index]['VE']
 
-    out_dict['VT1']['VO2'] = out_df.iloc[VT1_index]['VO2_F']
-    out_dict['VT2']['VO2'] = out_df.iloc[VT2_index]['VO2_F']
+        out_dict['VT1']['VO2'] = out_df.iloc[VT1_index]['VO2_F']
+        out_dict['VT2']['VO2'] = out_df.iloc[VT2_index]['VO2_F']
+        
+    except:
+        # Handle any remaining index errors gracefully
+        out_dict['VT1']['time'] = 0
+        out_dict['VT2']['time'] = 0
+        out_dict['VT1']['HR'] = 0
+        out_dict['VT2']['HR'] = 0
+        out_dict['VT1']['VE'] = 0
+        out_dict['VT2']['VE'] = 0
+        out_dict['VT1']['VO2'] = 0
+        out_dict['VT2']['VO2'] = 0
 
     return out_df, out_dict
 
@@ -1144,8 +1596,11 @@ def read_csv_app():
         plot_load = None
         plot_fat_oxidation = None
         plot_substrate_vo2max = None
+        plot_energy_contribution_load = None
+        plot_energy_contribution_vo2max = None
         show_load_plot = False
         show_fat_plot = False
+        show_energy_plot = False
         
         if 'load' in t.raw_data_frame.columns:
             plot_load = create_load_with_gas_exchange_plot(t.raw_data_frame, VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
@@ -1155,7 +1610,10 @@ def read_csv_app():
             if 'VO2_I' in t.raw_data_frame.columns and 'VCO2_I' in t.raw_data_frame.columns:
                 plot_fat_oxidation = create_fat_oxidation_plot(t.raw_data_frame)
                 plot_substrate_vo2max = create_substrate_vs_vo2max_plot(t.raw_data_frame)
+                plot_energy_contribution_load = create_energy_contribution_vs_load_plot(t.raw_data_frame)
+                plot_energy_contribution_vo2max = create_energy_contribution_vs_vo2max_plot(t.raw_data_frame)
                 show_fat_plot = True
+                show_energy_plot = True
 
         return render_template('plot_interpretation.html',
                                        VCO2vsVO2=plot_VCO2vsVO2,
@@ -1169,7 +1627,10 @@ def read_csv_app():
                                        show_load_plot=show_load_plot,
                                        fat_oxidation_plot=plot_fat_oxidation,
                                        substrate_vo2max_plot=plot_substrate_vo2max,
-                                       show_fat_plot=show_fat_plot)
+                                       show_fat_plot=show_fat_plot,
+                                       energy_contribution_load_plot=plot_energy_contribution_load,
+                                       energy_contribution_vo2max_plot=plot_energy_contribution_vo2max,
+                                       show_energy_plot=show_energy_plot)
     except:
         if 'file' not in request.files:
             dict_estimates = 'No file part'
