@@ -58,11 +58,32 @@
 <body>
 
 <div class="container">
+    {% if CPET_data.VT1.VO2 == 0 or CPET_data.VT2.VO2 == 0 %}
+    <h2 style="color: #ff4444;">⚠️ Oxynet Could Not Detect Ventilatory Thresholds</h2>
+    <div style="background-color: #ffe6e6; border: 2px solid #ff4444; border-radius: 10px; padding: 15px; margin: 20px auto; max-width: 600px; text-align: center;">
+        <h3 style="color: #cc0000; margin-top: 0;">❌ INFERENCE FAILED - DO NOT TRUST THESE RESULTS</h3>
+        <p style="color: #666; margin-bottom: 0;">
+            Sorry, for some reasons 😔 the OxyNet model could not reliably identify VT1 and/or VT2 thresholds in this test data. 
+            This may be due to:
+            <br>• Poor data quality or noise
+            <br>• Irregular breathing patterns
+            <br>• Atypical physiological responses
+            <br>• Incomplete or truncated test protocol
+            <br><br>
+            <strong>Please manually review the gas exchange plots below and consider re-analyzing the test data.</strong>
+        </p>
+    </div>
+    <ul>
+        <h4 style="color: #999; text-decoration: line-through;">VT<sub>1</sub>: {{CPET_data.VT1.VO2}} mlO<sub>2</sub>/min ({{CPET_data.VT1.perc_VO2}} %VO<sub>2MAX</sub>)
+        <br>VT<sub>2</sub>: {{CPET_data.VT2.VO2}} mlO<sub>2</sub>/min ({{CPET_data.VT2.perc_VO2}} %VO<sub>2MAX</sub>)</h4>
+    </ul>
+    {% else %}
     <h2>Oxynet just did some magic: here the results of the interpretation 🪄</h2>
     <ul>
         <h4>VT<sub>1</sub>: {{CPET_data.VT1.VO2}} mlO<sub>2</sub>/min ({{CPET_data.VT1.perc_VO2}} %VO<sub>2MAX</sub>)
         <br>VT<sub>2</sub>: {{CPET_data.VT2.VO2}} mlO<sub>2</sub>/min ({{CPET_data.VT2.perc_VO2}} %VO<sub>2MAX</sub>)</h4>
     </ul>
+    {% endif %}
 </div>
 
 <div class="row">
@@ -180,6 +201,42 @@
     <p style="font-size: 14px; color: #666; margin-top: 10px;">
         Fat oxidation rate (orange) and carbohydrate consumption rate (green) as function of relative exercise intensity.
         Data points fitted with 3rd degree polynomials (y-intercept = 0) to model substrate utilization curves.
+        VO₂max calculated as maximum 20-second rolling average during the test.
+    </p>
+</div>
+{% endif %}
+
+<!-- Conditional Energy Contribution Plots -->
+{% if show_energy_plot %}
+<div style="text-align: center; margin: 30px 0;">
+    <h3 style="color: #ff6b35; margin-bottom: 20px;">🔥 Energy Contribution vs Load</h3>
+    <div class="chart-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="chart" id="plot_energy_contribution_load">
+            <script>
+                var graphs = {{energy_contribution_load_plot | safe}};
+                Plotly.plot('plot_energy_contribution_load',graphs,{});
+            </script>
+        </div>
+    </div>
+    <p style="font-size: 14px; color: #666; margin-top: 10px;">
+        Percentage of energy expenditure from fat (orange) and carbohydrate (green) at different load levels.
+        Total energy contribution always equals 100%.
+    </p>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <h3 style="color: #ff6b35; margin-bottom: 20px;">🔥 Energy Contribution vs % VO₂max (⚠️ ONLY FOR VALID VO₂max TESTS)</h3>
+    <div class="chart-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="chart" id="plot_energy_contribution_vo2max">
+            <script>
+                var graphs = {{energy_contribution_vo2max_plot | safe}};
+                Plotly.plot('plot_energy_contribution_vo2max',graphs,{});
+            </script>
+        </div>
+    </div>
+    <p style="font-size: 14px; color: #666; margin-top: 10px;">
+        Percentage of energy expenditure from fat (orange) and carbohydrate (green) as function of relative exercise intensity.
+        Data points fitted with 3rd degree polynomials to model energy contribution curves.
         VO₂max calculated as maximum 20-second rolling average during the test.
     </p>
 </div>
