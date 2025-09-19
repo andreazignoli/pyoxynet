@@ -125,7 +125,12 @@ def CPET_var_plot_vs_O2(df, var_list=[], VT=[0, 0, 0, 0]):
     for lab_ in var_list:
         labels_dict[lab_] = lab_.replace('_', ' ').replace('I', '')
 
-    fig = px.scatter(df.iloc[np.arange(0, len(df))], x="VO2_I", y=var_list)
+    if "VO2_I" in df.columns:
+        indip_var_ = "VO2_I"
+    else:
+        indip_var_ = "VO2_F"
+    
+    fig = px.scatter(df.iloc[np.arange(0, len(df))], x=indip_var_, y=var_list)
     fig.update_traces(marker=dict(size=8, line=dict(width=1, color='black'), color='#51a1ff', opacity=0.7))
 
     if VT1 > 0:
@@ -648,25 +653,25 @@ def create_substrate_vs_vo2max_plot(df):
                 # Take the solution with highest fat oxidation rate if multiple valid solutions
                 fatmax_percent_vo2, fatmax_rate = max(valid_solutions, key=lambda sol: sol[1])
     
+    # Get corresponding loads from original change points
+    loads_at_change_points = []
+    if len(percent_vo2max) > 1:
+        for point in change_points[:len(percent_vo2max)]:
+            loads_at_change_points.append(df.iloc[point]['load'])
+    
     # Calculate corresponding load at FAT MAX
     fatmax_load = None
     if fatmax_percent_vo2 is not None:
         # Find the load corresponding to this %VO2max
         # We need to interpolate from our original data points
-        if len(percent_vo2max) > 1:
-            # Get corresponding loads from original change points
-            loads_at_change_points = []
-            for point in change_points[:len(percent_vo2max)]:
-                loads_at_change_points.append(df.iloc[point]['load'])
-            
-            if len(loads_at_change_points) > 1:
-                # Use numpy interpolation instead of scipy
-                try:
-                    fatmax_load = float(np.interp(fatmax_percent_vo2, percent_vo2max, loads_at_change_points))
-                except:
-                    # Fallback: find closest point
-                    closest_idx = np.argmin(np.abs(np.array(percent_vo2max) - fatmax_percent_vo2))
-                    fatmax_load = loads_at_change_points[closest_idx]
+        if len(loads_at_change_points) > 1:
+            # Use numpy interpolation instead of scipy
+            try:
+                fatmax_load = float(np.interp(fatmax_percent_vo2, percent_vo2max, loads_at_change_points))
+            except:
+                # Fallback: find closest point
+                closest_idx = np.argmin(np.abs(np.array(percent_vo2max) - fatmax_percent_vo2))
+                fatmax_load = loads_at_change_points[closest_idx]
 
     # Generate smooth curves for plotting
     x_smooth = np.linspace(min(percent_vo2max), max(percent_vo2max), 100)
@@ -1211,6 +1216,160 @@ def create_load_with_gas_exchange_plot(df, VT=[300, 400]):
     
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+def create_domain_probabilities_time_plot(df_estimates, VT=[300, 400]):
+    """Create domain probabilities vs time plot with filled areas
+    
+    Parameters:
+        df_estimates (DataFrame): DataFrame containing time, p_md, p_hv, p_sv columns
+        VT (list): Ventilatory thresholds [VT1, VT2, VT1_oxynet, VT2_oxynet]
+    
+    Returns:
+        JSON string of Plotly figure
+    """
+    import json
+    import plotly.graph_objects as go
+    
+    VT1, VT2, VT1_oxynet, VT2_oxynet = VT
+    
+    fig = go.Figure()
+    
+    # Add filled area plots for each domain probability
+    fig.add_trace(go.Scatter(
+        x=df_estimates['time'],
+        y=df_estimates['p_md'],
+        fill='tonexty',
+        mode='lines',
+        name='Moderate Domain (p_md)',
+        line=dict(width=0),
+        fillcolor='rgba(46, 204, 113, 0.6)',  # Green
+        hovertemplate='<b>Moderate Domain</b><br>Time: %{x}s<br>Probability: %{y:.3f}<extra></extra>'
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=df_estimates['time'],
+        y=df_estimates['p_md'] + df_estimates['p_hv'],
+        fill='tonexty',
+        mode='lines',
+        name='Heavy Domain (p_hv)',
+        line=dict(width=0),
+        fillcolor='rgba(241, 196, 15, 0.6)',  # Yellow/Gold
+        hovertemplate='<b>Heavy Domain</b><br>Time: %{x}s<br>Probability: %{customdata:.3f}<extra></extra>',
+        customdata=df_estimates['p_hv']
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=df_estimates['time'],
+        y=df_estimates['p_md'] + df_estimates['p_hv'] + df_estimates['p_sv'],
+        fill='tonexty',
+        mode='lines',
+        name='Severe Domain (p_sv)',
+        line=dict(width=0),
+        fillcolor='rgba(231, 76, 60, 0.6)',  # Red/Orange
+        hovertemplate='<b>Severe Domain</b><br>Time: %{x}s<br>Probability: %{customdata:.3f}<extra></extra>',
+        customdata=df_estimates['p_sv']
+    ))
+    
+    # Add ventilatory threshold lines
+    if VT1_oxynet > 0:
+        fig.add_vline(x=VT1_oxynet, line_width=2, line_color="blue", 
+                     annotation_text="VT1", annotation_position="top")
+    if VT2_oxynet > 0:
+        fig.add_vline(x=VT2_oxynet, line_width=2, line_color="red", 
+                     annotation_text="VT2", annotation_position="top")
+    
+    # Update layout
+    fig.update_layout(
+        title="Exercise Domain Probabilities vs Time",
+        xaxis_title="Time (seconds)",
+        yaxis_title="Cumulative Probability",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        legend=dict(x=0.02, y=0.98),
+        hovermode='x unified',
+        yaxis=dict(range=[0, 1])
+    )
+    
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
+def create_domain_probabilities_vo2_plot(df_estimates, VT=[0, 0, 0, 0]):
+    """Create VO2 vs time scatter plot colored by dominant exercise domain
+    
+    Parameters:
+        df_estimates (DataFrame): DataFrame containing time, VO2, p_md, p_hv, p_sv columns
+        VT (list): Ventilatory thresholds [VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet]
+    
+    Returns:
+        JSON string of Plotly figure
+    """
+    import json
+    import plotly.graph_objects as go
+    import numpy as np
+    
+    VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet = VT
+    
+    # Determine dominant domain for each point
+    probabilities = df_estimates[['p_md', 'p_hv', 'p_sv']].values
+    dominant_domain = np.argmax(probabilities, axis=1)
+    
+    # Define colors and domain names
+    domain_colors = ['#2ecc71', '#f1c40f', '#e74c3c']  # Green, Yellow, Red
+    domain_names = ['Moderate', 'Heavy', 'Severe']
+    
+    fig = go.Figure()
+    
+    # Determine which VO2 column to use
+    if 'VO2' in df_estimates.columns:
+        vo2_column = 'VO2'
+    elif 'VO2_I' in df_estimates.columns:
+        vo2_column = 'VO2_I'
+    elif 'VO2_F' in df_estimates.columns:
+        vo2_column = 'VO2_F'
+    else:
+        # If no VO2 column found, create a dummy one
+        df_estimates = df_estimates.copy()
+        df_estimates['VO2'] = range(len(df_estimates))
+        vo2_column = 'VO2'
+    
+    # Add scatter traces for each domain
+    for domain_idx, (color, name) in enumerate(zip(domain_colors, domain_names)):
+        mask = dominant_domain == domain_idx
+        if mask.any():
+            max_prob = probabilities[mask, domain_idx]
+            fig.add_trace(go.Scatter(
+                x=df_estimates.loc[mask, 'time'],
+                y=df_estimates.loc[mask, vo2_column],
+                mode='markers',
+                name=f'{name} Domain',
+                marker=dict(
+                    color=color,
+                    size=8,
+                    opacity=0.8
+                ),
+                hovertemplate=f'<b>{name} Domain</b><br>Time: %{{x}}s<br>VO₂: %{{y:.0f}} ml/min<br>Probability: %{{customdata:.3f}}<extra></extra>',
+                customdata=max_prob
+            ))
+    
+    # Add ventilatory threshold lines
+    if VO2VT1_oxynet > 0:
+        fig.add_hline(y=VO2VT1_oxynet, line_width=2, line_color="blue", line_dash="dash",
+                     annotation_text="VT1", annotation_position="right")
+    if VO2VT2_oxynet > 0:
+        fig.add_hline(y=VO2VT2_oxynet, line_width=2, line_color="red", line_dash="dash",
+                     annotation_text="VT2", annotation_position="right")
+    
+    # Update layout
+    fig.update_layout(
+        title="Exercise Domain Classification: VO₂ vs Time",
+        xaxis_title="Time (seconds)",
+        yaxis_title="VO₂ (ml/min)",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        legend=dict(x=0.02, y=0.98),
+        hovermode='closest'
+    )
+    
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
 def test_tf_lite_model(interpreter):
     """Test if the model is running correctly
 
@@ -1583,14 +1742,16 @@ def read_csv_app():
         t.raw_data_frame = t.raw_data_frame.rename(columns={'VEVCO2': 'VEVCO2_I'})
         t.raw_data_frame = t.raw_data_frame.rename(columns={'VEVO2': 'VEVO2_I'})
 
-        print(t.raw_data_frame)
-
         plot_VEvsVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VE_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
         plot_VCO2vsVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
         plot_PetO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['PetO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
         plot_PetCO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['PetCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
         plot_VEVO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VEVO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
         plot_VEVCO2 = CPET_var_plot_vs_O2(t.raw_data_frame, var_list=['VEVCO2_I'], VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
+        
+        # Create probability plots using dedicated functions
+        plot_probabilities_time = create_domain_probabilities_time_plot(df_estimates, VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
+        plot_probabilities_vo2 = create_domain_probabilities_vo2_plot(df_estimates, VT=[VO2VT1, VO2VT2, VO2VT1_oxynet, VO2VT2_oxynet])
 
         # Check if 'load' column exists and create load vs time plot
         plot_load = None
@@ -1606,8 +1767,9 @@ def read_csv_app():
             plot_load = create_load_with_gas_exchange_plot(t.raw_data_frame, VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
             show_load_plot = True
             
-            # Create fat oxidation analysis if we have the required columns
-            if 'VO2_I' in t.raw_data_frame.columns and 'VCO2_I' in t.raw_data_frame.columns:
+            # Create fat oxidation analysis if we have the required columns and load data is not all zeros
+            if ('VO2_I' in t.raw_data_frame.columns and 'VCO2_I' in t.raw_data_frame.columns and 
+                not (t.raw_data_frame['load'] == 0).all()):
                 plot_fat_oxidation = create_fat_oxidation_plot(t.raw_data_frame)
                 plot_substrate_vo2max = create_substrate_vs_vo2max_plot(t.raw_data_frame)
                 plot_energy_contribution_load = create_energy_contribution_vs_load_plot(t.raw_data_frame)
@@ -1630,7 +1792,9 @@ def read_csv_app():
                                        show_fat_plot=show_fat_plot,
                                        energy_contribution_load_plot=plot_energy_contribution_load,
                                        energy_contribution_vo2max_plot=plot_energy_contribution_vo2max,
-                                       show_energy_plot=show_energy_plot)
+                                       show_energy_plot=show_energy_plot,
+                                       probabilities_time_plot=plot_probabilities_time,
+                                       probabilities_vo2_plot=plot_probabilities_vo2)
     except:
         if 'file' not in request.files:
             dict_estimates = 'No file part'
