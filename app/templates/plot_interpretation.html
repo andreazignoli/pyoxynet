@@ -152,6 +152,45 @@
     </div>
 </div>
 
+<!-- Probability Plots -->
+<div style="text-align: center; margin: 30px 0;">
+    <h3 style="color: #ff6b35; margin-bottom: 20px;">🧠 Exercise Domain Probabilities vs Time</h3>
+    <div class="chart-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="chart" id="plot_probabilities_time">
+            <script>
+                var graphs = {{probabilities_time_plot | safe}};
+                Plotly.plot('plot_probabilities_time',graphs,{});
+            </script>
+        </div>
+    </div>
+    <p style="font-size: 14px; color: #666; margin-top: 10px;">
+        <strong>Exercise Domain Classification:</strong> This plot shows the OxyNet model's confidence in classifying each moment of the test into three physiological exercise domains:
+        <br>• <span style="color: #2ecc71;"><strong>Moderate Domain (Green):</strong></span> Below VT1 - sustainable aerobic exercise where lactate remains stable
+        <br>• <span style="color: #f1c40f;"><strong>Heavy Domain (Yellow):</strong></span> Between VT1-VT2 - elevated but steady-state lactate levels
+        <br>• <span style="color: #e74c3c;"><strong>Severe Domain (Red):</strong></span> Above VT2 - progressive lactate accumulation leading to exhaustion
+        <br><em>Probabilities represent the model's certainty (0-1) for each domain at every timepoint during the test.</em>
+    </p>
+</div>
+
+<div style="text-align: center; margin: 30px 0;">
+    <h3 style="color: #ff6b35; margin-bottom: 20px;">🧠 Exercise Domain Classification: VO₂ vs Time</h3>
+    <div class="chart-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="chart" id="plot_probabilities_vo2">
+            <script>
+                var graphs = {{probabilities_vo2_plot | safe}};
+                Plotly.plot('plot_probabilities_vo2',graphs,{});
+            </script>
+        </div>
+    </div>
+    <p style="font-size: 14px; color: #666; margin-top: 10px;">
+        <strong>Domain-Based VO₂ Progression:</strong> Each point represents VO₂ over time, colored by the <em>most probable</em> exercise domain:
+        <br>• <span style="color: #2ecc71;"><strong>Green points:</strong></span> Moderate domain (sustainable aerobic metabolism)
+        <br>• <span style="color: #f1c40f;"><strong>Yellow points:</strong></span> Heavy domain (elevated lactate steady-state)
+        <br>• <span style="color: #e74c3c;"><strong>Red points:</strong></span> Severe domain (lactate accumulation, limited duration)
+        <br><em>Point color reflects the domain with highest probability at that moment. Horizontal lines show VO₂ at ventilatory thresholds.</em>
+    </p>
+</div>
+
 <!-- Conditional Load vs Time Plot -->
 {% if show_load_plot %}
 <div style="text-align: center; margin: 30px 0;">
