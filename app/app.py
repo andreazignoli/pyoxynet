@@ -971,6 +971,118 @@ def create_energy_contribution_vs_load_plot(df):
     
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
+def create_vo2_vs_load_plot(df):
+    """
+    Create VO2 vs load scatter plot
+    
+    Parameters:
+        df (DataFrame): Raw CPET data with load, VO2_I columns
+        
+    Returns:
+        str: JSON string for plotly plot
+    """
+    import json
+    import plotly.graph_objects as go
+    import numpy as np
+    
+    # Find load change points (where load increases)
+    load_diff = df['load'].diff()
+    change_points = df[load_diff > 0].index.tolist()
+    
+    # Add the end point to capture the last steady state
+    if len(df) - 1 not in change_points:
+        change_points.append(len(df) - 1)
+    
+    avg_loads = []
+    avg_vo2_values = []
+    
+    for point in change_points:
+        # Get 60 samples before this change point (or all available)
+        start_idx = max(0, point - 60)
+        end_idx = point
+        
+        if end_idx - start_idx < 10:  # Skip if too few samples
+            continue
+            
+        # Get the data slice
+        slice_data = df.iloc[start_idx:end_idx]
+        
+        # Calculate averages
+        avg_load = slice_data['load'].mean()
+        avg_vo2 = slice_data['VO2_I'].mean() * 0.001  # Convert to L/min
+        
+        avg_loads.append(avg_load)
+        avg_vo2_values.append(avg_vo2)
+    
+    if not avg_loads:  # No valid points found
+        return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
+    
+    # Create plot
+    fig = go.Figure()
+    
+    # Convert to numpy arrays for fitting
+    x_data = np.array(avg_loads)
+    y_data = np.array(avg_vo2_values)
+    
+    # Add VO2 data points
+    fig.add_trace(go.Scatter(
+        x=avg_loads, 
+        y=avg_vo2_values, 
+        name="VO2 (data)", 
+        mode='markers',
+        marker=dict(size=8, color='#3498db'),
+        showlegend=True
+    ))
+    
+    # Fit linear regression to VO2 vs load data
+    if len(x_data) >= 2:  # Need at least 2 points for linear fit
+        coeffs = np.polyfit(x_data, y_data, 1)
+        slope = coeffs[0]  # mlO2/min per Watt -> multiply by 1000 to get mlO2/W
+        intercept = coeffs[1]  # L/min -> multiply by 1000 to get mlO2/min
+        
+        # Calculate R² (coefficient of determination)
+        y_pred = np.polyval(coeffs, x_data)
+        ss_res = np.sum((y_data - y_pred) ** 2)
+        ss_tot = np.sum((y_data - np.mean(y_data)) ** 2)
+        r_squared = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
+        
+        # Convert to appropriate units for display
+        vo2_resting_ml = intercept * 1000  # Convert L/min to mlO2/min
+        efficiency_ml_per_w = slope * 1000  # Convert L/min/W to mlO2/min/W
+        
+        # Generate smooth curve
+        x_smooth = np.linspace(min(x_data), max(x_data), 100)
+        y_fit = np.polyval(coeffs, x_smooth)
+        
+        # Add fitted curve with equation in legend
+        equation_text = f"VO2 (fit)<br>VO2 resting: {vo2_resting_ml:.0f} mlO2/min<br>Efficiency: {efficiency_ml_per_w:.1f} mlO2/W<br>R² = {r_squared:.3f}"
+        
+        fig.add_trace(go.Scatter(
+            x=x_smooth,
+            y=y_fit,
+            name=equation_text,
+            mode='lines',
+            line=dict(width=3, color='rgba(52, 152, 219, 0.6)', dash='solid'),
+            showlegend=True
+        ))
+    
+    # Update layout
+    fig.update_layout(
+        title="VO2 vs Load",
+        xaxis_title="Load (Watts)",
+        yaxis_title="VO2 (L/min)",
+        plot_bgcolor='white',
+        paper_bgcolor='white',
+        legend=dict(x=0.02, y=0.98, bgcolor='rgba(255,255,255,0.8)'),
+        hovermode='x unified'
+    )
+    
+    # Add grid styling
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+    
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+
 def create_energy_contribution_vs_vo2max_plot(df):
     """
     Create energy contribution percentage plot vs %VO2max
@@ -1367,6 +1479,10 @@ def create_domain_probabilities_vo2_plot(df_estimates, VT=[0, 0, 0, 0]):
         legend=dict(x=0.02, y=0.98),
         hovermode='closest'
     )
+    
+    # Add grid styling
+    fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
+    fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
     
     return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
@@ -1774,6 +1890,7 @@ def read_csv_app():
                 plot_substrate_vo2max = create_substrate_vs_vo2max_plot(t.raw_data_frame)
                 plot_energy_contribution_load = create_energy_contribution_vs_load_plot(t.raw_data_frame)
                 plot_energy_contribution_vo2max = create_energy_contribution_vs_vo2max_plot(t.raw_data_frame)
+                plot_vo2_vs_load = create_vo2_vs_load_plot(t.raw_data_frame)
                 show_fat_plot = True
                 show_energy_plot = True
 
@@ -1792,6 +1909,7 @@ def read_csv_app():
                                        show_fat_plot=show_fat_plot,
                                        energy_contribution_load_plot=plot_energy_contribution_load,
                                        energy_contribution_vo2max_plot=plot_energy_contribution_vo2max,
+                                       vo2_vs_load_plot=plot_vo2_vs_load,
                                        show_energy_plot=show_energy_plot,
                                        probabilities_time_plot=plot_probabilities_time,
                                        probabilities_vo2_plot=plot_probabilities_vo2)
