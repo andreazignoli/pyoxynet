@@ -979,7 +979,7 @@ def create_vo2_vs_load_plot(df):
         df (DataFrame): Raw CPET data with load, VO2_I columns
         
     Returns:
-        str: JSON string for plotly plot
+        str: JSON string for plotly plot    
     """
     import json
     import plotly.graph_objects as go
@@ -995,6 +995,7 @@ def create_vo2_vs_load_plot(df):
     
     avg_loads = []
     avg_vo2_values = []
+    ge_values = []
     
     for point in change_points:
         # Get 60 samples before this change point (or all available)
@@ -1010,9 +1011,24 @@ def create_vo2_vs_load_plot(df):
         # Calculate averages
         avg_load = slice_data['load'].mean()
         avg_vo2 = slice_data['VO2_I'].mean() * 0.001  # Convert to L/min
+        avg_vco2 = slice_data['VCO2_I'].mean() * 0.001  # Convert to L/min
+        
+        # Calculate GE (Gross Efficiency)
+        # EEm = 3.941*VO2/1000+1.106*VCO2/1000 (energy expenditure metabolic)
+        EEm = 3.941 * avg_vo2 + 1.106 * avg_vco2  # Already in L/min
+        
+        # Emecc = 60 * average_load / 1000 (mechanical energy)
+        Emecc = 60 * avg_load / 1000
+        
+        # GE_perc = Emecc/(EEm*4.186) * 100 (gross efficiency percentage)
+        if EEm > 0:
+            GE_perc = Emecc / (EEm * 4.186) * 100
+        else:
+            GE_perc = 0
         
         avg_loads.append(avg_load)
         avg_vo2_values.append(avg_vo2)
+        ge_values.append(GE_perc)
     
     if not avg_loads:  # No valid points found
         return json.dumps({}, cls=plotly.utils.PlotlyJSONEncoder)
@@ -1033,6 +1049,27 @@ def create_vo2_vs_load_plot(df):
         marker=dict(size=8, color='#3498db'),
         showlegend=True
     ))
+    
+    # Add GE text annotations above each point (skip first point)
+    for i, (x, y, ge) in enumerate(zip(avg_loads, avg_vo2_values, ge_values)):
+        if i == 0:  # Skip the first point
+            continue
+        fig.add_annotation(
+            x=x,
+            y=y,
+            text=f"GE: {ge:.1f}%",
+            showarrow=True,
+            arrowhead=2,
+            arrowsize=1,
+            arrowwidth=1,
+            arrowcolor="#2c3e50",
+            ax=0,
+            ay=-30,  # Position above the point
+            bgcolor="rgba(255, 255, 255, 0.9)",
+            bordercolor="#2c3e50",
+            borderwidth=1,
+            font=dict(size=10, color="#2c3e50")
+        )
     
     # Fit linear regression to VO2 vs load data
     if len(x_data) >= 2:  # Need at least 2 points for linear fit
