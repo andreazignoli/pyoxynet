@@ -1912,11 +1912,12 @@ def read_csv_app():
         plot_substrate_vo2max = None
         plot_energy_contribution_load = None
         plot_energy_contribution_vo2max = None
+        plot_vo2_vs_load = None
         show_load_plot = False
         show_fat_plot = False
         show_energy_plot = False
         
-        if 'load' in t.raw_data_frame.columns:
+        if ('load' in t.raw_data_frame.columns and not (t.raw_data_frame['load'] == 0).all()):
             plot_load = create_load_with_gas_exchange_plot(t.raw_data_frame, VT=[VT1, VT2, VT1_oxynet, VT2_oxynet])
             show_load_plot = True
             
