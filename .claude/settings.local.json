@@ -14,7 +14,12 @@
       "Bash(pip install:*)",
       "Bash(python -m pytest tests/unit/test_config.py -v)",
       "Bash(python -m pytest tests/unit/test_security.py::TestCPETFileValidator::test_validate_valid_cpet_file -v)",
-      "Bash(python -m pytest tests/integration/test_secure_api.py::TestSecureAPI::test_health_check_endpoint -v)"
+      "Bash(python -m pytest tests/integration/test_secure_api.py::TestSecureAPI::test_health_check_endpoint -v)",
+      "Bash(python -m pytest tests/unit/test_modular_services.py -v)",
+      "Bash(python -m pytest tests/unit/test_modular_services.py::TestCPETDataService::test_process_csv_file -v)",
+      "Bash(python -m pytest tests/unit/test_modular_services.py::TestCPETVisualizationService::test_vo2_time_plot_creation -v)",
+      "Bash(python -m pytest tests/unit/test_modular_services.py -v --tb=short)",
+      "Bash(python -m pytest tests/unit/ -v --tb=short)"
     ],
     "deny": [],
     "ask": []

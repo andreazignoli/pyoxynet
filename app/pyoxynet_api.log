@@ -1,2 +1,111 @@
 2025-09-25 21:12:13,956 - pyoxynet.api - WARNING - Security event: file_validation_success
 2025-09-25 21:13:35,628 - pyoxynet.api - INFO - PyOxynet secure API initialized
+2025-09-25 21:38:20,831 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:38:43,898 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:38:43,901 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:38:43,947 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:38:43,947 - pyoxynet.api - ERROR - Data preprocessing failed: Invalid fill method. Expecting pad (ffill) or backfill (bfill). Got forward
+2025-09-25 21:38:44,010 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:38:44,012 - pyoxynet.api - ERROR - VO2 time plot creation failed: make_subplots() got unexpected keyword argument(s): ['shared_xaxis']
+2025-09-25 21:38:44,123 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:38:44,123 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:38:44,124 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:38:44,124 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:38:44,124 - pyoxynet.api - INFO - Starting CPET data analysis
+2025-09-25 21:38:44,124 - pyoxynet.api - ERROR - VO2 time plot creation failed: make_subplots() got unexpected keyword argument(s): ['shared_xaxis']
+2025-09-25 21:38:44,127 - pyoxynet.api - WARNING - Failed to generate ventilatory_equivalents: CPETVisualizationService.create_ventilatory_equivalents_plot() takes 2 positional arguments but 3 were given
+2025-09-25 21:38:44,158 - pyoxynet.api - INFO - CPET data analysis completed successfully
+2025-09-25 21:38:44,160 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:38:44,160 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:38:44,160 - pyoxynet.api - INFO - Starting CPET analysis for file: test.csv
+2025-09-25 21:38:44,163 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:38:44,164 - pyoxynet.api - ERROR - VO2 time plot creation failed: make_subplots() got unexpected keyword argument(s): ['shared_xaxis']
+2025-09-25 21:38:44,166 - pyoxynet.api - WARNING - Failed to generate ventilatory_equivalents: CPETVisualizationService.create_ventilatory_equivalents_plot() takes 2 positional arguments but 3 were given
+2025-09-25 21:38:44,212 - pyoxynet.api - INFO - CPET analysis completed successfully for test.csv
+2025-09-25 21:38:44,214 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:38:44,214 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:38:44,217 - pyoxynet.api - INFO - Successfully processed file: integration_test.csv (60 rows)
+2025-09-25 21:38:44,218 - pyoxynet.api - ERROR - VO2 time plot creation failed: make_subplots() got unexpected keyword argument(s): ['shared_xaxis']
+2025-09-25 21:38:44,226 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:38:44,226 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:38:44,226 - pyoxynet.api - INFO - Starting CPET analysis for file: invalid.csv
+2025-09-25 21:38:44,227 - pyoxynet.api - INFO - Successfully processed file: invalid.csv (0 rows)
+2025-09-25 21:39:14,343 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:39:14,349 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:14,398 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:14,402 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:14,515 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:14,516 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:14,516 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:14,516 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:14,516 - pyoxynet.api - INFO - Starting CPET data analysis
+2025-09-25 21:39:14,541 - pyoxynet.api - WARNING - Failed to generate ventilatory_equivalents: CPETVisualizationService.create_ventilatory_equivalents_plot() takes 2 positional arguments but 3 were given
+2025-09-25 21:39:14,572 - pyoxynet.api - INFO - CPET data analysis completed successfully
+2025-09-25 21:39:14,573 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:14,573 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:14,573 - pyoxynet.api - INFO - Starting CPET analysis for file: test.csv
+2025-09-25 21:39:14,576 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:39:14,594 - pyoxynet.api - WARNING - Failed to generate ventilatory_equivalents: CPETVisualizationService.create_ventilatory_equivalents_plot() takes 2 positional arguments but 3 were given
+2025-09-25 21:39:14,624 - pyoxynet.api - INFO - CPET analysis completed successfully for test.csv
+2025-09-25 21:39:14,625 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:14,625 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:14,629 - pyoxynet.api - INFO - Successfully processed file: integration_test.csv (60 rows)
+2025-09-25 21:39:14,637 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:14,638 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:14,638 - pyoxynet.api - INFO - Starting CPET analysis for file: invalid.csv
+2025-09-25 21:39:14,639 - pyoxynet.api - INFO - Successfully processed file: invalid.csv (0 rows)
+2025-09-25 21:39:28,425 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:39:28,427 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:28,428 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:28,430 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:28,533 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:28,533 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:28,534 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:28,534 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:28,534 - pyoxynet.api - INFO - Starting CPET data analysis
+2025-09-25 21:39:28,556 - pyoxynet.api - WARNING - Failed to generate ventilatory_equivalents: CPETVisualizationService.create_ventilatory_equivalents_plot() takes 2 positional arguments but 3 were given
+2025-09-25 21:39:28,585 - pyoxynet.api - INFO - CPET data analysis completed successfully
+2025-09-25 21:39:28,586 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:28,586 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:28,586 - pyoxynet.api - INFO - Starting CPET analysis for file: test.csv
+2025-09-25 21:39:28,589 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:39:28,606 - pyoxynet.api - WARNING - Failed to generate ventilatory_equivalents: CPETVisualizationService.create_ventilatory_equivalents_plot() takes 2 positional arguments but 3 were given
+2025-09-25 21:39:28,637 - pyoxynet.api - INFO - CPET analysis completed successfully for test.csv
+2025-09-25 21:39:28,638 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:28,638 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:28,642 - pyoxynet.api - INFO - Successfully processed file: integration_test.csv (60 rows)
+2025-09-25 21:39:28,650 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:28,651 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:28,651 - pyoxynet.api - INFO - Starting CPET analysis for file: invalid.csv
+2025-09-25 21:39:28,652 - pyoxynet.api - INFO - Successfully processed file: invalid.csv (0 rows)
+2025-09-25 21:39:37,019 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:39:37,022 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:37,022 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:37,024 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:37,149 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:37,150 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:37,150 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:37,151 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:37,151 - pyoxynet.api - INFO - Starting CPET data analysis
+2025-09-25 21:39:37,175 - pyoxynet.api - WARNING - Failed to generate ventilatory_equivalents: CPETVisualizationService.create_ventilatory_equivalents_plot() takes 2 positional arguments but 3 were given
+2025-09-25 21:39:37,206 - pyoxynet.api - INFO - CPET data analysis completed successfully
+2025-09-25 21:39:37,207 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:37,207 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:37,207 - pyoxynet.api - INFO - Starting CPET analysis for file: test.csv
+2025-09-25 21:39:37,210 - pyoxynet.api - INFO - Successfully processed file: test.csv (60 rows)
+2025-09-25 21:39:37,228 - pyoxynet.api - WARNING - Failed to generate ventilatory_equivalents: CPETVisualizationService.create_ventilatory_equivalents_plot() takes 2 positional arguments but 3 were given
+2025-09-25 21:39:37,258 - pyoxynet.api - INFO - CPET analysis completed successfully for test.csv
+2025-09-25 21:39:37,259 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:37,259 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:37,263 - pyoxynet.api - INFO - Successfully processed file: integration_test.csv (60 rows)
+2025-09-25 21:39:37,272 - pyoxynet.api - WARNING - TensorFlow Lite model not found: TensorFlow Lite model not found in any of: ['../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', 'pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/app/pyoxynet/pyoxynet/tfl_models/tfl_model.tflite', '/Users/andreazignoli/pyoxynet/app/tests/../pyoxynet/pyoxynet/tfl_models/tfl_model.tflite']
+2025-09-25 21:39:37,272 - pyoxynet.api - INFO - CPET Analysis Service initialized
+2025-09-25 21:39:37,272 - pyoxynet.api - INFO - Starting CPET analysis for file: invalid.csv
+2025-09-25 21:39:37,274 - pyoxynet.api - INFO - Successfully processed file: invalid.csv (0 rows)
+2025-09-25 21:39:37,283 - pyoxynet.api - WARNING - Security event: file_validation_success
+2025-09-25 21:39:37,295 - pyoxynet.api - WARNING - Security event: file_validation_success
+2025-09-25 21:39:37,429 - pyoxynet.api - INFO - Medical data cleanup completed - 1 files removed
+2025-09-25 21:39:37,431 - pyoxynet.api - INFO - Medical data cleanup completed - 1 files removed
+2025-09-25 21:40:37,440 - pyoxynet.api - INFO - Medical data cleanup completed - 1 files removed
+2025-09-25 21:40:37,449 - pyoxynet.api - WARNING - Security event: file_validation_success
+2025-09-25 21:40:37,449 - pyoxynet.api - INFO - Medical data cleanup completed - 1 files removed

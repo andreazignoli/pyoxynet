@@ -53,6 +53,42 @@ class CPETProcessingLogger:
         self.config = config
         self._setup_logger()
     
+    # Standard logging methods for compatibility with services
+    def info(self, message: str, **kwargs):
+        """Log info level message"""
+        if kwargs:
+            self.logger.info(message, extra=kwargs)
+        else:
+            self.logger.info(message)
+    
+    def debug(self, message: str, **kwargs):
+        """Log debug level message"""
+        if kwargs:
+            self.logger.debug(message, extra=kwargs)
+        else:
+            self.logger.debug(message)
+    
+    def error(self, message: str, **kwargs):
+        """Log error level message"""
+        if kwargs:
+            self.logger.error(message, extra=kwargs)
+        else:
+            self.logger.error(message)
+    
+    def warning(self, message: str, **kwargs):
+        """Log warning level message"""
+        if kwargs:
+            self.logger.warning(message, extra=kwargs)
+        else:
+            self.logger.warning(message)
+    
+    def critical(self, message: str, **kwargs):
+        """Log critical level message"""
+        if kwargs:
+            self.logger.critical(message, extra=kwargs)
+        else:
+            self.logger.critical(message)
+    
     def _setup_logger(self):
         """Setup logger with PyOxynet-specific configuration"""
         self.logger.setLevel(getattr(logging, self.config.LOG_LEVEL.upper()))
