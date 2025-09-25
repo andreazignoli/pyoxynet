@@ -26,3 +26,5 @@ coverage.xml
 *.log
 .idea
 .vscode
+.claude
+.specify

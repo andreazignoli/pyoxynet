@@ -36,3 +36,5 @@ docs/*
 !docs/Makefile
 
 .DS_store
+
+.claude

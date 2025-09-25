@@ -8,7 +8,13 @@
       "Bash(git commit:*)",
       "Bash(heroku:*)",
       "Bash(git push:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)",
+      "Bash(python -m pytest tests/ -v --tb=short)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest tests/unit/test_config.py -v)",
+      "Bash(python -m pytest tests/unit/test_security.py::TestCPETFileValidator::test_validate_valid_cpet_file -v)",
+      "Bash(python -m pytest tests/integration/test_secure_api.py::TestSecureAPI::test_health_check_endpoint -v)"
     ],
     "deny": [],
     "ask": []
