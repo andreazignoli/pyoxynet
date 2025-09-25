@@ -1,14 +1,33 @@
+# PyOxynet Production Dependencies  
+# Scientific API for cardiopulmonary exercise test analysis
+# IMPORTANT: Install with --extra-index-url https://google-coral.github.io/py-repo/
+
 --extra-index-url https://google-coral.github.io/py-repo/
 
+# Core Flask Framework
 flask
 flasgger
+
+# Scientific Computing & Visualization (TensorFlow Lite compatible)
 plotly>=5.0,<6.0
 faker
 chardet
 openpyxl
 xlrd
 matplotlib
+
+# PyOxynet with TensorFlow Lite support
 pyoxynet[tflite]==0.1.8
+
+# TensorFlow Lite Runtime (Production inference)
 tflite-runtime
+
+# NumPy version compatible with TFLite runtime
 numpy==1.26.4
+
+# WSGI Server for production
 gunicorn
+
+# Additional production dependencies
+cryptography
+python-dotenv
