@@ -19,7 +19,10 @@
       "Bash(python -m pytest tests/unit/test_modular_services.py::TestCPETDataService::test_process_csv_file -v)",
       "Bash(python -m pytest tests/unit/test_modular_services.py::TestCPETVisualizationService::test_vo2_time_plot_creation -v)",
       "Bash(python -m pytest tests/unit/test_modular_services.py -v --tb=short)",
-      "Bash(python -m pytest tests/unit/ -v --tb=short)"
+      "Bash(python -m pytest tests/unit/ -v --tb=short)",
+      "Bash(python -m pytest tests/integration/test_modern_api.py::TestModernAPIEndpoints::test_api_info_endpoint -v)",
+      "Bash(python -m pytest tests/integration/test_modern_api.py::TestModernAPIEndpoints -v)",
+      "Bash(python -m pytest tests/integration/test_modern_api.py::TestHealthCheckEndpoint -v)"
     ],
     "deny": [],
     "ask": []

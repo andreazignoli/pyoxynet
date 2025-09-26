@@ -361,9 +361,14 @@ class MedicalDataManager:
 def create_security_manager(config, logger):
     """Factory function to create security manager"""
     file_validator = CPETFileValidator(logger)
+    
+    # Handle different config types gracefully
+    upload_folder = getattr(config, 'UPLOAD_FOLDER', 'temp_uploads')
+    cleanup_minutes = getattr(config, 'AUTO_CLEANUP_MINUTES', 10)
+    
     data_manager = MedicalDataManager(
-        config.UPLOAD_FOLDER,
-        config.AUTO_CLEANUP_MINUTES,
+        upload_folder,
+        cleanup_minutes,
         logger
     )
     

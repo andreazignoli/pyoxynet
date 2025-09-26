@@ -85,6 +85,12 @@ class TestingConfig(Config):
         self.SECRET_KEY = 'testing-secret-key-not-for-production'
         self.MAX_BATCH_SIZE = 10  # Smaller batches for testing
         self.AUTO_CLEANUP_MINUTES = 1  # Fast cleanup for tests
+        
+        # Add missing attributes for security manager compatibility
+        self.UPLOAD_FOLDER = 'test_uploads'
+        self.DEBUG = False
+        self.WTF_CSRF_ENABLED = False
+        self.LOG_LEVEL = 'DEBUG'
 
 
 # Configuration mapping
