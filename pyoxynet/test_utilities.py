@@ -231,6 +231,109 @@ class TestSafeNormalize(unittest.TestCase):
             self.skipTest("TensorFlow not installed")
 
 
+def generate_and_plot_cpet(output_path='/tmp/df_gen.png'):
+    """
+    Generate CPET data and create visualization plot
+
+    This function generates synthetic CPET data using the TensorFlow generator,
+    creates a scatter plot with ventilatory thresholds, and saves to file.
+
+    Args:
+        output_path (str): Path to save the plot. Default: '/tmp/df_gen.png'
+
+    Returns:
+        tuple: (df_gen, dict_gen) - DataFrame and metadata dict
+
+    Example:
+        >>> df_gen, dict_gen = generate_and_plot_cpet()
+        >>> print(f"Saved plot to /tmp/df_gen.png")
+    """
+    print("\n" + "=" * 70)
+    print("Generating CPET Data and Creating Visualization")
+    print("=" * 70)
+
+    # Import required modules
+    try:
+        from pyoxynet.utilities import load_tf_generator, generate_CPET
+        import matplotlib.pyplot as plt
+    except ImportError as e:
+        print(f"Error: Missing dependencies: {e}")
+        print("Install with: pip install tensorflow scipy pandas matplotlib")
+        return None, None
+
+    # Load generator
+    print("\n1. Loading TensorFlow generator model...")
+    generator_model = load_tf_generator()
+
+    if generator_model is None:
+        print("   ✗ Failed to load generator model")
+        print("   Make sure TensorFlow is installed: pip install tensorflow")
+        return None, None
+
+    print("   ✓ Generator model loaded")
+
+    # Generate CPET data
+    print("\n2. Generating CPET data...")
+    df_gen, dict_gen = generate_CPET(generator_model, plot=False, fitness_group=2)
+
+    print(f"   ✓ Generated {len(df_gen)} data points")
+    print(f"   - VT1: {dict_gen['VT1']} sec (VO2: {dict_gen['VO2VT1']} ml/min)")
+    print(f"   - VT2: {dict_gen['VT2']} sec (VO2: {dict_gen['VO2VT2']} ml/min)")
+
+    # Create visualization
+    print("\n3. Creating visualization...")
+    plt.figure(figsize=(10, 6))
+
+    # Scatter plot
+    plt.scatter(df_gen.VO2_I, df_gen.VCO2_I, alpha=0.6, s=10, label='CPET Data')
+
+    # VT1 vertical line
+    plt.vlines(
+        int(dict_gen['VO2VT1']),
+        df_gen.VCO2_I.min(),
+        df_gen.VCO2_I.max(),
+        colors='red',
+        linestyles='solid',
+        linewidth=2,
+        label=f"VT1 (VO2={int(dict_gen['VO2VT1'])} ml/min)"
+    )
+
+    # VT2 vertical line
+    plt.vlines(
+        int(dict_gen['VO2VT2']),
+        df_gen.VCO2_I.min(),
+        df_gen.VCO2_I.max(),
+        colors='orange',
+        linestyles='dashed',
+        linewidth=2,
+        label=f"VT2 (VO2={int(dict_gen['VO2VT2'])} ml/min)"
+    )
+
+    plt.xlabel('VO2 (ml/min)', fontsize=12)
+    plt.ylabel('VCO2 (ml/min)', fontsize=12)
+    plt.title('Generated CPET: VO2 vs VCO2 with Ventilatory Thresholds', fontsize=14)
+    plt.legend(loc='best')
+    plt.grid(True, alpha=0.3)
+
+    # Save plot
+    plt.savefig(output_path, dpi=150, bbox_inches='tight')
+    plt.close()
+
+    print(f"   ✓ Plot saved to: {output_path}")
+
+    # Also save CSV
+    csv_path = output_path.replace('.png', '.csv')
+    df_gen.to_csv(csv_path, index=False)
+    print(f"   ✓ Data saved to: {csv_path}")
+
+    print("\n" + "=" * 70)
+    print("✓ Complete!")
+    print(f"View plot: open {output_path}")
+    print("=" * 70)
+
+    return df_gen, dict_gen
+
+
 def run_tests():
     """Run all tests"""
     print("=" * 70)
