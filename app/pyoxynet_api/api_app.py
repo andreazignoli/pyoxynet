@@ -13,7 +13,7 @@ from config import DevelopmentConfig, ProductionConfig, TestingConfig
 from security import create_security_manager
 from .core.services.cpet_service import CPETAnalysisService
 from .api.v1.analysis_api import api as analysis_api_v1, init_analysis_api
-from .core.utils.api_response import APIResponse
+from .core.utils.api_response import APIResponse, NumpyEncoder
 
 
 def create_api_app(config_name: Optional[str] = None) -> Flask:
@@ -27,6 +27,9 @@ def create_api_app(config_name: Optional[str] = None) -> Flask:
         Configured Flask API application
     """
     app = Flask(__name__)
+    
+    # Configure JSON encoder for NumPy arrays
+    app.json_encoder = NumpyEncoder
     
     # Load configuration
     config_name = config_name or os.environ.get('FLASK_ENV', 'development')
@@ -51,7 +54,7 @@ def create_api_app(config_name: Optional[str] = None) -> Flask:
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
          allow_headers=['Content-Type', 'Authorization', 'X-API-Key'])
     
-    # Create main API instance
+    # Create main API instance with custom JSON encoder
     main_api = Api(
         app,
         title="PyOxynet CPET Analysis Platform",
@@ -132,7 +135,7 @@ def create_api_app(config_name: Optional[str] = None) -> Flask:
         
         Built with ❤️ for the exercise physiology research community.
         """,
-        doc="/",  # Root serves documentation
+        doc="/docs/",  # Documentation at /docs/
         prefix="",
         contact="PyOxynet Team",
         contact_email="support@pyoxynet.com",
@@ -144,6 +147,26 @@ def create_api_app(config_name: Optional[str] = None) -> Flask:
         }
     )
     
+    # Configure JSON encoder for Flask-RESTX
+    import json
+    from flask_restx.representations import output_json
+    
+    @main_api.representation('application/json')
+    def custom_json(data, code, headers=None):
+        """Custom JSON representation with NumPy support"""
+        settings = {}
+        if app.debug:
+            settings.setdefault('indent', 4)
+        
+        # Use our custom encoder
+        dumped = json.dumps(data, cls=NumpyEncoder, **settings) + "\n"
+        
+        from flask import make_response
+        resp = make_response(dumped, code)
+        resp.headers.extend(headers or {})
+        resp.headers['Content-Type'] = 'application/json'
+        return resp
+    
     # Initialize services
     cpet_service = CPETAnalysisService(logger=app.logger)
     
@@ -153,11 +176,29 @@ def create_api_app(config_name: Optional[str] = None) -> Flask:
     # Add namespaces
     main_api.add_namespace(analysis_api_v1)
     
-    # Add root redirect to docs
-    @app.route('/')
-    def index():
-        """Redirect to API documentation"""
-        return redirect('/docs/')
+    # Add simple root route that doesn't conflict with Flask-RESTX
+    @app.route('/welcome')
+    def welcome():
+        """API welcome page"""
+        return APIResponse.success(
+            data={
+                "welcome": "PyOxynet CPET Analysis API v1.0.0",
+                "description": "Professional CPET analysis for exercise physiologists and researchers",
+                "endpoints": {
+                    "documentation": "/docs/",
+                    "api_info": "/api",
+                    "health_check": "/api/v1/health",
+                    "file_analysis": "/api/v1/analyze/file",
+                    "json_analysis": "/api/v1/analyze/data"
+                },
+                "quick_start": {
+                    "upload_file": "POST /api/v1/analyze/file with multipart/form-data",
+                    "json_data": "POST /api/v1/analyze/data with JSON payload"
+                },
+                "required_variables": ["VO2", "VCO2", "VE", "PetO2", "PetCO2"]
+            },
+            message="Welcome to PyOxynet API - Visit /docs/ for interactive documentation"
+        )[0]
     
     # Add API info endpoint
     @app.route('/api')

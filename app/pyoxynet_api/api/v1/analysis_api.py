@@ -41,9 +41,41 @@ api = Namespace(
     - Data quality assessment and validation
     
     ## Getting Started
-    1. Upload your CPET data file or send JSON data
-    2. Receive comprehensive analysis results with visualizations
-    3. Download reports and integrate findings into your research
+    
+    ### File Upload (Recommended)
+    ```bash
+    curl -X POST -F "file=@your_cpet_data.csv" \\
+         http://localhost:5001/api/v1/analyze/file
+    ```
+    
+    ### JSON Data Analysis
+    ```bash
+    curl -X POST -H "Content-Type: application/json" \\
+         -d '{
+           "data": [
+             {
+               "t": 0, "VO2": 1680, "VCO2": 1090, "VE": 31.3, 
+               "PetO2": 76.5, "PetCO2": 37.1, "R": 0.65
+             },
+             {
+               "t": 1, "VO2": 1700, "VCO2": 1100, "VE": 32.0,
+               "PetO2": 77.0, "PetCO2": 37.5, "R": 0.66
+             }
+           ]
+         }' \\
+         http://localhost:5001/api/v1/analyze/data
+    ```
+    
+    ### Required Variables for ML Analysis
+    - **VO2**: Oxygen uptake (ml/min) - REQUIRED
+    - **VCO2**: CO2 output (ml/min) - REQUIRED  
+    - **VE**: Minute ventilation (L/min) - REQUIRED
+    - **PetO2**: End-tidal oxygen pressure (mmHg) - REQUIRED
+    - **PetCO2**: End-tidal CO2 pressure (mmHg) - REQUIRED
+    
+    ### Response Format
+    The API returns exercise domain classification (Moderate/Heavy/Severe), 
+    confidence scores, data quality metrics, and optional visualizations.
     
     For detailed examples and SDKs, visit our documentation.
     """
@@ -87,13 +119,15 @@ analysis_options = api.model('AnalysisOptions', {
 })
 
 cpet_data_point = api.model('CPETDataPoint', {
-    'TIME': fields.Float(description='Time in seconds'),
+    't': fields.Float(description='Time in seconds'),
     'VO2': fields.Float(required=True, description='Oxygen uptake (ml/min)', min=0),
-    'VCO2': fields.Float(required=True, description='CO2 output (ml/min)', min=0),
+    'VCO2': fields.Float(required=True, description='CO2 output (ml/min)', min=0), 
     'VE': fields.Float(required=True, description='Minute ventilation (L/min)', min=0),
-    'HR': fields.Float(description='Heart rate (bpm)', min=0, max=300),
-    'RER': fields.Float(description='Respiratory exchange ratio', min=0.5, max=2.0),
-    'LOAD': fields.Float(description='Workload (watts)', min=0)
+    'PetO2': fields.Float(required=True, description='End-tidal oxygen pressure (mmHg)', min=0),
+    'PetCO2': fields.Float(required=True, description='End-tidal CO2 pressure (mmHg)', min=0),
+    'R': fields.Float(description='Respiratory exchange ratio', min=0.5, max=2.0),
+    'HR': fields.Float(description='Heart rate (bpm) - optional for visualization only', min=0, max=300),
+    'LOAD': fields.Float(description='Workload (watts) - optional for visualization only', min=0)
 })
 
 json_analysis_request = api.model('JSONAnalysisRequest', {
@@ -575,13 +609,14 @@ class HealthCheckResource(Resource):
             )
             
             # Return raw dict for Flask-RESTX serialization
+            from datetime import datetime
             return {
                 'success': True,
                 'status': 'ok',
                 'data': response_data,
                 'metadata': {
                     'api_version': '1.0.0',
-                    'timestamp': pd.Timestamp.now().isoformat()
+                    'timestamp': datetime.now().isoformat()
                 },
                 'message': message,
                 'errors': None
