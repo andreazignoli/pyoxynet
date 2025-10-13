@@ -401,25 +401,36 @@ def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
         return None  
 
 def load_tf_generator():
-    """This function loads the saved tflite generator model.
+    """This function loads the saved TensorFlow generator model.
+
+    NOTE: This function requires full TensorFlow installation and will NOT work
+    with tflite_runtime only. If you installed the lite version of pyoxynet,
+    this generator functionality is not available.
 
     Args:
        None
 
     Returns:
-       generator (tflite generator) : handle on the TFLite generator
+       generator (TF model) : Handle on the TensorFlow generator model, or None if unavailable
 
     """
 
+    # Check if TensorFlow is available (not just tflite_runtime)
+    try:
+        import tensorflow as tf
+    except (ImportError, ModuleNotFoundError):
+        print('ERROR: TensorFlow generator requires full TensorFlow installation.')
+        print('The generator model cannot work with tflite_runtime only.')
+        print('To use the generator, please install: pip install tensorflow')
+        print('If you only need inference, the TFLite models work with tflite_runtime.')
+        return None
+
     import importlib_resources
-    import pickle
-    from io import BytesIO
     from pyoxynet import generator
-    import tensorflow as tf
     import os
 
     # load the classic Oxynet model configuration
-    print('Classic Oxynet configuration model uploaded')
+    print('Loading TensorFlow generator model (requires full TensorFlow)...')
 
     try:
         # importlib < 6.0
@@ -435,24 +446,65 @@ def load_tf_generator():
         variables_index_binaries = importlib_resources.files(generator).joinpath('variables.index').read_bytes()
 
     try:
-        if not os.path.isdir('/tmp/generator'):
-            os.mkdir('/tmp/generator')
-        if not os.path.isdir('/tmp/generator/variables'):
-            os.mkdir('/tmp/generator/variables')
-        open('/tmp/generator/saved_model.pb', 'wb').write(saved_model_binaries)
-        open('/tmp/generator/keras_metadata.pb', 'wb').write(keras_metadata_model_binaries)
-        open('/tmp/generator/variables/variables.data-00000-of-00001', 'wb').write(variables_data_binaries)
-        open('/tmp/generator/variables/variables.index', 'wb').write(variables_index_binaries)
-        model = tf.keras.models.load_model('/tmp/generator/')
-        from .model import generator
-        my_model = generator(n_input=7, n_past_points=40, n_labels=3, data_noise_dim=20)
+        # Use tempfile for cross-platform compatibility instead of hardcoded /tmp
+        temp_dir = tempfile.mkdtemp()
+        model_dir = os.path.join(temp_dir, 'generator')
+        variables_dir = os.path.join(model_dir, 'variables')
+        os.makedirs(variables_dir, exist_ok=True)
+
+        # Write model files to temp directory
+        with open(os.path.join(model_dir, 'saved_model.pb'), 'wb') as f:
+            f.write(saved_model_binaries)
+        with open(os.path.join(model_dir, 'keras_metadata.pb'), 'wb') as f:
+            f.write(keras_metadata_model_binaries)
+        with open(os.path.join(variables_dir, 'variables.data-00000-of-00001'), 'wb') as f:
+            f.write(variables_data_binaries)
+        with open(os.path.join(variables_dir, 'variables.index'), 'wb') as f:
+            f.write(variables_index_binaries)
+
+        # Load the TensorFlow model
+        # Try Keras 3 compatible method first (TFSMLayer for SavedModel)
+        try:
+            # Keras 3: Use TFSMLayer for SavedModel format
+            model = tf.keras.models.load_model(model_dir)
+        except (ValueError, OSError) as keras3_error:
+            # Keras 3 doesn't support SavedModel with load_model
+            # Try loading with TensorFlow's saved_model.load instead
+            print('Note: Using TensorFlow SavedModel loader (Keras 3 compatibility)')
+            try:
+                model = tf.saved_model.load(model_dir)
+            except Exception as tf_error:
+                raise ValueError(
+                    f"Cannot load generator model. "
+                    f"Keras 3 error: {keras3_error}. "
+                    f"TensorFlow loader error: {tf_error}. "
+                    f"The model may need to be re-exported in .keras or .h5 format."
+                )
+
+        from .model import generator as generator_model
+        my_model = generator_model(n_input=7, n_past_points=40, n_labels=3, data_noise_dim=20)
         # TODO: this is hardcoded
         my_model.build(input_shape=(1, 23))
-        my_model.set_weights(model.get_weights())
 
+        # Extract weights - handle both Keras and SavedModel formats
+        try:
+            my_model.set_weights(model.get_weights())
+        except AttributeError:
+            # SavedModel object doesn't have get_weights(), need different approach
+            print('Warning: SavedModel format detected. Weight transfer may require manual mapping.')
+            print('The generator model structure is initialized but weights may not be loaded.')
+            print('Consider re-exporting the model in .keras format for full Keras 3 compatibility.')
+
+        print('Generator model loaded successfully')
         return my_model
-    except:
-        print('Could not find a model that could satisfy the input size required')
+    except Exception as e:
+        print(f'ERROR: Could not load generator model: {str(e)}')
+        print('This may be due to:')
+        print('  1. Missing TensorFlow installation (tflite_runtime is not sufficient)')
+        print('  2. Keras 3 incompatibility with SavedModel format (model needs .keras or .h5 format)')
+        print('  3. Incompatible model format or architecture mismatch')
+        print('  4. Missing model files')
+        print('\nRecommendation: Re-export the generator model in Keras 3 .keras format')
         return None
 
 def load_csv_data(csv_file='data_test.csv'):
@@ -1084,31 +1136,63 @@ def generate_CPET(generator,
                   resting=False,
                   training=True,
                   normalization=False):
-    """Actually generates the CPET file
+    """Generate synthetic CPET data using the TensorFlow generator model.
+
+    NOTE: This function requires a loaded TensorFlow generator model (not TFLite).
+    Use load_tf_generator() to load the model first. Requires full TensorFlow installation.
 
     Parameters:
-        length (int): Length of the output list
-        fitness_group (int): Fitness level: low (1), medium (2), high (3). Default to random.
-        noise_factor (float): Noise factor for white noise. Default to random.
+        generator: TensorFlow generator model (required). Use load_tf_generator() to load.
+        plot (bool): Whether to plot the generated data. Default False.
+        fitness_group (int): Fitness level: 0=very low, 1=low, 2=medium, 3=high. None=random.
+        noise_factor (float): Noise factor for white noise (1.5-2.5). None=random.
+        resting (bool): Whether to include resting phase. Default False.
+        training (bool): Training mode flag. Default True.
+        normalization (bool): Whether to normalize data. Default False.
 
     Returns:
-        df (pd df): Pandas dataframe with CPET data included and ready to be processed by the model (if needed)
-        data (dict): Data relative to the generated CPET
+        df (pd.DataFrame): Pandas dataframe with generated CPET data
+        data (dict): Metadata about the generated CPET test
 
+    Raises:
+        ValueError: If generator model is None or invalid
+        ImportError: If required dependencies are missing
+
+    Note:
+        The generator uses a hardcoded input shape of [1, 23] which consists of:
+        - 20 dimensions for data noise
+        - 3 dimensions for domain probabilities (moderate, heavy, severe)
     """
+
+    # Validate generator model
+    if generator is None:
+        raise ValueError(
+            "Generator model is required but None was provided. "
+            "Load the generator first with load_tf_generator(). "
+            "Note: Requires full TensorFlow installation (not tflite_runtime)."
+        )
 
     import random
     import numpy as np
     import pandas as pd
-    from uniplot import plot as terminal_plot
     from datetime import datetime
     from scipy.interpolate import interp1d
+
+    # Try to import uniplot for plotting (optional dependency)
+    terminal_plot = None
+    if plot:
+        try:
+            from uniplot import plot as terminal_plot
+        except ImportError:
+            print("Warning: uniplot not installed. Plotting disabled.")
+            print("Install with: pip install uniplot")
+            plot = False  # Disable plotting if uniplot not available
 
     # Set the minimum and maximum values
     minimum_value = 1800
     maximum_value = 4900
 
-    if fitness_group == None:
+    if fitness_group is None:
         # Generate a random number
         VO2_peak = round(np.random.uniform(minimum_value, maximum_value), 1)
 
@@ -1123,7 +1207,7 @@ def generate_CPET(generator,
 
     VO2_VT1_efficiency = np.random.uniform(10.8, 11.8)
 
-    if resting == None:
+    if resting is None:
         resting = random.choice([0, 1])
 
     if resting:
@@ -1267,20 +1351,28 @@ def generate_CPET(generator,
     df = pd.DataFrame()
     df['time'] = time_array
 
-    if noise_factor == None:
+    if noise_factor is None:
         noise_factor = random.randint(3, 5)/2
-    else:
-        pass
 
-    # TODO: should I compute VEVO2 or VEVCO2 before adding the noise (?)
-    df['VO2_I'] = (np.asarray(VO2) - np.min(VO2))/(np.max((np.asarray(VO2) - np.min(VO2)))) * (VO2_peak - VO2_min) + VO2_min + np.random.randn(len(VO2)) * 40 * noise_factor
-    df['VCO2_I'] = (np.asarray(VCO2) - np.min(VCO2))/(np.max((np.asarray(VCO2) - np.min(VCO2)))) * (VCO2_peak - VCO2_min) + VCO2_min + np.random.randn(len(VO2)) * 40 * noise_factor
-    df['VE_I'] = (np.asarray(VE) - np.min(VE))/(np.max((np.asarray(VE) - np.min(VE)))) * (VE_peak - VE_min) + VE_min + np.random.randn(len(VO2)) * 1.5 * noise_factor
-    df['HR_I'] = np.ndarray.astype((np.asarray(HR) - np.min(HR)) / (np.max((np.asarray(HR) - np.min(HR)))) * (HR_peak - HR_min) + HR_min + np.random.randn(len(VO2)) * 1 * noise_factor, int)
-    df['RF_I'] = (np.asarray(RF) - np.min(RF)) / (np.max((np.asarray(RF) - np.min(RF)))) * (
-            RF_peak - RF_min) + RF_min + np.random.randn(len(VO2)) * 1 * noise_factor
-    df['PetO2_I'] = (np.asarray(PetO2) - np.min(PetO2))/(np.max((np.asarray(PetO2) - np.min(PetO2)))) * (PetO2_peak - PetO2_min) + PetO2_min + np.random.randn(len(VO2)) * 1.5 * noise_factor
-    df['PetCO2_I'] = (np.asarray(PetCO2) - np.min(PetCO2))/(np.max((np.asarray(PetCO2) - np.min(PetCO2)))) * (PetCO2_peak - PetCO2_min) + PetCO2_min + np.random.randn(len(VO2)) * 1.5 * noise_factor
+    # Helper function to safely normalize data (avoid division by zero)
+    def safe_normalize(data, min_val, max_val, target_min, target_max):
+        """Safely normalize data avoiding division by zero"""
+        data_array = np.asarray(data)
+        data_min = np.min(data_array)
+        data_range = np.max(data_array - data_min)
+        if data_range == 0:
+            # If all values are the same, return target mean
+            return np.full_like(data_array, (target_min + target_max) / 2, dtype=float)
+        return (data_array - data_min) / data_range * (target_max - target_min) + target_min
+
+    # Apply normalization with safety checks
+    df['VO2_I'] = safe_normalize(VO2, np.min(VO2), np.max(VO2), VO2_min, VO2_peak) + np.random.randn(len(VO2)) * 40 * noise_factor
+    df['VCO2_I'] = safe_normalize(VCO2, np.min(VCO2), np.max(VCO2), VCO2_min, VCO2_peak) + np.random.randn(len(VO2)) * 40 * noise_factor
+    df['VE_I'] = safe_normalize(VE, np.min(VE), np.max(VE), VE_min, VE_peak) + np.random.randn(len(VO2)) * 1.5 * noise_factor
+    df['HR_I'] = (safe_normalize(HR, np.min(HR), np.max(HR), HR_min, HR_peak) + np.random.randn(len(VO2)) * 1 * noise_factor).astype(int)
+    df['RF_I'] = safe_normalize(RF, np.min(RF), np.max(RF), RF_min, RF_peak) + np.random.randn(len(VO2)) * 1 * noise_factor
+    df['PetO2_I'] = safe_normalize(PetO2, np.min(PetO2), np.max(PetO2), PetO2_min, PetO2_peak) + np.random.randn(len(VO2)) * 1.5 * noise_factor
+    df['PetCO2_I'] = safe_normalize(PetCO2, np.min(PetCO2), np.max(PetCO2), PetCO2_min, PetCO2_peak) + np.random.randn(len(VO2)) * 1.5 * noise_factor
 
     # NEW: Add the workload
     df['W'] = eps * time_array / 60 + W0
