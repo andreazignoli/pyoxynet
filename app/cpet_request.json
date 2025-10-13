@@ -1,0 +1,14 @@
+{
+  "data": [
+    {"Time": 60, "VO2": 500, "VCO2": 400, "VE": 20, "HR": 60, "PetO2": 120, "PetCO2": 35, "VEVO2": 40, "VEVCO2": 50},
+    {"Time": 120, "VO2": 600, "VCO2": 480, "VE": 25, "HR": 70, "PetO2": 115, "PetCO2": 38, "VEVO2": 42, "VEVCO2": 52},
+    {"Time": 180, "VO2": 700, "VCO2": 560, "VE": 30, "HR": 80, "PetO2": 110, "PetCO2": 40, "VEVO2": 43, "VEVCO2": 54},
+    {"Time": 240, "VO2": 800, "VCO2": 640, "VE": 35, "HR": 90, "PetO2": 108, "PetCO2": 42, "VEVO2": 44, "VEVCO2": 55},
+    {"Time": 300, "VO2": 900, "VCO2": 720, "VE": 40, "HR": 100, "PetO2": 105, "PetCO2": 44, "VEVO2": 44, "VEVCO2": 56},
+    {"Time": 360, "VO2": 1000, "VCO2": 800, "VE": 45, "HR": 110, "PetO2": 103, "PetCO2": 46, "VEVO2": 45, "VEVCO2": 56},
+    {"Time": 420, "VO2": 1100, "VCO2": 880, "VE": 50, "HR": 120, "PetO2": 101, "PetCO2": 48, "VEVO2": 45, "VEVCO2": 57},
+    {"Time": 480, "VO2": 1200, "VCO2": 960, "VE": 55, "HR": 130, "PetO2": 99, "PetCO2": 50, "VEVO2": 46, "VEVCO2": 58},
+    {"Time": 540, "VO2": 1300, "VCO2": 1040, "VE": 60, "HR": 140, "PetO2": 97, "PetCO2": 52, "VEVO2": 46, "VEVCO2": 58},
+    {"Time": 600, "VO2": 1400, "VCO2": 1120, "VE": 65, "HR": 150, "PetO2": 95, "PetCO2": 54, "VEVO2": 46, "VEVCO2": 58}
+  ]
+}

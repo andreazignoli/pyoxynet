@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""
+PyOxynet CPET Analysis API with Moving Window Analysis
+
+This API provides a clean interface to PyOxynet's TensorFlow Lite models for 
+exercise intensity domain classification and ventilatory threshold detection.
+
+QUICK START:
+1. Start the server: python simple_api.py
+2. View docs: http://127.0.0.1:5002/docs/
+3. Test endpoint: POST http://127.0.0.1:5002/analyze/data
+
+WORKING EXAMPLES:
+- See test_api_examples.md for complete working examples
+- example_request_minimal.json - Simple 50-point test
+- example_request_dataset.json - Complete dataset format
+- Both files contain verified, working data formats
+
+REQUIREMENTS:
+- Minimum 40 data points for moving window analysis  
+- Required fields: VO2, VCO2, VE, PetO2, PetCO2
+- Units: VO2/VCO2 (ml/min), VE (L/min), PetO2/PetCO2 (mmHg)
+
+ANALYSIS METHOD:
+- 40-point sliding window with TensorFlow Lite inference
+- Domain classification: Moderate/Heavy/Severe
+- Threshold detection: VT1/VT2 from domain transitions
+- Temporal analysis of complete CPET tests
+"""
+import os
+from flask import Flask
+from flask_restx import Api, Resource, fields
+from flask_cors import CORS
+from pyoxynet_api.core.services.cpet_service import CPETAnalysisService
+from pyoxynet_api.core.utils.api_response import APIResponse, NumpyEncoder
+import json
+
+def create_simple_api():
+    """Create a simple, clean API with proper Swagger docs"""
+    app = Flask(__name__)
+    app.json_encoder = NumpyEncoder
+    
+    # Enable CORS
+    CORS(app)
+    
+    # Create API with clean documentation
+    api = Api(
+        app,
+        title="PyOxynet CPET Analysis API",
+        version="1.0.0", 
+        description="Professional CPET Analysis API for Exercise Physiologists. ML-powered exercise domain classification and ventilatory threshold detection.",
+        doc="/docs/",
+        contact="PyOxynet Team",
+        contact_email="support@pyoxynet.com"
+    )
+    
+    # Configure custom JSON encoder
+    @api.representation('application/json')
+    def custom_json(data, code, headers=None):
+        """Custom JSON representation with NumPy support"""
+        settings = {'indent': 4} if app.debug else {}
+        dumped = json.dumps(data, cls=NumpyEncoder, **settings) + "\n"
+        from flask import make_response
+        resp = make_response(dumped, code)
+        resp.headers.extend(headers or {})
+        resp.headers['Content-Type'] = 'application/json'
+        return resp
+    
+    # Define data models based on actual pyoxynet format
+    cpet_point = api.model('CPETDataPoint', {
+        't': fields.Float(description='Time (seconds)', example=-240),
+        'VO2': fields.Float(required=True, description='Oxygen uptake (ml/min)', example=1680),
+        'VCO2': fields.Float(required=True, description='CO2 output (ml/min)', example=1090),
+        'VE': fields.Float(required=True, description='Minute ventilation (L/min)', example=31.3),
+        'PetO2': fields.Float(required=True, description='End-tidal O2 pressure (mmHg)', example=76.506),
+        'PetCO2': fields.Float(required=True, description='End-tidal CO2 pressure (mmHg)', example=37.0712),
+        'R': fields.Float(description='Respiratory exchange ratio (optional)', example=0.65),
+        'VE/VO2': fields.Float(description='Ventilatory equivalent for oxygen (optional)', example=18.7),
+        'VE/VCO2': fields.Float(description='Ventilatory equivalent for CO2 (optional)', example=28.8)
+    })
+    
+    dataset = api.model('CPETDataset', {
+        'id': fields.String(required=True, description='Dataset identifier', example='dataset_#001'),
+        'VO2max': fields.Float(description='Maximum oxygen uptake (ml/min)', example=4694.3448),
+        'LT': fields.Float(description='Lactate threshold (ml/min)', example=3150),
+        'LT_vo2max': fields.String(description='LT as percentage of VO2max', example='67%'),
+        'RCP': fields.Float(description='Respiratory compensation point (ml/min)', example=3700),
+        'RCP_vo2max': fields.String(description='RCP as percentage of VO2max', example='79%'),
+        'data': fields.List(fields.Nested(cpet_point), required=True, description='CPET measurement points')
+    })
+    
+    # Support both formats: array of datasets or direct data points
+    analysis_request = api.model('AnalysisRequest', {
+        'datasets': fields.List(fields.Nested(dataset), description='Array of complete CPET datasets (pyoxynet format)'),
+        'data': fields.List(fields.Nested(cpet_point), 
+                          description='Direct array of CPET data points (minimum 40 points required for moving window analysis)',
+                          min_items=40)
+    })
+    
+    # Note: Root endpoint (/) conflicts with Flask-RESTX. Use /info instead.
+    
+    # Initialize CPET service
+    cpet_service = CPETAnalysisService()
+    
+    @api.route('/info')
+    class APIInfo(Resource):
+        """API Information"""
+        def get(self):
+            """Get API information and available endpoints"""
+            return {
+                "name": "PyOxynet CPET Analysis API",
+                "version": "1.0.0",
+                "description": "ML-powered exercise domain classification and ventilatory threshold detection",
+                "endpoints": {
+                    "info": "GET /info - This endpoint",
+                    "health": "GET /health - Check API health",
+                    "analyze": "POST /analyze/data - Analyze CPET data with moving window",
+                    "docs": "GET /docs/ - Interactive Swagger documentation"
+                },
+                "requirements": {
+                    "minimum_data_points": 40,
+                    "required_fields": ["VO2", "VCO2", "VE", "PetO2", "PetCO2"],
+                    "units": {
+                        "VO2_VCO2": "ml/min",
+                        "VE": "L/min", 
+                        "PetO2_PetCO2": "mmHg"
+                    }
+                },
+                "examples": {
+                    "test_files": ["example_request_minimal.json", "example_request_dataset.json"],
+                    "documentation": "test_api_examples.md"
+                }
+            }
+
+    @api.route('/health')
+    class HealthCheck(Resource):
+        """Health check endpoint"""
+        def get(self):
+            """Check API health status"""
+            return {"status": "healthy", "message": "PyOxynet API is running"}
+    
+    @api.route('/analyze/data')
+    class DataAnalysis(Resource):
+        """CPET Data Analysis"""
+        
+        @api.expect(analysis_request, validate=True)
+        @api.doc('analyze_cpet_data', 
+                responses={
+                    200: 'Success',
+                    400: 'Bad Request - Invalid data format or insufficient data points',
+                    500: 'Internal Server Error'
+                })
+        def post(self):
+            """
+            Analyze CPET data using PyOxynet's moving window approach
+            
+            Performs moving window analysis across the entire CPET test to:
+            - Classify exercise intensity domains (Moderate/Heavy/Severe)  
+            - Detect ventilatory thresholds (VT1/VT2)
+            - Generate temporal analysis of domain transitions
+            
+            **Requirements:**
+            - Minimum 40 data points for proper moving window analysis
+            - Required variables: VO2, VCO2, VE, PetO2, PetCO2 (in these exact units)
+            - Time-series data from complete CPET test
+            
+            **Input Format Options:**
+            
+            **Option 1: Direct data array**
+            ```json
+            {
+              "data": [
+                {
+                  "VO2": 1680, 
+                  "VCO2": 1090, 
+                  "VE": 31.3, 
+                  "PetO2": 76.506, 
+                  "PetCO2": 37.0712
+                },
+                ...minimum 40 data points...
+              ]
+            }
+            ```
+            
+            **Option 2: Complete dataset format**  
+            ```json
+            {
+              "datasets": [{
+                "id": "test_001",
+                "data": [
+                  {
+                    "t": -240,
+                    "VO2": 1680, 
+                    "VCO2": 1090, 
+                    "VE": 31.3, 
+                    "PetO2": 76.506, 
+                    "PetCO2": 37.0712
+                  },
+                  ...minimum 40 data points...
+                ]
+              }]
+            }
+            ```
+            
+            **Units:**
+            - VO2, VCO2: ml/min
+            - VE: L/min  
+            - PetO2, PetCO2: mmHg
+            - t: seconds (optional)
+            
+            The analysis uses a 40-point sliding window with TensorFlow Lite inference
+            at each time point to detect threshold transitions.
+            """
+            try:
+                request_data = api.payload
+                
+                # Handle both direct data and datasets format
+                if 'data' in request_data and request_data['data']:
+                    data = request_data['data']
+                elif 'datasets' in request_data and request_data['datasets']:
+                    # Extract data from first dataset
+                    dataset = request_data['datasets'][0]
+                    data = dataset.get('data', [])
+                else:
+                    return APIResponse.error(
+                        message="No data provided",
+                        errors=["Either 'data' array or 'datasets' array must be provided"]
+                    )
+                
+                # Validate minimum data requirements
+                if len(data) < 40:
+                    return APIResponse.error(
+                        message=f"Insufficient data for pyoxynet analysis",
+                        errors=[f"Minimum 40 data points required. Provided: {len(data)} points. PyOxynet uses a 40-point moving window for threshold detection."]
+                    )
+                
+                # Perform analysis
+                results = cpet_service.analyze_data(data, {})
+                
+                if results['success']:
+                    return APIResponse.success(
+                        data=results,
+                        message=f"Moving window analysis completed: {results.get('processing_info', {}).get('moving_window_coverage', 'unknown coverage')}"
+                    )
+                else:
+                    return APIResponse.error(
+                        message="Analysis failed",
+                        errors=results.get('errors', [])
+                    )
+                    
+            except Exception as e:
+                return APIResponse.internal_error(f"Analysis error: {str(e)}")
+    
+    return app
+
+if __name__ == '__main__':
+    app = create_simple_api()
+    print("Starting Clean PyOxynet API")
+    print("Docs: http://127.0.0.1:5002/docs/")
+    app.run(debug=True, port=5002)
