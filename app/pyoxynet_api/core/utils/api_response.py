@@ -2,10 +2,30 @@
 API Response Utilities
 Standardized response format for PyOxynet API
 """
+import json
 import time
 from typing import Any, Dict, List, Optional
 from flask import jsonify, make_response
 import pandas as pd
+import numpy as np
+
+
+class NumpyEncoder(json.JSONEncoder):
+    """Custom JSON encoder for NumPy arrays and pandas objects"""
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, pd.Timestamp):
+            return obj.isoformat()
+        if isinstance(obj, pd.DataFrame):
+            return obj.to_dict('records')
+        if isinstance(obj, pd.Series):
+            return obj.to_list()
+        return super().default(obj)
 
 
 class APIResponse:
@@ -48,7 +68,7 @@ class APIResponse:
         if message:
             response_data["message"] = message
             
-        return jsonify(response_data), status_code
+        return response_data, status_code
     
     @staticmethod
     def error(message: str,
@@ -85,7 +105,7 @@ class APIResponse:
             }
         }
         
-        return jsonify(response_data), status_code
+        return response_data, status_code
     
     @staticmethod
     def validation_error(validation_errors: Dict,
