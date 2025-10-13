@@ -107,12 +107,12 @@ class CPETAnalysisService:
             self.logger.error(f"CPET analysis failed: {e}")
             return self._create_error_result("Analysis failed", [str(e)])
     
-    def analyze_data(self, data: pd.DataFrame, options: Optional[Dict] = None) -> Dict:
+    def analyze_data(self, data: List[Dict], options: Optional[Dict] = None) -> Dict:
         """
         Analyze pre-loaded CPET data (for API endpoints)
         
         Args:
-            data: CPET DataFrame with standardized columns
+            data: List of CPET data points or DataFrame with standardized columns
             options: Analysis options
             
         Returns:
@@ -123,12 +123,26 @@ class CPETAnalysisService:
         try:
             self.logger.info("Starting CPET data analysis")
             
+            # Convert list of dicts to DataFrame if needed
+            if isinstance(data, list):
+                if len(data) == 0:
+                    return self._create_error_result("No data provided", ["Empty data array"])
+                
+                # Check minimum data requirement for pyoxynet
+                if len(data) < 40:
+                    return self._create_error_result(
+                        f"Insufficient data: {len(data)} points", 
+                        [f"Minimum 40 data points required for pyoxynet analysis. Provided: {len(data)}"]
+                    )
+                
+                data = pd.DataFrame(data)
+            
             # Validate data
             validation_result = self.data_service.validate_cpet_data(data)
             if not validation_result['valid']:
                 return self._create_error_result("Data validation failed", validation_result['errors'])
             
-            # Run ML analysis
+            # Run ML analysis with moving window
             ml_results = self.ml_service.predict_exercise_domains(data)
             
             # Generate visualizations
@@ -147,7 +161,8 @@ class CPETAnalysisService:
                 'validation': validation_result,
                 'processing_info': {
                     'total_data_points': len(data),
-                    'data_quality': metadata.get('data_quality', 'Unknown')
+                    'data_quality': metadata.get('data_quality', 'Unknown'),
+                    'moving_window_coverage': ml_results.get('moving_window_info', {}).get('analysis_coverage', 'Unknown')
                 }
             }
             
