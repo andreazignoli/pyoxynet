@@ -36,3 +36,6 @@ docs/*
 !docs/Makefile
 
 .DS_store
+
+# Claude Code local commands
+.claude/commands/
