@@ -22,7 +22,13 @@
       "Bash(python -m pytest tests/unit/ -v --tb=short)",
       "Bash(python -m pytest tests/integration/test_modern_api.py::TestModernAPIEndpoints::test_api_info_endpoint -v)",
       "Bash(python -m pytest tests/integration/test_modern_api.py::TestModernAPIEndpoints -v)",
-      "Bash(python -m pytest tests/integration/test_modern_api.py::TestHealthCheckEndpoint -v)"
+      "Bash(python -m pytest tests/integration/test_modern_api.py::TestHealthCheckEndpoint -v)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(timeout:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
