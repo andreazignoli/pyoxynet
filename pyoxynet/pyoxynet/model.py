@@ -4,64 +4,38 @@ class generator(tf.keras.Model):
     def __init__(self, n_input=7, n_past_points=40, n_labels=3, data_noise_dim=50):
 
         super(generator, self).__init__()
-        # DATA
-        self.d1 = tf.keras.layers.Dense(n_past_points * n_input, use_bias=False, input_shape=(data_noise_dim,))
+        self.n_input = n_input
+        self.n_past_points = n_past_points
+
+        # Single dense layer to generate initial representation
+        # Combine data and labels directly
+        self.d1 = tf.keras.layers.Dense(n_past_points * 16, use_bias=False)
         self.bn1 = tf.keras.layers.BatchNormalization()
         self.lRe1 = tf.keras.layers.LeakyReLU()
 
-        self.conv1 = tf.keras.layers.Conv1DTranspose(32, 5, strides=1, padding='same', use_bias=False)
+        # Two conv transpose layers to upsample features
+        self.conv1 = tf.keras.layers.Conv1DTranspose(32, 4, strides=1, padding='same', use_bias=False)
         self.bn2 = tf.keras.layers.BatchNormalization()
         self.lRe2 = tf.keras.layers.LeakyReLU()
 
-        # LABEL
-        self.d12 = tf.keras.layers.Dense(n_past_points * n_labels, use_bias=False, input_shape=(3,))
-        self.bn12 = tf.keras.layers.BatchNormalization()
-        self.lRe12 = tf.keras.layers.LeakyReLU()
-
-        self.conv12 = tf.keras.layers.Conv1DTranspose(32, 5, strides=1, padding='same', use_bias=False)
-        self.bn22 = tf.keras.layers.BatchNormalization()
-        self.lRe22 = tf.keras.layers.LeakyReLU()
-
-        # DATA + LABEL
-        self.conv2 = tf.keras.layers.Conv1DTranspose(32, 5, strides=2, padding='same', use_bias=False)
-        self.bn3 = tf.keras.layers.BatchNormalization()
-        self.lRe3 = tf.keras.layers.LeakyReLU()
-
-        self.conv3 = tf.keras.layers.Conv1D(n_input, 5, strides=2, padding='same', use_bias=False, activation='linear')
-        self.bn32 = tf.keras.layers.BatchNormalization()
-        self.lRe32 = tf.keras.layers.LeakyReLU()
+        # Final conv to output channels
+        self.conv2 = tf.keras.layers.Conv1D(n_input, 3, strides=1, padding='same', activation='tanh')
 
     def call(self, inputs, training=None):
-        # data
-        inputs_1 = tf.slice(inputs, [0, 0], [-1, 20])
-        # label
-        inputs_2 = tf.slice(inputs, [0, 20], [-1, 3])
-
-        # INPUT
-        x = self.d1(inputs_1)
+        # Concatenated input: [data_noise + labels]
+        # Process together instead of separately
+        x = self.d1(inputs)
         x = self.bn1(x, training=training)
-        x = self.lRe1(x, training=training)
-        x = tf.reshape(x, [-1, 40, 7])
+        x = self.lRe1(x)
+        x = tf.reshape(x, [-1, self.n_past_points, 16])
 
-        # LABELS
-        y = self.d12(inputs_2)
-        y = self.bn2(y, training=training)
-        y = self.lRe2(y, training=training)
-        y = tf.reshape(y, [-1, 40, 3])
+        # Upsample features
+        x = self.conv1(x)
+        x = self.bn2(x, training=training)
+        x = self.lRe2(x)
 
-        # LABELS + INPUT
-        x = tf.concat([x, y], axis=2)
-        x = self.conv12(x)
-        x = self.bn22(x, training=training)
-        x = self.lRe22(x, training=training)
-
+        # Generate output
         x = self.conv2(x)
-        x = self.bn3(x, training=training)
-        x = self.lRe3(x, training=training)
-
-        x = self.conv3(x)
-        x = self.bn32(x, training=training)
-        x = self.lRe32(x, training=training)
 
         return x
 
