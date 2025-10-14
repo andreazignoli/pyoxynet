@@ -973,92 +973,94 @@ def create_probabilities(duration=600,
                          y_pm0=1,
                          generator=False,
                          sigmoid_steepness=0.05):
-    """Creates the probabilities of being in different intensity domains using sigmoid transitions
+    """Creates piecewise-linear probabilities for moderate/heavy/severe zones
+    with enforced overlaps at VT1 and VT2.
 
-    These probabilities are then sent to the CPET generator and they are used to generate CPET vars
-    that can replicate those probabilities. Uses sigmoid-based transitions for clearer domain
-    separation and better GAN learning.
-
-    Parameters:
-        duration (int): Length of the test file (seconds)
-        VT1 (int): First ventilatory threshold, in time samples from the beginning of the test
-        VT2 (int): Second ventilatory threshold, in time samples from the beginning of the test
-        training (bool): Add noise to probabilities if True. Default True.
-        normalization (bool): Normalize probabilities to [0,1] range if True. Default False.
-        resting (bool): Kept for compatibility, not used. Default True.
-        resting_duration (int): Kept for compatibility, not used. Default 60.
-        initial_step (bool): Kept for compatibility, not used. Default False.
-        y_pm0 (double): Initial probability of moderate domain (0.65-1.0).
-            Use <1.0 if starting from higher VO2 (warm start). Default 1.
-        generator (bool): Kept for compatibility, not used. Default False.
-        sigmoid_steepness (float): Controls transition sharpness.
-            Lower values (0.02-0.05) = sharper transitions. Default 0.05.
-
-    Returns:
-        p_mF (np array): Probability of being in the moderate intensity zone (0:1)
-        p_hF (np array): Probability of being in the heavy intensity zone (0:1)
-        p_sF (np array): Probability of being in the severe intensity zone (0:1)
-
+    Behaviour:
+      - Nodes at t=1, VT1, VT2, duration with values:
+          t=1   : (y_pm0, 1-y_pm0, 0)
+          VT1   : (0.5, 0.5, 0)
+          VT2   : (0.0, 0.5, 0.5)
+          end   : (0.0, 0.0, 1.0)
+      - Linear interpolation between these nodes ensures fully linear transitions,
+        exact overlaps at VT1 and VT2, and sum-to-1 (after numerical normalization).
     """
 
-    t = np.arange(1, duration + 1)
+    # time vector (1..duration) to preserve your original indexing
+    t = np.arange(1, duration + 1).astype(float)
 
-    # Safety check for y_pm0
+    # safety checks
+    if VT1 < 1:
+        raise ValueError("VT1 must be >= 1")
+    if VT2 <= VT1:
+        raise ValueError("VT2 must be > VT1")
+    if VT2 > duration:
+        raise ValueError("VT2 must be <= duration")
+    if y_pm0 < 0.0 or y_pm0 > 1.0:
+        raise ValueError("y_pm0 must be in [0,1]")
+
+    # guard minimum for y_pm0 as in your original code
     if y_pm0 < 0.65:
         print('This is too close to VT1, I am settling at 0.65')
         y_pm0 = 0.65
 
-    # Create sigmoid transition function
-    def sigmoid(x, center, steepness_param):
-        """Sigmoid: 1 before center, 0 after center"""
-        return 1 / (1 + np.exp((x - center) / (steepness_param * duration)))
+    # Define node times and node values for each zone
+    node_times = np.array([1.0, float(VT1), float(VT2), float(duration)], dtype=float)
 
-    # Create two independent sigmoid transitions at VT1 and VT2
-    s1 = sigmoid(t, VT1, sigmoid_steepness)
-    s2 = sigmoid(t, VT2, sigmoid_steepness)
+    # Node values: moderate, heavy, severe at each node time
+    node_pm = np.array([y_pm0, 0.5, 0.0, 0.0], dtype=float)
+    node_ph = np.array([1.0 - y_pm0, 0.5, 0.5, 0.0], dtype=float)
+    node_ps = np.array([0.0, 0.0, 0.5, 1.0], dtype=float)
 
-    # Build baseline probabilities using sigmoid transitions
-    # These sum to 1 by construction
-    base_mF = s1  # 1->0 at VT1
-    base_hF = (1 - s1) * s2  # 0->1->0 between VT1 and VT2
-    base_sF = (1 - s1) * (1 - s2)  # 0->1 after VT2
+    # Interpolate linearly across the whole time vector
+    p_mF = np.interp(t, node_times, node_pm)
+    p_hF = np.interp(t, node_times, node_ph)
+    p_sF = np.interp(t, node_times, node_ps)
 
-    # Incorporate y_pm0 to set initial conditions
-    # At t=0: base_mF≈1, base_hF≈0, base_sF≈0
-    # We want: p_mF=y_pm0, p_hF=(1-y_pm0), p_sF=0
-    # Scale moderate by y_pm0, and give the rest to heavy
-    p_mF = y_pm0 * base_mF
-    p_hF = (1 - y_pm0) * base_mF + base_hF
-    p_sF = base_sF
+    # Numerical safety: clip and normalize so they sum to 1 at each time point
+    p_mF = np.clip(p_mF, 0.0, 1.0)
+    p_hF = np.clip(p_hF, 0.0, 1.0)
+    p_sF = np.clip(p_sF, 0.0, 1.0)
 
-    # These sum to exactly 1 by construction:
-    # p_mF + p_hF + p_sF = y_pm0*base_mF + (1-y_pm0)*base_mF + base_hF + base_sF
-    #                    = base_mF + base_hF + base_sF = 1
+    total = p_mF + p_hF + p_sF
+    # avoid division by zero (shouldn't happen), but protect anyway
+    zero_mask = (total == 0)
+    if np.any(zero_mask):
+        total[zero_mask] = 1.0
+    p_mF /= total
+    p_hF /= total
+    p_sF /= total
 
-    # Apply normalization if requested
+    # optional renormalization to [0,1] range per series (keeps shape but scales)
     if normalization:
-        p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (0, 1))
-        p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (0, 1))
-        p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (0, 1))
+        p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (0.0, 1.0))
+        p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (0.0, 1.0))
+        p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (0.0, 1.0))
 
-    # Add noise if training
+        # re-normalize to sum=1 after per-series scaling
+        total = p_mF + p_hF + p_sF
+        total[total == 0] = 1.0
+        p_mF /= total
+        p_hF /= total
+        p_sF /= total
+
+    # Add small training noise if requested (same pattern as before)
     if training:
-        # Reduced noise from 1/18 (≈0.056) to 0.02 for better GAN learning
-        noise_scale = 0.02
+        noise_scale = 0.02  # your chosen default
         p_mF = p_mF + np.random.randn(len(t)) * noise_scale
         p_hF = p_hF + np.random.randn(len(t)) * noise_scale
         p_sF = p_sF + np.random.randn(len(t)) * noise_scale
 
-        # Clip to valid probabilities
-        p_mF = np.clip(p_mF, 0, 1)
-        p_hF = np.clip(p_hF, 0, 1)
-        p_sF = np.clip(p_sF, 0, 1)
+        # Clip and re-normalize
+        p_mF = np.clip(p_mF, 0.0, 1.0)
+        p_hF = np.clip(p_hF, 0.0, 1.0)
+        p_sF = np.clip(p_sF, 0.0, 1.0)
 
-        # Normalize after noise to ensure sum=1
         total = p_mF + p_hF + p_sF
-        p_mF = p_mF / total
-        p_hF = p_hF / total
-        p_sF = p_sF / total
+        total[total == 0] = 1.0
+        p_mF /= total
+        p_hF /= total
+        p_sF /= total
 
     return p_mF, p_hF, p_sF
 
