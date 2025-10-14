@@ -971,136 +971,94 @@ def create_probabilities(duration=600,
                          resting_duration=60,
                          initial_step=False,
                          y_pm0=1,
-                         generator=False):
-    """Creates the probabilities of being in different intensity domains
+                         generator=False,
+                         sigmoid_steepness=0.05):
+    """Creates the probabilities of being in different intensity domains using sigmoid transitions
 
-    These probabilities are then sent to the CPET generator and they are used ot generate CPET vars that can replicate those probabilities
+    These probabilities are then sent to the CPET generator and they are used to generate CPET vars
+    that can replicate those probabilities. Uses sigmoid-based transitions for clearer domain
+    separation and better GAN learning.
 
     Parameters:
-        duration (int): Length of the test file
+        duration (int): Length of the test file (seconds)
         VT1 (int): First ventilatory threshold, in time samples from the beginning of the test
         VT2 (int): Second ventilatory threshold, in time samples from the beginning of the test
-        y_pm0 (double): This is used to set the first value of the probabilities.
-            Indeed, if you start from a higher VO2 you're not likely full in moderate domain (pm<1)
-        generator (bool): Use the following when you need to create the files to
-            train the INFERENCE model (False, default), or the GENERATOR (True)
+        training (bool): Add noise to probabilities if True. Default True.
+        normalization (bool): Normalize probabilities to [0,1] range if True. Default False.
+        resting (bool): Kept for compatibility, not used. Default True.
+        resting_duration (int): Kept for compatibility, not used. Default 60.
+        initial_step (bool): Kept for compatibility, not used. Default False.
+        y_pm0 (double): Initial probability of moderate domain (0.65-1.0).
+            Use <1.0 if starting from higher VO2 (warm start). Default 1.
+        generator (bool): Kept for compatibility, not used. Default False.
+        sigmoid_steepness (float): Controls transition sharpness.
+            Lower values (0.02-0.05) = sharper transitions. Default 0.05.
 
     Returns:
-        p_mF (np array): Probability of being in the moderate intensity zone (-1:1)
-        p_hF (np array): Probability of being in the heavy intensity zone (-1:1)
-        p_sF (np array): Probability of being in the severe intensity zone (-1:1)
+        p_mF (np array): Probability of being in the moderate intensity zone (0:1)
+        p_hF (np array): Probability of being in the heavy intensity zone (0:1)
+        p_sF (np array): Probability of being in the severe intensity zone (0:1)
 
     """
-    
+
     t = np.arange(1, duration + 1)
 
-    if resting == True:
-        step_1 = resting_duration
-        smooth_lambda = [duration*2, duration*2, duration*2]
-    else:
-        # no resting is included
-        step_1 = 1
-        smooth_lambda = [duration*2, duration*2, duration*2]
-
+    # Safety check for y_pm0
     if y_pm0 < 0.65:
         print('This is too close to VT1, I am settling at 0.65')
         y_pm0 = 0.65
 
-    # Use the following when you need to create the files to train the INFERENCE model
-    if ~generator:
-        y_pm = [1, 0.5, 0, 0]
-        y_ph = [0, 0.5, 1, 0]
-        y_ps = [0, 0.1, 0.5, 1]
+    # Create sigmoid transition function
+    def sigmoid(x, center, steepness_param):
+        """Sigmoid: 1 before center, 0 after center"""
+        return 1 / (1 + np.exp((x - center) / (steepness_param * duration)))
 
-        # linear coefficients
-        x_p = [0, VT1, VT2, duration]
+    # Create two independent sigmoid transitions at VT1 and VT2
+    s1 = sigmoid(t, VT1, sigmoid_steepness)
+    s2 = sigmoid(t, VT2, sigmoid_steepness)
 
-        interp_pm = interp1d(x_p, y_pm, kind='linear', fill_value="extrapolate")
-        interp_ph = interp1d(x_p, y_ph, kind='linear', fill_value="extrapolate")
-        interp_ps = interp1d(x_p, y_ps, kind='linear', fill_value="extrapolate")
+    # Build baseline probabilities using sigmoid transitions
+    # These sum to 1 by construction
+    base_mF = s1  # 1->0 at VT1
+    base_hF = (1 - s1) * s2  # 0->1->0 between VT1 and VT2
+    base_sF = (1 - s1) * (1 - s2)  # 0->1 after VT2
 
-        p_mF = interp_pm(t)
-        p_hF = interp_ph(t)
-        p_sF = interp_ps(t)
+    # Incorporate y_pm0 to set initial conditions
+    # At t=0: base_mF≈1, base_hF≈0, base_sF≈0
+    # We want: p_mF=y_pm0, p_hF=(1-y_pm0), p_sF=0
+    # Scale moderate by y_pm0, and give the rest to heavy
+    p_mF = y_pm0 * base_mF
+    p_hF = (1 - y_pm0) * base_mF + base_hF
+    p_sF = base_sF
 
-    # Use the following when you need to create the files to train the GENERATOR model
-    if generator:
-        # in this case you create a set of probabilities with know shape
-        # (as opposed to the case where you only have the thresholds,
-        # so you do not know how the probabilities work)
-        if not initial_step:
-            # moderate => 2 splines
-            pm_L1 = UnivariateSpline([0, step_1, VT1], [y_pm0, y_pm0, 0.5], k=1)
-            # heavy => 3 splines
-            ph_L1 = UnivariateSpline([0, step_1, VT1], [1 - y_pm0, 1 - y_pm0, 0.5], k=1)
-            # compute additional points
-            pm_L2 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration], [0.5, pm_L1(VT1 + 30), 0, 0, 0], k=1)
-            p_mF = np.hstack((pm_L1(t[t < VT1]), pm_L2(t[t >= VT1])))
-            # compute additional points
-            ph_L2 = UnivariateSpline([VT1, ((VT2 - VT1)/2 + VT1), VT2], [0.5, np.min([ph_L1(((VT2 - VT1)/2 + VT1)), 1]), 0.5], k=1)
-            ph_L3 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L2(VT2 + 30), 0], k=1)
-            p_hF = np.hstack((ph_L1(t[t < VT1]), ph_L2(t[(t >= VT1) & (t < VT2)]), ph_L3(t[t >= VT2])))
-            # severe => 2 splines
-            ps_L1 = UnivariateSpline([0, VT1, VT2], [0, 0, 0.5], k=1)
-            # compute additional points
-            ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
-                                     [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
-            p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
-        else:
-            # moderate => 2 splines
-            pm_L0 = UnivariateSpline([0, step_1], [y_pm0, y_pm0], k=1)
-            pm_L1 = UnivariateSpline([step_1, step_1 + 60],
-                                     [y_pm0, (y_pm0 - 0.5)/2 + 0.5], k=1)
-            pm_L2 = UnivariateSpline([step_1 + 60, step_1 + 120],
-                                     [(y_pm0 - 0.5) / 2 + 0.5, (y_pm0 - 0.5) / 2 + 0.5], k=1)
-            pm_L3 = UnivariateSpline([step_1 + 120, VT1],
-                                     [(y_pm0 - 0.5) / 2 + 0.5, 0.5], k=1)
-            pm_L4 = UnivariateSpline([VT1, VT1 + 30, duration - 60, duration - 30, duration],
-                                     [0.5, pm_L3(VT1 + 30), 0, 0, 0], k=2)
-            p_mF = np.hstack((pm_L0(t[t < step_1]),
-                              pm_L1(t[(t >= step_1) & (t < step_1 + 60)]),
-                              pm_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
-                              pm_L3(t[(t >= step_1 + 120) & (t < VT1)]),
-                              pm_L4(t[(t >= VT1)])))
+    # These sum to exactly 1 by construction:
+    # p_mF + p_hF + p_sF = y_pm0*base_mF + (1-y_pm0)*base_mF + base_hF + base_sF
+    #                    = base_mF + base_hF + base_sF = 1
 
-            # heavy => 3 splines
-            ph_L0 = UnivariateSpline([0, step_1], [1 - y_pm0, 1 - y_pm0], k=1)
-            ph_L1 = UnivariateSpline([step_1, step_1 + 60], [1 - y_pm0, 1 - ((y_pm0 - 0.5)/2 + 0.5)], k=1)
-            ph_L2 = UnivariateSpline([step_1 + 60, step_1 + 120], [1 - ((y_pm0 - 0.5) / 2 + 0.5), 1 - ((y_pm0 - 0.5) / 2 + 0.5)], k=1)
-            ph_L3 = UnivariateSpline([step_1 + 120, VT1],
-                                     [1 - ((y_pm0 - 0.5) / 2 + 0.5), 0.5], k=1)
-            ph_L4 = UnivariateSpline([VT1, VT1 + 30, VT2], [0.5, ph_L3(VT1 + 30), 0.5], k=2)
-            ph_L5 = UnivariateSpline([VT2, VT2 + 30, duration], [0.5, ph_L4(VT2 + 30), 0], k=2)
-            p_hF = np.hstack((ph_L0(t[t < step_1]),
-                              ph_L1(t[(t >= step_1) & (t < step_1 + 60)]),
-                              ph_L2(t[(t >= step_1 + 60) & (t < step_1 + 120)]),
-                              ph_L3(t[(t >= step_1 + 120) & (t < VT1)]),
-                              ph_L4(t[(t >= VT1) & (t < VT2)]),
-                              ph_L4(t[(t >= VT2)])))
-            # severe => 2 splines
-            ps_L1 = UnivariateSpline([0, step_1, VT2], [0, 0, 0.5], k=2)
-            # compute additional points
-            ps_L2 = UnivariateSpline([VT2, VT2 + 15, VT2 + 30, duration - 30, duration],
-                                     [0.5, ps_L1(VT2 + 15), ps_L1(VT2 + 30), 1, 1], k=1)
-            p_sF = np.hstack((ps_L1(t[t < VT2]), ps_L2(t[t >= VT2])))
-
-    p_mF = optimal_filter(t, p_mF, 4000)
-    p_hF = optimal_filter(t, p_hF, 4000)
-    p_sF = optimal_filter(t, p_sF, 4000)
-
+    # Apply normalization if requested
     if normalization:
         p_mF = np.interp(p_mF, (p_mF.min(), p_mF.max()), (0, 1))
         p_hF = np.interp(p_hF, (p_hF.min(), p_hF.max()), (0, 1))
         p_sF = np.interp(p_sF, (p_sF.min(), p_sF.max()), (0, 1))
-    else:
-        pass
 
+    # Add noise if training
     if training:
-        p_mF = p_mF + np.random.randn(len(t)) / 18
-        p_hF = p_hF + np.random.randn(len(t)) / 18
-        p_sF = p_sF + np.random.randn(len(t)) / 18
-    else:
-        pass
+        # Reduced noise from 1/18 (≈0.056) to 0.02 for better GAN learning
+        noise_scale = 0.02
+        p_mF = p_mF + np.random.randn(len(t)) * noise_scale
+        p_hF = p_hF + np.random.randn(len(t)) * noise_scale
+        p_sF = p_sF + np.random.randn(len(t)) * noise_scale
+
+        # Clip to valid probabilities
+        p_mF = np.clip(p_mF, 0, 1)
+        p_hF = np.clip(p_hF, 0, 1)
+        p_sF = np.clip(p_sF, 0, 1)
+
+        # Normalize after noise to ensure sum=1
+        total = p_mF + p_hF + p_sF
+        p_mF = p_mF / total
+        p_hF = p_hF / total
+        p_sF = p_sF / total
 
     return p_mF, p_hF, p_sF
 

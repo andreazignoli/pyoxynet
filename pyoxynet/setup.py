@@ -10,15 +10,15 @@ long_description = (this_directory/"README.md").read_text()
 
 setuptools.setup(
     name="pyoxynet",
-    version="0.1.8",
+    version="0.1.9",
     author="Andrea Zignoli",
     author_email="andrea.zignoli@unitn.it",
     description="Python package of the Oxynet project",
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=setuptools.find_packages(),
-    install_requires=['importlib-resources', 'pandas', 
-    'uniplot', 'scipy', 'chardet', 
+    install_requires=['importlib-resources', 'pandas',
+    'uniplot', 'scipy', 'chardet',
     'xlrd', 'openpyxl', 'matplotlib'],
     extras_require={
         'full': ['tensorflow', 'shap'],
