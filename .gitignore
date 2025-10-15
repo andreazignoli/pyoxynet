@@ -41,5 +41,6 @@ docs/*
 
 .DS_store
 
-# Claude Code local commands
+# Claude Code local files
 .claude/commands/
+.claude/settings.local.json
