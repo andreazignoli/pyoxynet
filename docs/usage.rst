@@ -12,65 +12,102 @@ To use ``pyoxynet``, first install it using pip:
    (.venv) $ pip install pyoxynet
 
 
-.. note:: 
+.. note::
 
-   Packages that require addition extra url cannot be installed via *setuptools*, which letely allows and suggests to use ``pip`` when possible. Therefore, as a work-around, TFLite is automatically installed with the following command the first time ``pyoxynet`` is imported.
-   
+   Starting from version 0.1.5, ``pyoxynet`` offers flexible installation options. You can install the base package, the lightweight TFLite version for inference, or the full version with TensorFlow for training and development.
 
-The executed commend is:
+
+For TFLite support, the executed command is:
 
 .. code-block:: console
 
-   (.venv) $ pip install --extra-index-url https://google-coral.github.io/py-repo/ tflite_runtime
+   (.venv) $ pip install "pyoxynet[tflite]" --extra-index-url https://google-coral.github.io/py-repo/
+
+Or for the full TensorFlow version:
+
+.. code-block:: console
+
+   (.venv) $ pip install "pyoxynet[full]" 
+
+Quick Start
+-----------
+
+To test the presence of the package you can use the ``PrintHello()`` function:
+
+.. code-block:: python
+
+   import pyoxynet
+   pyoxynet.PrintHello()
 
 
-Currently, The TFLite installation process is completed with a line command inside Python, which i know is not the best solution. 
+Basic Workflow
+--------------
 
-Functions
----------
+The typical workflow for using pyoxynet involves three main steps:
 
-To test the presence of the package you can use the ``utilities.PrintHello()`` function:
+1. **Load a model** - Choose between CNN, LSTM, or other available models
+2. **Prepare your data** - Load CPET data from CSV or generate synthetic data
+3. **Run inference** - Get predictions on exercise intensity domains
 
-.. autofunction:: utilities.PrintHello()
+Example workflow:
 
+.. code-block:: python
 
-Every-day functions
--------------------
+   import pyoxynet
 
-The optimal filter adopted for the project ``utilities.optimal_filter(t, y, my_lambda)`` function:
+   # Step 1: Load the model
+   model = pyoxynet.load_tf_model(n_inputs=5, past_points=40, model='CNN')
 
-.. autofunction:: utilities.optimal_filter(t, y, my_lambda)
+   # Step 2: Load your data
+   df = pyoxynet.load_csv_data('your_data.csv')
 
-.. autofunction:: utilities.normalize(df)
-
-.. autofunction:: utilities.random_walk(length=1, scale_factor=1, variation=1)
-
-
-CPET data functions
--------------------
-
-.. autofunction:: utilities.load_csv_data(csv_file='data_test.csv')
+   # Step 3: Run inference
+   results = pyoxynet.test_pyoxynet(model, input_df=df, plot=True)
 
 
-TFLite model
-------------
+Data Requirements
+-----------------
 
-To test if the TFLite model has been correctly initiated you can use ``utilities.test_tfl_model(interpreter)`` function:
+For inference, your CPET data must include the following variables:
 
-.. autofunction:: utilities.test_tfl_model()
+**5-input model** (default):
 
-.. autofunction:: utilities.load_tf_model(n_inputs=7, past_points=40)
+* VO2 - Oxygen uptake
+* VCO2 - CO2 output
+* VE - Minute ventilation
+* PetO2 - End-tidal O2
+* PetCO2 - End-tidal CO2
 
-.. autofunction:: utilities.load_tf_generator()
+**7-input model** (alternative):
 
-.. autofunction:: utilities.pip_install_tflite()
+* All of the above plus:
+* VEVO2 - Ventilatory equivalent for O2
+* VEVCO2 - Ventilatory equivalent for CO2
+
+Data should be sampled at 1-second intervals. For breath-by-breath data, use linear interpolation. For averaged data (5-by-5 or 10-by-10 seconds), cubic interpolation is recommended.
 
 
-Production functions
---------------------
+Generating Synthetic Data
+--------------------------
 
-.. autofunction:: utilities.test_pyoxynet(input_df=[], n_inputs=7, past_points=40)
+Pyoxynet includes a conditional GAN that can generate realistic synthetic CPET data:
 
-.. autofunction:: utilities.create_probabilities(duration=600, VT1=320, VT2=460)
+.. code-block:: python
 
-.. autofunction:: utilities.generate_CPET(generator, plot=False, fitness_group=None)
+   from pyoxynet import *
+
+   # Load the generator
+   generator = load_tf_generator()
+
+   # Generate synthetic CPET data
+   df = generate_CPET(generator, plot=True)
+
+   # Optionally specify fitness characteristics
+   probabilities = create_probabilities(duration=600, VT1=320, VT2=460)
+   df = generate_CPET(generator, plot=True, fitness_group=probabilities)
+
+
+API Reference
+-------------
+
+For detailed documentation of all functions and their parameters, see the :doc:`api` page.

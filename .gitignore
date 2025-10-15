@@ -33,6 +33,10 @@ docs/*
 !docs/conf.py
 !docs/index.rst
 !docs/usage.rst
+!docs/api.rst
+!docs/examples.rst
+!docs/requirements.txt
+!docs/_static
 !docs/Makefile
 
 .DS_store

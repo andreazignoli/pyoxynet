@@ -18,20 +18,42 @@ sys.path.insert(0, os.path.abspath('../pyoxynet/pyoxynet'))
 # -- Project information -----------------------------------------------------
 
 project = 'pyoxynet'
-copyright = '2022, Andrea Zignoli'
+copyright = '2025, Andrea Zignoli'
 author = 'Andrea Zignoli'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.8.1'
+release = '0.1.11'
+version = '0.1.11'
 
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.duration',
+extensions = [
+    'sphinx.ext.duration',
     'sphinx.ext.doctest',
-    'sphinx.ext.autodoc']
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
+]
+
+# Napoleon settings for Google/NumPy style docstrings
+napoleon_google_docstring = True
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = True
+
+# Autosummary settings
+autosummary_generate = True
+
+# Autodoc settings
+autodoc_mock_imports = ['tensorflow', 'shap']
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': False,
+    'show-inheritance': True,
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
