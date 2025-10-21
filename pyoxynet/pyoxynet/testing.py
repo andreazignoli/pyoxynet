@@ -39,9 +39,20 @@ class Test:
                 df = read_csv(self.filename + self.data_extension, sep="\t", header=None, skiprows=3)
                 print('Just reading a txt file')
                 self.metabolimeter = 'vyiare'
-            if self.data_extension == '.xlsx' or self.data_extension == '.xls':
+            if self.data_extension in ['.xlsx', '.xls', '.XLSX', '.XLS']:
                 print('Attempting to read an Excel file')
-                df = pd.read_excel(self.filename + self.data_extension)
+                try:
+                    # Try reading as actual Excel first
+                    engine = 'xlrd' if self.data_extension.lower() == '.xls' else 'openpyxl'
+                    df = pd.read_excel(self.filename + self.data_extension, engine=engine)
+                except:
+                    # Many .xls files are actually tab-delimited text files
+                    print('Excel read failed, trying as tab-delimited text')
+                    try:
+                        df = pd.read_csv(self.filename + self.data_extension, sep='\t', encoding='utf-8')
+                    except UnicodeDecodeError:
+                        # Try with latin-1 encoding if UTF-8 fails
+                        df = pd.read_csv(self.filename + self.data_extension, sep='\t', encoding='latin-1')
         except:
             try:
                 f = open(self.filename + self.data_extension, encoding="utf8", errors="ignore")

@@ -1847,9 +1847,20 @@ def read_csv_app():
             df = read_csv(file.filename, sep="\t", header=None, skiprows=3)
             print('Just reading a txt file')
             t.metabolimeter = 'vyiare'
-        if file_extension == '.xlsx' or file_extension == '.xls':
+        if file_extension in ['.xlsx', '.xls', '.XLSX', '.XLS']:
             print('Attempting to read an Excel file')
-            df = pd.read_excel(file.filename)
+            try:
+                # Try reading as actual Excel first
+                engine = 'xlrd' if file_extension.lower() == '.xls' else 'openpyxl'
+                df = pd.read_excel(file.filename, engine=engine)
+            except:
+                # Many .xls files are actually tab-delimited text files
+                print('Excel read failed, trying as tab-delimited text')
+                try:
+                    df = pd.read_csv(file.filename, sep='\t', encoding='utf-8')
+                except UnicodeDecodeError:
+                    # Try with latin-1 encoding if UTF-8 fails
+                    df = pd.read_csv(file.filename, sep='\t', encoding='latin-1')
 
         os.remove(file.filename)
         t.infer_metabolimeter(optional_data=df)
