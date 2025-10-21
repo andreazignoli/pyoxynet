@@ -1962,11 +1962,21 @@ def read_csv_app():
                                        show_energy_plot=show_energy_plot,
                                        probabilities_time_plot=plot_probabilities_time,
                                        probabilities_vo2_plot=plot_probabilities_vo2)
-    except:
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error processing file: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+        # Determine error message
+        error_detail = None
         if 'file' not in request.files:
-            dict_estimates = 'No file part'
-        dict_estimates = {}
-        return flask.jsonify('We are sorry to report that something went wrong with your file :-(')
+            error_detail = 'No file was uploaded'
+        else:
+            # Provide a generic error message (don't expose internal details to users)
+            error_detail = f"File processing error: {type(e).__name__}"
+
+        return render_template('error.html', error_detail=error_detail)
 
 @app.route('/CPET_generation', methods=['GET', 'POST'])
 def CPET_generation():

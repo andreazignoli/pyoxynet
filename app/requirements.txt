@@ -8,7 +8,7 @@ chardet
 openpyxl
 xlrd
 matplotlib
-pyoxynet[tflite]==0.1.8
+pyoxynet[tflite]==0.1.12
 tflite-runtime
 numpy==1.26.4
 gunicorn
