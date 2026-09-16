@@ -3,15 +3,14 @@
 Test script to generate CPET data and create visualization
 
 Usage:
-    cd /Users/andreazignoli/pyoxynet
-    PYTHONPATH=/Users/andreazignoli/pyoxynet/pyoxynet python3 test_generate_cpet.py
+    python3 test_generate_cpet.py
 """
 
 import sys
 import os
 
 # Add pyoxynet to path
-sys.path.insert(0, '/Users/andreazignoli/pyoxynet/pyoxynet')
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pyoxynet'))
 
 print("=" * 70)
 print("PyOxynet CPET Data Generation and Visualization Test")
