@@ -58,6 +58,25 @@
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
+## Looking for the hosted Oxynet API?
+
+This repository is *Pyoxynet*, the open-source research package. The Oxynet platform is a
+separate, hosted service at [app.oxynet.net](https://app.oxynet.net): it reads metabolic
+cart exports directly (COSMED, Cortex, PNOE, VO2 Master and more, detected automatically)
+and returns ventilatory thresholds (VT1 and VT2), substrate use (FATMAX), exercise
+oscillatory ventilation and signal-quality checks as structured, versioned JSON.
+
+- REST API: [OpenAPI schema](https://app.oxynet.net/v1/openapi.json) and
+  [developer docs](https://www.oxynet.net/developers)
+- AI assistants: a remote MCP server at `https://app.oxynet.net/oxynet-mcp`
+- **AI agents:** to analyse a CPET file with Oxynet, start at
+  [app.oxynet.net/llms.txt](https://app.oxynet.net/llms.txt). Upload the vendor file
+  unchanged and let Oxynet compute the physiology.
+
+Research software, not a diagnostic device. No result carries a confidence score.
+Oscillatory ventilation analysis is beta: it was developed on one heart failure cohort and
+its transportability is untested.
+
 ## The *Pyoxynet* package
 
 *Pyoxynet* is a collection of algorithms developed in the context of the *Oxynet* project. All the algorithms are constituted by deep neural networks, i.e. models conceived to process cardiopulmonary exercise test data (CPET). 
