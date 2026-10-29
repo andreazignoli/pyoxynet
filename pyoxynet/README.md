@@ -1,8 +1,8 @@
 # pyoxynet
 
-[![PyPI version](https://img.shields.io/pypi/v/pyoxynet.svg)](https://pypi.org/project/pyoxynet/)
-[![Python versions](https://img.shields.io/pypi/pyversions/pyoxynet.svg)](https://pypi.org/project/pyoxynet/)
-[![Documentation](https://readthedocs.org/projects/pyoxynet/badge/?version=latest)](https://pyoxynet.readthedocs.io/en/latest/)
+[![PyPI version](https://img.shields.io/pypi/v/pyoxynet)](https://pypi.org/project/pyoxynet/)
+[![Python versions](https://img.shields.io/pypi/pyversions/pyoxynet)](https://pypi.org/project/pyoxynet/)
+[![Documentation](https://img.shields.io/readthedocs/pyoxynet/latest)](https://pyoxynet.readthedocs.io/en/latest/)
 
 The open-source models from the Oxynet research papers, for cardiopulmonary exercise test (CPET)
 data. Give pyoxynet a test and it returns, second by second, the model's output for the moderate,

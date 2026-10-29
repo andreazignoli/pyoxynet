@@ -8,11 +8,11 @@ where those outputs cross. It can also generate synthetic tests.
 
 Everything runs on your machine. The models are frozen LiteRT files, so TensorFlow is not needed.
 
-.. image:: https://img.shields.io/pypi/v/pyoxynet.svg
+.. image:: https://img.shields.io/pypi/v/pyoxynet
    :target: https://pypi.org/project/pyoxynet/
    :alt: PyPI version
 
-.. image:: https://img.shields.io/pypi/pyversions/pyoxynet.svg
+.. image:: https://img.shields.io/pypi/pyversions/pyoxynet
    :target: https://pypi.org/project/pyoxynet/
    :alt: Python versions
 
