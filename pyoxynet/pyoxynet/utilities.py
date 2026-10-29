@@ -281,12 +281,12 @@ def draw_real_test(resting='random'):
         resting = random.randint(0, 1)
 
     if resting:
-        file_index = str(random.randrange(1, 50))
+        file_index = str(random.randint(1, 50))
         file_name = 'resting_real_test_' + file_index + '.csv'
         bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
         print(file_name, ' from resting')
     else:
-        file_index = str(random.randrange(1, 88))
+        file_index = str(random.randint(1, 88))
         file_name = 'ramp_real_test_' + file_index + '.csv'
         bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
         print(file_name, ' from ramp')

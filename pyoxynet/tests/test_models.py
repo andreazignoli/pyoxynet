@@ -1,8 +1,7 @@
 """The shipped models and the inference pipeline, against what 0.1.12 gave with the same weights.
 
 reference_0_1_12.json was recorded by running pyoxynet 0.1.12's own test_pyoxynet on the bundled
-example tests (see "recorded_with" in the file). Only data_test.csv is in git; the ramp tests are
-checked when they are present and skipped otherwise.
+example tests (see "recorded_with" in the file).
 """
 import json
 import pkgutil
@@ -31,10 +30,7 @@ def model(name):
 def sample(name):
     if name == 'data_test':
         return utilities.load_csv_data()
-    try:
-        raw = pkgutil.get_data('pyoxynet.data_test', f'{name}.csv')
-    except OSError:
-        pytest.skip(f'{name}.csv is not in this checkout')
+    raw = pkgutil.get_data('pyoxynet.data_test', f'{name}.csv')
     return pd.read_csv(StringIO(raw.decode()))
 
 
@@ -109,8 +105,14 @@ def test_a_generated_test_runs_through_inference():
     assert out['VT1']['time'] < out['VT2']['time']
 
 
+@pytest.mark.parametrize('kind', ['ramp_real_test', 'resting_real_test'])
+def test_every_example_test_is_present(kind):
+    count = {'ramp_real_test': 88, 'resting_real_test': 50}[kind]
+    for n in range(1, count + 1):
+        assert pkgutil.get_data('pyoxynet.data_test', f'{kind}_{n}.csv')
+
+
 def test_draw_real_test():
-    sample('ramp_real_test_1')  # skips when the example tests are not in this checkout
     random.seed(0)
     df, data = utilities.draw_real_test(resting=False)
     assert {'VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I'} <= set(df.columns)

@@ -3,10 +3,6 @@ pyoxynet/models/*
 
 pyoxynet/pyoxynet/data_test/__pycache__
 
-pyoxynet/pyoxynet/data_test/*.csv
-!pyoxynet/pyoxynet/data_test/data_test.csv
-!pyoxynet/pyoxynet/data_test/database_statistics_resting.csv
-!pyoxynet/pyoxynet/data_test/database_statistics_ramp.csv
 
 pyoxynet/pyoxynet/tfl_models/*.pickle
 !pyoxynet/pyoxynet/tfl_models/tfl_model.pickle
