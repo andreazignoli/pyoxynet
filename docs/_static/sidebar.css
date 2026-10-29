@@ -1,0 +1,4 @@
+/* Keep the mark at a logo's size: Furo would stretch it to the sidebar's width. */
+.sidebar-logo {
+  max-width: 88px;
+}

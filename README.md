@@ -1,12 +1,12 @@
 <div align="center">
-  <img src="pics/logo_BW.png" alt="Oxynet logo" width="120" height="120">
+  <img src="docs/_static/oxynet-mark.svg" alt="Oxynet" width="96" height="96">
   <h1>pyoxynet</h1>
   <p>The open-source models from the Oxynet research papers, for cardiopulmonary exercise test (CPET) data.</p>
   <p>
-    <a href="https://pypi.org/project/pyoxynet/"><img src="https://img.shields.io/pypi/v/pyoxynet.svg" alt="PyPI version"></a>
-    <a href="https://pypi.org/project/pyoxynet/"><img src="https://img.shields.io/pypi/pyversions/pyoxynet.svg" alt="Python versions"></a>
-    <a href="https://pyoxynet.readthedocs.io/en/latest/"><img src="https://readthedocs.org/projects/pyoxynet/badge/?version=latest" alt="Documentation"></a>
-    <a href="LICENSE.txt"><img src="https://img.shields.io/github/license/andreazignoli/pyoxynet.svg" alt="MIT License"></a>
+    <a href="https://pypi.org/project/pyoxynet/"><img src="https://img.shields.io/pypi/v/pyoxynet" alt="PyPI version"></a>
+    <a href="https://pypi.org/project/pyoxynet/"><img src="https://img.shields.io/pypi/pyversions/pyoxynet" alt="Python versions"></a>
+    <a href="https://pyoxynet.readthedocs.io/en/latest/"><img src="https://img.shields.io/readthedocs/pyoxynet/latest" alt="Documentation"></a>
+    <a href="LICENSE.txt"><img src="https://img.shields.io/github/license/andreazignoli/pyoxynet" alt="MIT License"></a>
   </p>
   <p>
     <a href="https://www.oxynet.net"><strong>oxynet.net</strong></a>
