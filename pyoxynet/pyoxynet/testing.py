@@ -1151,15 +1151,18 @@ class Test:
             self.VE = df.VE_I
             self.PetO2 = df.PetO2_I
             self.PetCO2 = df.PetCO2_I
-            self.age = df.Age.mean()
-            if df.gender.mean() == 1:
+            # The example tests carry age, gender, weight and height; generate_CPET's output does not.
+            # Without them, use the defaults the exercise_threshold_app branch uses.
+            age_column = 'Age' if 'Age' in df.columns else 'age'
+            self.age = df[age_column].mean() if age_column in df.columns else 45
+            if 'gender' not in df.columns:
+                self.gender = 'N'
+            elif df.gender.mean() == 1:
                 self.gender = 'F'
             else:
                 self.gender = 'M'
-            # print('Weight')
-            self.weight = df.weight.mean()
-            # print('Height')
-            self.height = df.height.mean()
+            self.weight = df.weight.mean() if 'weight' in df.columns else 70
+            self.height = df.height.mean() if 'height' in df.columns else 170
 
         if self.metabolimeter == 'exercise_threshold_app':
             self.time = df.t

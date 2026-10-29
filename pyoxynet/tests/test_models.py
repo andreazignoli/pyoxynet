@@ -146,5 +146,29 @@ def test_generate_cpet_refuses_a_resting_phase():
         utilities.generate_CPET(utilities.load_generator(), resting=True)
 
 
+def test_the_file_reader_reads_a_generated_test(tmp_path):
+    random.seed(4)
+    np.random.seed(4)
+    df, _ = utilities.generate_CPET(utilities.load_generator())
+    df.to_csv(tmp_path / 'generated.csv', index=False)
+
+    t = pyoxynet.Test(str(tmp_path / 'generated'))
+    t.set_data_extension('.csv')
+    t.infer_metabolimeter()
+    t.load_file()
+    t.create_data_frame()
+    t.create_raw_data_frame()
+    assert t.metabolimeter == 'generated_pyoxynet'
+    _, out = utilities.test_pyoxynet(input_df=t.data_frame)
+    assert out['VT1']['time'] < out['VT2']['time']
+
+
+def test_exercise_thresholds_json_runs_through_inference():
+    data = json.loads(pkgutil.get_data('pyoxynet.test', 'exercise_threshold_app_test.json'))
+    df = utilities.load_exercise_threshold_app_data(data_dict=data)
+    _, out = utilities.test_pyoxynet(input_df=df)
+    assert out['VT1']['time'] < out['VT2']['time']
+
+
 def test_version():
     assert pyoxynet.__version__ == '1.0.0'
