@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyoxynet"
-version = "1.0.1"
+version = "1.0.2"
 description = "The Oxynet research models for cardiopulmonary exercise test (CPET) data: exercise intensity domains, ventilatory thresholds and synthetic tests"
 readme = "README.md"
 requires-python = ">=3.10"
