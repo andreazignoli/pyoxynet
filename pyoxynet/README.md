@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/andreazignoli/pyoxynet/master/docs/_static/oxynet-mark.svg" alt="Oxynet" width="96">
+</p>
+
 # pyoxynet
 
 [![PyPI version](https://img.shields.io/pypi/v/pyoxynet)](https://pypi.org/project/pyoxynet/)
@@ -60,8 +64,10 @@ The columns `test_pyoxynet` reads:
   one-second bins and interpolates linearly between them.
 - Each signal is min-max scaled over the test before it reaches the model, so units do not change
   the domains. The VO2, VE and HR reported at each threshold are in your file's units.
-- When the outputs never cross, no threshold can be placed and `test_pyoxynet` raises a
-  `ValueError`.
+- Other columns, text included, are ignored.
+- `test_pyoxynet` raises a `ValueError` that says why when it cannot place consistent thresholds:
+  the outputs never cross, VT1 would fall after VT2 or in the first 40 s, a signal is missing or
+  constant, or the test is shorter than 80 s.
 
 ## The models
 
@@ -83,7 +89,8 @@ Where each file came from is recorded in
 [models/README.md](https://github.com/andreazignoli/pyoxynet/blob/master/pyoxynet/pyoxynet/models/README.md).
 The models offered before 1.0.0 (`murias_lab`, `AIS`, `NSWIS`, `TCN`, `LSTMGRUModel`) were removed.
 Asking for one raises an error that names the available ones, and the earlier releases remain on
-PyPI.
+PyPI. In 0.1.12, `'CNN'` loaded a different network (`regressor`), so 1.0 gives different
+thresholds than 0.1.12 on the same file.
 
 ## Synthetic and example tests
 

@@ -42,7 +42,7 @@ def test_thresholds_match_0_1_12(key):
 
     if 'error' in expected:
         # 0.1.12 raised an IndexError here; 1.0.0 says why
-        with pytest.raises(ValueError, match='never crosses'):
+        with pytest.raises(ValueError, match='never cross'):
             utilities.test_pyoxynet(tf_model=model(model_name), input_df=df)
         return
 
@@ -52,7 +52,10 @@ def test_thresholds_match_0_1_12(key):
         assert out[vt]['time'] == expected[vt]['time']
         assert out[vt]['VO2'] == pytest.approx(expected[vt]['VO2'], abs=0.5)
         assert out[vt]['VE'] == pytest.approx(expected[vt]['VE'], abs=0.05)
-        assert out[vt]['HR'] == pytest.approx(expected[vt]['HR'], abs=0.5, nan_ok=True)
+        # 0.1.12 read heart rate 41 s before the threshold (fixed in 1.0.1): compare with the
+        # recording at the threshold's time instead of with the reference
+        at = df.loc[(df['time'] - out[vt]['time']).abs().idxmin(), 'HR_I']
+        assert out[vt]["HR"] == pytest.approx(at, abs=1e-6)
     assert out_df['p_md'].sum() == pytest.approx(expected['p_md_sum'], rel=1e-4)
     assert out_df['p_sv'].sum() == pytest.approx(expected['p_sv_sum'], rel=1e-4)
 
@@ -171,4 +174,4 @@ def test_exercise_thresholds_json_runs_through_inference():
 
 
 def test_version():
-    assert pyoxynet.__version__ == '1.0.0'
+    assert pyoxynet.__version__ == '1.0.1'
