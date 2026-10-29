@@ -48,8 +48,10 @@ Column         Signal
   change the domains. The VO2, VE and HR reported at each threshold are in your file's units.
 * ``out_df`` holds the three domain outputs (``p_md``, ``p_hv``, ``p_sv``) over time, next to
   the signals. ``plot=True`` draws them in the terminal.
-* When the outputs never cross, no threshold can be placed and ``test_pyoxynet`` raises a
-  ``ValueError``.
+* Other columns, text included, are ignored.
+* ``test_pyoxynet`` raises a ``ValueError`` that says why when it cannot place consistent
+  thresholds: the outputs never cross, VT1 would fall after VT2 or in the first 40 s, a signal is
+  missing or constant, or the test is shorter than 80 s.
 
 The models
 ----------
@@ -67,9 +69,15 @@ The models
 
    out_df, thresholds = pyoxynet.test_pyoxynet(input_df=df, model='LSTM')
 
-   # or load once and reuse
+   # or load once and reuse, from several threads if you like
    model = pyoxynet.load_model('LSTM')
    out_df, thresholds = pyoxynet.test_pyoxynet(tf_model=model, input_df=df)
+
+   # A loaded model also runs on its own, on windows scaled as test_pyoxynet scales them:
+   # one of shape (40, 5), or a batch of shape (n, 40, 5)
+   import numpy as np
+   windows = np.zeros((3, 40, 5))
+   outputs = model(windows)                  # shape (3, 3)
 
 * Both are research models, frozen as they are: they are not retrained.
 * Both take 40 one-second samples of VO2, VCO2, VE, PetO2 and PetCO2 and give three outputs.
@@ -84,7 +92,10 @@ Upgrading from 0.1.x
 --------------------
 
 * ``load_tf_model`` and ``load_tf_generator`` still work. They return the same objects as
-  ``load_model`` and ``load_generator``.
+  ``load_model`` and ``load_generator``, whose outputs also answer ``.numpy()``.
+* **The default model is a different network.** In 0.1.12, ``'CNN'`` loaded ``regressor``; in
+  1.0 it is the CNN evaluated in Keir et al. (2026). On the same file, 1.0 gives different
+  thresholds than 0.1.12.
 * ``murias_lab``, ``AIS``, ``NSWIS``, ``TCN``, ``LSTMGRUModel`` and ``transformer`` were
   removed. Asking for one raises a ``ValueError`` that names the available models. The
   earlier releases remain on PyPI.

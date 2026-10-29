@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyoxynet"
-version = "1.0.0"
+version = "1.0.1"
 description = "The Oxynet research models for cardiopulmonary exercise test (CPET) data: exercise intensity domains, ventilatory thresholds and synthetic tests"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,6 +45,7 @@ Homepage = "https://www.oxynet.net"
 Documentation = "https://pyoxynet.readthedocs.io"
 Source = "https://github.com/andreazignoli/pyoxynet"
 Issues = "https://github.com/andreazignoli/pyoxynet/issues"
+Changelog = "https://github.com/andreazignoli/pyoxynet/releases"
 
 [tool.setuptools]
 packages = ["pyoxynet", "pyoxynet.data_test", "pyoxynet.test"]

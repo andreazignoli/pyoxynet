@@ -139,8 +139,19 @@ MODELS = {
 REMOVED_MODELS = ('transformer', 'TCN', 'LSTMGRUModel', 'murias_lab', 'AIS', 'NSWIS')
 
 
+class ModelOutput(np.ndarray):
+    """A numpy array that also answers .numpy(), as the TensorFlow tensors returned before 1.0.0 did."""
+
+    def numpy(self):
+        return np.asarray(self)
+
+
 class TFLiteModel:
-    """A frozen pyoxynet model, called like a Keras model: model(x) returns a numpy array.
+    """A frozen pyoxynet model, called like a Keras model: model(x) returns an array.
+
+    x is one sample or a batch: for the threshold models (40, 5), (1, 40, 5) or (n, 40, 5), which
+    give (1, 3) or (n, 3). Any other shape raises a ValueError. Calls are serialised, so one model
+    can be shared between threads.
 
     Args:
        filename (str):  Name of a .tflite file in pyoxynet/models.
@@ -148,6 +159,7 @@ class TFLiteModel:
     """
 
     def __init__(self, filename):
+        import threading
         from importlib.resources import files
         from ai_edge_litert.interpreter import Interpreter
 
@@ -157,13 +169,29 @@ class TFLiteModel:
         self._interpreter.allocate_tensors()
         self._input = self._interpreter.get_input_details()[0]
         self._output = self._interpreter.get_output_details()[0]
+        # One interpreter holds one input and one output buffer, so calls must not overlap
+        self._lock = threading.Lock()
         self.input_shape = tuple(int(n) for n in self._input['shape'])
+        self.sample_shape = self.input_shape[1:]
 
     def __call__(self, x):
-        x = np.asarray(x, dtype=np.float32).reshape(self.input_shape)
-        self._interpreter.set_tensor(self._input['index'], x)
-        self._interpreter.invoke()
-        return self._interpreter.get_tensor(self._output['index']).copy()
+        x = np.asarray(x, dtype=np.float32)
+        if x.shape == self.sample_shape:
+            x = x[np.newaxis]
+        if x.ndim != len(self.input_shape) or x.shape[1:] != self.sample_shape or len(x) == 0:
+            raise ValueError(f'{self.filename} takes an array of shape {self.sample_shape}, or a batch '
+                             f'of them, (n, {", ".join(map(str, self.sample_shape))}); got {x.shape}.')
+        outputs = []
+        with self._lock:
+            for sample in x:
+                self._interpreter.set_tensor(self._input['index'], sample[np.newaxis])
+                self._interpreter.invoke()
+                outputs.append(self._interpreter.get_tensor(self._output['index'])[0].copy())
+        return np.stack(outputs).view(ModelOutput)
+
+    def predict(self, x):
+        """As Keras' predict: model(x) as a plain numpy array."""
+        return np.asarray(self(x))
 
     def __repr__(self):
         return f'TFLiteModel({self.filename!r}, input_shape={self.input_shape})'
@@ -252,12 +280,71 @@ def load_csv_data(csv_file='data_test.csv'):
 
     return pd.read_csv(csv_file)
 
+EXERCISE_THRESHOLD_NAMES = {"time": "t",
+                            "VO2_I": "VO2",
+                            "VCO2_I": "VCO2",
+                            "VE_I": "VE",
+                            "VCO2VO2_I": "R",
+                            "VEVO2_I": "VE/VO2",
+                            "VEVCO2_I": "VE/VCO2",
+                            "PetO2_I": "PetO2",
+                            "PetCO2_I": "PetCO2",
+                            "HR_I": "HR",
+                            "RF_I": "RF"}
+
+
+def _breath_by_breath(df, duration):
+    """Rebuild breaths from a one-second test: each breath is the median of the rows it spans
+
+    Breath lengths come from RF_I. The result uses the Exercise Thresholds names (t, VO2, ...).
+    Adds a 'breaths' column (breath length, s) to df, as draw_real_test and generate_CPET always did.
+
+    Parameters:
+        df (pd df) : one-second test with time and RF_I
+        duration (int) : length of the test in seconds
+
+    Returns:
+        records (list of dict) : one dict per breath
+
+    """
+
+    import numpy as np
+    import pandas as pd
+
+    df['breaths'] = (1/(df.RF_I/60))
+
+    time_cum_sum = 0
+    df_breath = pd.DataFrame()
+    n = 0
+    while time_cum_sum < (duration - 6):
+        try:
+            breath = df.breaths.iloc[n]
+            # Some example tests record RF as 0, which added noise can make negative: a breath of
+            # zero or negative length would never move the loop forward, so step one second instead.
+            if not np.isfinite(breath) or breath <= 0:
+                breath = 1.0
+            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + breath))].median()
+            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, len(df.columns)]),
+                                                           columns=tmp.index.to_list())])
+            time_cum_sum = (time_cum_sum + breath)
+            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + breath))])
+        except:
+            break
+
+    df_breath = df_breath.dropna()
+    df_breath['time'] = df_breath['time'].astype(int)
+    df_breath = df_breath.drop_duplicates('time')
+    df_breath = df_breath.rename(columns=EXERCISE_THRESHOLD_NAMES)
+
+    return df_breath.to_dict(orient='records')
+
+
 def draw_real_test(resting='random', index=None):
     """Draw one of the bundled example tests, with a little random noise added to its signals
 
     Parameters:
         resting (bool or 'random') : a test with a resting phase (50 of them) or a ramp test (88)
-        index (int) : which test, from 1; a random one if not given
+        index (int) : which test, from 1 (with resting True or False); a random one if not given
 
     Returns:
         df (pandas df) : Real data output
@@ -273,19 +360,22 @@ def draw_real_test(resting='random', index=None):
     import numpy as np
     from datetime import datetime
 
+    if index is not None and resting == 'random':
+        raise ValueError('Give resting=True or resting=False with index: the 50 resting tests and '
+                         'the 88 ramp tests are numbered separately.')
+
     if resting == 'random':
         resting = random.randint(0, 1)
 
-    if resting:
-        file_index = str(index or random.randint(1, 50))
-        file_name = 'resting_real_test_' + file_index + '.csv'
-        bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
-        print(file_name, ' from resting')
-    else:
-        file_index = str(index or random.randint(1, 88))
-        file_name = 'ramp_real_test_' + file_index + '.csv'
-        bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
-        print(file_name, ' from ramp')
+    kind, count = ('resting', 50) if resting else ('ramp', 88)
+    if index is None:
+        index = random.randint(1, count)
+    elif not 1 <= index <= count:
+        raise ValueError(f'index must be between 1 and {count} for the {kind} tests, not {index}.')
+
+    file_name = f'{kind}_real_test_{index}.csv'
+    bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
+    print(file_name, ' from', kind)
 
     s = str(bytes_data, 'utf-8')
     data = StringIO(s)
@@ -354,47 +444,8 @@ def draw_real_test(resting='random', index=None):
     data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
     data['resting'] = str(resting)
 
-    df['breaths'] = (1/(df.RF_I/60))
-    # df['recorded_timestamp'] = pd.to_datetime(df.time, unit='s')
-
-    time_cum_sum = 0
-    df_breath = pd.DataFrame()
-    n = 0
-    while time_cum_sum < (duration - 6):
-        try:
-            breath = df.breaths.iloc[n]
-            # Some example tests record RF as 0, which the noise above can make negative: a breath of
-            # zero or negative length would never move the loop forward, so step one second instead.
-            if not np.isfinite(breath) or breath <= 0:
-                breath = 1.0
-            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + breath))].median()
-            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, len(df.columns)]),
-                                                           columns=tmp.index.to_list())])
-            time_cum_sum = (time_cum_sum + breath)
-            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + breath))])
-        except:
-            break
-
-    df_breath = df_breath.dropna()
-    df_breath['time'] = df_breath['time'].astype(int)
-    df_breath = df_breath.drop_duplicates('time')
-
-    exercise_threshold_names = {"time": "t",
-                                "VO2_I": "VO2",
-                                "VCO2_I": "VCO2",
-                                "VE_I": "VE",
-                                "VCO2VO2_I": "R",
-                                "VEVO2_I": "VE/VO2",
-                                "VEVCO2_I": "VE/VCO2",
-                                "PetO2_I": "PetO2",
-                                "PetCO2_I": "PetCO2",
-                                "HR_I": "HR",
-                                "RF_I": "RF"}
-
-    df_breath = df_breath.rename(columns=exercise_threshold_names)
     # create the dict for the exercise threshold app
-    data['data'] = dict()
-    data['data'] = df_breath.to_dict(orient='records')
+    data['data'] = _breath_by_breath(df, duration)
 
     return df, data
 
@@ -405,7 +456,7 @@ def load_exercise_threshold_app_data(data_dict={}, filter_size = 20):
         data_dict (dict) : Dictionary with format like test/exercise_threshold_app_test.json
 
     Returns:
-        df (pandas df) : Pandas data frame with format that can be used by Pyoxynet for inference (columns needed: 'VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I')
+        df (pandas df) : Pandas data frame with format that can be used by Pyoxynet for inference (columns needed: 'VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I'; 'HR_I' when the data has HR)
 
     """
 
@@ -435,6 +486,7 @@ def load_exercise_threshold_app_data(data_dict={}, filter_size = 20):
         VEVO2_I.append(data_points_['VE/VO2'])
         VEVCO2_I.append(data_points_['VE/VCO2'])
         VCO2VO2_I.append(data_points_['VCO2']/data_points_['VO2'])
+        HR_I.append(data_points_.get('HR', np.nan))
 
     # transform in array
     time = np.asarray(time)
@@ -446,6 +498,7 @@ def load_exercise_threshold_app_data(data_dict={}, filter_size = 20):
     VEVO2_I = np.asarray(VEVO2_I)
     VEVCO2_I = np.asarray(VEVCO2_I)
     VCO2VO2_I = np.asarray(VCO2VO2_I)
+    HR_I = np.asarray(HR_I, dtype=float)
 
     # rolling averages to filter the data
     # This filter size should be equal to the one used by the Test class
@@ -482,7 +535,9 @@ def load_exercise_threshold_app_data(data_dict={}, filter_size = 20):
     df['VEVO2_I'] = VEVO2_I
     df['VEVCO2_I'] = VEVCO2_I
     df['VCO2VO2_I'] = VCO2VO2_I
-    df['HR_I'] = 0
+    # Heart rate only when every point has it: a column of zeros would be reported as 0 bpm
+    if len(HR_I) and np.all(np.isfinite(HR_I)):
+        df['HR_I'] = np.interp(time_I, time, uniform_filter1d(HR_I, size=filter_size))
 
     return df
 
@@ -519,13 +574,33 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
     else:
         df = input_df
 
+    signals = ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I']
+    missing = [c for c in ['time'] + signals if c not in df.columns]
+    if missing:
+        raise ValueError(f'The test has no {", ".join(missing)} column. test_pyoxynet reads time (s), '
+                         f'{", ".join(signals)} and, optionally, HR_I.')
+    if not pd.api.types.is_numeric_dtype(df['time']):
+        raise ValueError('The time column must hold seconds from the start of the test, as numbers.')
+
     # some adjustments to input df
     # TODO: create dedicated function for this
     df = df.drop_duplicates('time')
+    # Only numeric columns can be averaged into one-second bins. Text columns (a phase marker, an id)
+    # would make resample().mean() fail, and the models do not read them.
+    df = df[[c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]].copy()
     df['timestamp'] = pd.to_datetime(df['time'], unit='s')
     df = df.set_index('timestamp')
     df = df.resample('1s').mean()
     df = df.interpolate()
+    # interpolate() leaves the rows before a signal's first value empty: hold that first value
+    df[signals] = df[signals].bfill().ffill()
+    unusable = [c for c in signals if df[c].isna().all() or df[c].max() == df[c].min()]
+    if unusable:
+        raise ValueError(f'{", ".join(unusable)} is empty or constant in this test; the models need all '
+                         'five signals to vary.')
+    min_length = 2 * past_points
+    if len(df) < min_length:
+        raise ValueError(f'The test covers {len(df)} s; test_pyoxynet needs at least {min_length} s.')
     df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().bfill().ffill()
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
@@ -572,6 +647,10 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
     PetO2 = []
     PetCO2 = []
 
+    # each signal's range, to undo the scaling; computed once rather than in every window
+    low = {c: df[c].min() for c in signals}
+    span = {c: df[c].max() - df[c].min() for c in signals}
+
     for i in np.arange(1, len(XN) - past_points, inference_stride):
         XN_array = np.asarray(XN[i:i+int(past_points)])
         output_data = np.asarray(tf_model(XN_array.reshape(1, past_points, n_inputs)))
@@ -580,11 +659,11 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
         p_3.append(output_data[0][2])
         time.append(df.time[i] + past_points)
         # ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'domain']
-        VO2.append(np.mean(XN_array[-1, 0]) * (df['VO2_I'].max() - df['VO2_I'].min()) + df['VO2_I'].min())
-        VCO2.append(np.mean(XN_array[-1, 1]) * (df['VCO2_I'].max() - df['VCO2_I'].min()) + df['VCO2_I'].min())
-        VE.append(np.mean(XN_array[-1, 2]) * (df['VE_I'].max() - df['VE_I'].min()) + df['VE_I'].min())
-        PetO2.append(np.mean(XN_array[-1, 3]) * (df['PetO2_I'].max() - df['PetO2_I'].min()) + df['PetO2_I'].min())
-        PetCO2.append(np.mean(XN_array[-1, 4]) * (df['PetCO2_I'].max() - df['PetCO2_I'].min()) + df['PetCO2_I'].min())
+        VO2.append(np.mean(XN_array[-1, 0]) * span['VO2_I'] + low['VO2_I'])
+        VCO2.append(np.mean(XN_array[-1, 1]) * span['VCO2_I'] + low['VCO2_I'])
+        VE.append(np.mean(XN_array[-1, 2]) * span['VE_I'] + low['VE_I'])
+        PetO2.append(np.mean(XN_array[-1, 3]) * span['PetO2_I'] + low['PetO2_I'])
+        PetCO2.append(np.mean(XN_array[-1, 4]) * span['PetCO2_I'] + low['PetCO2_I'])
 
     tmp_df = pd.DataFrame()
     tmp_df['time'] = time
@@ -646,18 +725,26 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
 
     VT1_candidates = out_df[(out_df['p_hv'] >= out_df['p_md'])].index
     VT2_candidates = out_df[(out_df['p_sv'] <= out_df['p_hv'])].index
-    if len(VT1_candidates) == 0 or len(VT2_candidates) == 0:
-        raise ValueError('The model output never crosses at '
-                         + ('VT1 (heavy never reaches moderate)' if len(VT1_candidates) == 0
-                            else 'VT2 (severe stays above heavy throughout)')
-                         + ', so no threshold can be placed in this test.')
+    # The three columns are labelled by which output leads at the start and at the end of the test,
+    # so a missing crossing says the test does not span three domains, not which one is missing.
+    for name, candidates in (('VT1', VT1_candidates), ('VT2', VT2_candidates)):
+        if len(candidates) == 0:
+            raise ValueError(f'The model outputs never cross where {name} would be, so no {name} can be '
+                             'placed in this test. This happens when a test does not span all three '
+                             'domains, for example when it stops before the severe domain.')
 
-    # FIXME: hard coded
+    # Each threshold is placed at the start of the 40 s window in which the outputs cross
     VT1_index = int(VT1_candidates[0] - int(past_points / inference_stride))
     VT2_index = int(VT2_candidates[-1] - int(past_points / inference_stride))
+    if VT1_index < 0 or VT2_index < 0:
+        raise ValueError(f'The outputs cross within the first {past_points} s of the test, before the '
+                         'model has seen a full window, so the threshold cannot be placed.')
 
     VT1_time = int(out_df.iloc[VT1_index]['time'])
     VT2_time = int(out_df.iloc[VT2_index]['time'])
+    if VT1_time >= VT2_time:
+        raise ValueError(f'The outputs place VT1 ({VT1_time} s) at or after VT2 ({VT2_time} s), so the '
+                         'two thresholds are not consistent in this test.')
 
     out_dict['VT1']['time'] = VT1_time
     out_dict['VT2']['time'] = VT2_time
@@ -667,10 +754,14 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
     # out_dict['VT2_upper']['time'] = overlap_ci_2[1]
     # out_dict['VT2_lower']['time'] = overlap_ci_2[0]
 
-    # heart rate is reported, not used by the models, so a test without it still runs
+    # Heart rate is reported, not used by the models, so a test without it still runs. It is read at
+    # the threshold's time: VT1_index counts windows, not the seconds of df.
+    def hr_at(seconds):
+        return float(df.at[(df['time'] - seconds).abs().idxmin(), 'HR_I'])
+
     has_hr = 'HR_I' in df.columns
-    out_dict['VT1']['HR'] = float(df.iloc[VT1_index]['HR_I']) if has_hr else float('nan')
-    out_dict['VT2']['HR'] = float(df.iloc[VT2_index]['HR_I']) if has_hr else float('nan')
+    out_dict['VT1']['HR'] = hr_at(VT1_time) if has_hr else float('nan')
+    out_dict['VT2']['HR'] = hr_at(VT2_time) if has_hr else float('nan')
     # out_dict['VT1_upper']['HR'] = df[df.time == overlap_ci_1[1]]['HR_I'].values[0]
     # out_dict['VT1_lower']['HR'] = df[df.time == overlap_ci_1[0]]['HR_I'].values[0]
     # out_dict['VT2_upper']['HR'] = df[df.time == overlap_ci_2[1]]['HR_I'].values[0]
@@ -832,7 +923,7 @@ def generate_CPET(generator,
         plot (bool): Whether to plot the generated data. Default False.
         fitness_group (int): Fitness level: 0=very low, 1=low, 2=medium, 3=high. None=random.
         noise_factor (float): Noise factor for white noise (1.5-2.5). None=random.
-        resting (bool): Whether to include a resting phase. Only False is implemented.
+        resting (bool): Whether to include a resting phase. Only False (or None) is implemented: True raises NotImplementedError.
         training (bool): Training mode flag. Default True.
         normalization (bool): Whether to normalize data. Default False.
 
@@ -892,8 +983,9 @@ def generate_CPET(generator,
 
     VO2_VT1_efficiency = np.random.uniform(10.8, 11.8)
 
+    # None used to pick at random, but only tests without a resting phase can be generated
     if resting is None:
-        resting = random.choice([0, 1])
+        resting = False
 
     if resting:
         # This branch never set the ramp (W0, ramp rate, duration) the rest of the function needs,
@@ -929,7 +1021,7 @@ def generate_CPET(generator,
             eps = 15
             duration = (VO2_peak - VO2_min)/(eps * VO2_VT1_efficiency)
             R_max = 1.16
-        if VO2_peak > 4000:
+        if VO2_peak >= 4000:
             VO2_basal = np.random.uniform(320, 540)
             # Assuming they are already delivering 100 W
             W0 = 100
@@ -947,8 +1039,10 @@ def generate_CPET(generator,
     VO2VT1_estimated = 0
     VO2VT2_estimated = 0
 
+    # VT1 below 1 s or VT2 past the end would fail in create_probabilities: draw again
     while ((VT2 - VT1) < 60 or VO2VT1_estimated > 0.74 * VO2_peak or VO2VT2_estimated > 0.94 * VO2_peak or
-           VO2VT1_estimated < 0.49 * VO2_peak or VO2VT2_estimated < 0.73 * VO2_peak):
+           VO2VT1_estimated < 0.49 * VO2_peak or VO2VT2_estimated < 0.73 * VO2_peak or
+           VT1 < 1 or VT2 > duration):
         VT2 = round(np.random.normal(0.8, 0.12) * duration)
         VT1 = round(np.random.normal(0.7, 0.6) * VT2)
         VO2VT1_estimated = int((W0 + eps / 60 * VT1) * VO2_VT1_efficiency + VO2_basal)
@@ -1165,42 +1259,7 @@ def generate_CPET(generator,
     data['W0'] = str(W0)
     data['W/min'] = str(eps)
 
-    df['breaths'] = (1/(df.RF_I/60))
-    # df['recorded_timestamp'] = pd.to_datetime(df.time, unit='s')
-
-    time_cum_sum = 0
-    df_breath = pd.DataFrame()
-    n = 0
-    while time_cum_sum < (duration-6):
-        try:
-            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
-            # TODO: this 25 is hardcoded, you should have len(df.columns)
-            df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, 21]),
-                                                           columns=tmp.index.to_list())])
-            time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
-            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])
-        except:
-            break
-
-    df_breath = df_breath.dropna()
-    df_breath['time'] = df_breath['time'].astype(int)
-    df_breath = df_breath.drop_duplicates('time')
-
-    exercise_threshold_names = {"time": "t",
-                                "VO2_I": "VO2",
-                                "VCO2_I": "VCO2",
-                                "VE_I": "VE",
-                                "VCO2VO2_I": "R",
-                                "VEVO2_I": "VE/VO2",
-                                "VEVCO2_I": "VE/VCO2",
-                                "PetO2_I": "PetO2",
-                                "PetCO2_I": "PetCO2",
-                                "HR_I": "HR",
-                                "RF_I": "RF"}
-
-    df_breath = df_breath.rename(columns=exercise_threshold_names)
     # create the dict for the exercise threshold app
-    data['data'] = dict()
-    data['data'] = df_breath.to_dict(orient='records')
+    data['data'] = _breath_by_breath(df, duration)
 
     return df, data
