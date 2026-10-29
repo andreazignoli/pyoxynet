@@ -8,7 +8,7 @@ Install
 
    $ pip install pyoxynet
 
-Python 3.10 to 3.14, on Windows, macOS and Linux. The models run with LiteRT
+Python 3.10 to 3.14, on Windows, Linux and macOS (Apple silicon). The models run with LiteRT
 (``ai-edge-litert``), which pip installs with the package. TensorFlow is not needed.
 
 ``pip install "pyoxynet[train]"`` adds TensorFlow, which only :mod:`pyoxynet.model` uses: it

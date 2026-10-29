@@ -50,7 +50,7 @@ its transportability is untested.
 pip install pyoxynet
 ```
 
-Python 3.10 to 3.14, on Windows, macOS and Linux. To install the development version:
+Python 3.10 to 3.14, on Windows, Linux and macOS (Apple silicon). To install the development version:
 
 ```sh
 pip install "git+https://github.com/andreazignoli/pyoxynet.git#subdirectory=pyoxynet"

@@ -1,0 +1,66 @@
+# Publishes pyoxynet to PyPI when a tag like v1.0.0 is pushed. The tag must match the version
+# in pyoxynet/pyproject.toml. PyPI trusts this workflow (trusted publishing), so no token is
+# stored anywhere: the PyPI project lists andreazignoli/pyoxynet, release.yml and the "pypi"
+# environment as its publisher.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Check the tag matches the package version
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyoxynet/pyproject.toml', 'rb'))['project']['version'])")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match version $version in pyoxynet/pyproject.toml"
+            exit 1
+          fi
+      - run: python -m pip install build
+      - run: python -m build pyoxynet --outdir dist
+      - run: python .github/check_dist.py dist/*.whl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  test:
+    needs: build
+    name: Test the wheel on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - run: python -m pip install pytest dist/*.whl
+        shell: bash
+      - run: python -m pytest -q
+        working-directory: pyoxynet/tests
+
+  publish:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

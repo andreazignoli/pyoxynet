@@ -23,7 +23,7 @@ Install
 
    pip install pyoxynet
 
-Python 3.10 to 3.14, on Windows, macOS and Linux.
+Python 3.10 to 3.14, on Windows, Linux and macOS (Apple silicon).
 
 Quick start
 -----------
