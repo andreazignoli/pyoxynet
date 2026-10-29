@@ -46,6 +46,7 @@ ramp tests.
   ``info['data']`` holds a breath-by-breath version built from it.
 * Only ramp tests that start under load are generated: ``resting=True`` raises
   ``NotImplementedError``.
+* ``verbose=True`` prints a summary of the generated test.
 
 The example tests
 -----------------
@@ -63,7 +64,9 @@ labelled with its thresholds.
 
    df, info = pyoxynet.draw_real_test(resting=False, index=12)   # ramp test 12
 
-``draw_real_test`` adds a little random noise to the signals of the test it draws.
+``draw_real_test`` adds a little random noise to the signals of the test it draws, from Python's
+``random`` module: call ``random.seed()`` first to repeat a draw, or pass ``noise=False`` for the
+test as recorded. ``verbose=True`` prints a summary of the test.
 
 Smoothing a signal
 ------------------

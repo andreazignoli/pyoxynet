@@ -44,7 +44,7 @@ domain outputs (`p_md`, `p_hv`, `p_sv`) over time, next to the signals.
 import pandas as pd
 import pyoxynet
 
-df = pd.read_csv('my_test.csv')
+df = pd.read_csv('my_test.csv')    # your test, with the columns below
 out_df, thresholds = pyoxynet.test_pyoxynet(input_df=df)
 ```
 
@@ -64,7 +64,9 @@ The columns `test_pyoxynet` reads:
   one-second bins and interpolates linearly between them.
 - Each signal is min-max scaled over the test before it reaches the model, so units do not change
   the domains. The VO2, VE and HR reported at each threshold are in your file's units.
-- Other columns, text included, are ignored.
+- Other columns, text included, are ignored. From a cart export, rename its columns and turn its
+  time into seconds: the [docs show how](https://pyoxynet.readthedocs.io/en/latest/usage.html#from-a-cart-export).
+  The hosted Oxynet API reads vendor exports directly.
 - `test_pyoxynet` raises a `ValueError` that says why when it cannot place consistent thresholds:
   the outputs never cross, VT1 would fall after VT2 or in the first 40 s, a signal is missing or
   constant, or the test is shorter than 80 s.

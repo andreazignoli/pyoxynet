@@ -174,7 +174,7 @@ def test_resting_none_generates_a_ramp_test():
         random.seed(seed)
         np.random.seed(seed)
         _, info = quiet(utilities.generate_CPET, generator, resting=None)
-        assert info['resting'] == 'False'
+        assert info['resting'] is False
 
 
 def test_a_peak_vo2_of_exactly_4000_has_a_ramp(monkeypatch):
@@ -187,7 +187,7 @@ def test_a_peak_vo2_of_exactly_4000_has_a_ramp(monkeypatch):
     random.seed(0)
     np.random.seed(0)
     _, info = quiet(utilities.generate_CPET, utilities.load_generator(), fitness_group=2)
-    assert info['W0'] == '100'
+    assert info['W0'] == 100
 
 
 @pytest.mark.parametrize('kwargs, match', [

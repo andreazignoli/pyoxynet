@@ -5,6 +5,8 @@ from scipy.ndimage import uniform_filter1d
 import csv
 from . import utilities
 
+__all__ = ['Test']
+
 class Test:
 
     def __init__(self, filename, filter_size = 20):

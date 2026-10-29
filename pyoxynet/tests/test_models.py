@@ -174,4 +174,4 @@ def test_exercise_thresholds_json_runs_through_inference():
 
 
 def test_version():
-    assert pyoxynet.__version__ == '1.0.1'
+    assert pyoxynet.__version__ == '1.0.2'

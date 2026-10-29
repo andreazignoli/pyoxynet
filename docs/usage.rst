@@ -22,7 +22,7 @@ Your own test
    import pandas as pd
    import pyoxynet
 
-   df = pd.read_csv('my_test.csv')
+   df = pd.read_csv('my_test.csv')           # your test, with the columns below
    out_df, thresholds = pyoxynet.test_pyoxynet(input_df=df)
 
    thresholds['VT1']   # {'time': ..., 'HR': ..., 'VE': ..., 'VO2': ...}
@@ -53,6 +53,40 @@ Column         Signal
   thresholds: the outputs never cross, VT1 would fall after VT2 or in the first 40 s, a signal is
   missing or constant, or the test is shorter than 80 s.
 
+From a cart export
+------------------
+
+``test_pyoxynet`` reads a table, not a vendor file. To get from an export to that table, read it
+with pandas, rename its columns, and turn its time into seconds:
+
+.. code-block:: python
+
+   import pandas as pd
+   import pyoxynet
+
+   # Your export, read with pd.read_excel or pd.read_csv. Here one is made from the bundled
+   # example, with a cart's own column names and time as mm:ss.
+   example = pyoxynet.load_csv_data()
+   raw = pd.DataFrame({
+       't': [f'{int(s) // 60}:{int(s) % 60:02d}' for s in example['time']],
+       "V'O2": example['VO2_I'], "V'CO2": example['VCO2_I'], "V'E": example['VE_I'],
+       'PETO2': example['PetO2_I'], 'PETCO2': example['PetCO2_I'], 'HR': example['HR_I'],
+   })
+
+   df = pd.DataFrame({
+       'time': raw['t'].map(pyoxynet.get_sec),      # 'mm:ss' or 'h:mm:ss' to seconds
+       'VO2_I': raw["V'O2"], 'VCO2_I': raw["V'CO2"], 'VE_I': raw["V'E"],
+       'PetO2_I': raw['PETO2'], 'PetCO2_I': raw['PETCO2'], 'HR_I': raw['HR'],
+   })
+   out_df, thresholds = pyoxynet.test_pyoxynet(input_df=df)
+
+* A units row under the header, or cells such as ``---``, can stay: rows without a time are
+  dropped and gaps in a signal are interpolated.
+* Units do not matter for the domains, since each signal is scaled over the test, but the VO2,
+  VE and HR reported at the thresholds are in your file's units.
+* The hosted Oxynet API (`app.oxynet.net <https://app.oxynet.net>`_) reads vendor exports
+  directly, with no renaming, COSMED and Cortex among them.
+
 The models
 ----------
 
@@ -67,6 +101,9 @@ The models
 
 .. code-block:: python
 
+   import pyoxynet
+
+   df = pyoxynet.load_csv_data()             # or your own test
    out_df, thresholds = pyoxynet.test_pyoxynet(input_df=df, model='LSTM')
 
    # or load once and reuse, from several threads if you like
@@ -81,6 +118,9 @@ The models
 
 * Both are research models, frozen as they are: they are not retrained.
 * Both take 40 one-second samples of VO2, VCO2, VE, PetO2 and PetCO2 and give three outputs.
+* The two can disagree by tens of seconds on the same test. On the bundled example the CNN
+  places VT1 and VT2 at 372 s and 550 s, the LSTM at 448 s and 628 s. The CNN is the one a paper
+  evaluated.
 * The evaluation in Keir et al. covered incremental tests in healthy individuals.
 * The domain outputs are what the network gives, not calibrated probabilities, and pyoxynet
   reports no confidence score.
@@ -102,6 +142,8 @@ Upgrading from 0.1.x
 * ``load_explainer`` and ``compute_shap`` were removed. They expected a 6-input Keras model,
   which no model shipped since the move to 5 inputs has been.
 * The ``[tflite]`` and ``[full]`` extras are gone: the base install runs everything.
+* Since 1.0.2, ``generate_CPET`` and ``draw_real_test`` return their labels as numbers, not
+  strings, and print nothing unless ``verbose=True``.
 
 Citing
 ------

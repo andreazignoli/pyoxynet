@@ -4,6 +4,13 @@ from scipy.stats import beta
 from scipy.interpolate import UnivariateSpline
 from scipy.interpolate import interp1d
 
+# What `from pyoxynet import *` and `pyoxynet.<name>` expose: pyoxynet's own names, not numpy,
+# pandas or scipy
+__all__ = ['PrintHello', 'get_sec', 'normalize', 'optimal_filter', 'MODELS', 'REMOVED_MODELS',
+           'ModelOutput', 'TFLiteModel', 'load_model', 'load_tf_model', 'load_generator',
+           'load_tf_generator', 'load_csv_data', 'draw_real_test', 'load_exercise_threshold_app_data',
+           'test_pyoxynet', 'create_probabilities', 'random_walk', 'generate_CPET']
+
 def PrintHello(hello='hello'):
     """This function prints to screen.
 
@@ -259,23 +266,25 @@ def load_tf_generator():
 
     return load_generator()
 
-def load_csv_data(csv_file='data_test.csv'):
+def load_csv_data(csv_file=None):
     """Loads a CSV file, or the bundled example test when called without arguments
 
     Parameters:
-        csv_file (str) : Path to a CSV file. 'data_test.csv' (the default) is the bundled example.
+        csv_file (str) : Path to a CSV file. Without it, the bundled example. 'data_test.csv'
+            also means the bundled example, as before 1.0.2, unless a file of that name exists.
 
     Returns:
         df (pandas df) : The file's contents
 
     """
 
+    import os
     import pandas as pd
 
-    if csv_file == 'data_test.csv':
+    if csv_file is None or (csv_file == 'data_test.csv' and not os.path.exists(csv_file)):
         import pkgutil
         from io import StringIO
-        bytes_data = pkgutil.get_data('pyoxynet.data_test', csv_file)
+        bytes_data = pkgutil.get_data('pyoxynet.data_test', 'data_test.csv')
         return pd.read_csv(StringIO(str(bytes_data, 'utf-8')))
 
     return pd.read_csv(csv_file)
@@ -339,15 +348,21 @@ def _breath_by_breath(df, duration):
     return df_breath.to_dict(orient='records')
 
 
-def draw_real_test(resting='random', index=None):
-    """Draw one of the bundled example tests, with a little random noise added to its signals
+def draw_real_test(resting='random', index=None, noise=True, verbose=False):
+    """Draw one of the 138 bundled example tests: anonymised real tests with labelled thresholds
 
     Parameters:
         resting (bool or 'random') : a test with a resting phase (50 of them) or a ramp test (88)
         index (int) : which test, from 1 (with resting True or False); a random one if not given
+        noise (bool) : add a little random noise to the signals, as earlier versions always did.
+            The noise comes from Python's random module: call random.seed() first to repeat a draw.
+        verbose (bool) : print a summary of the test
 
     Returns:
-        df (pandas df) : Real data output
+        tuple: ``(df, info)``. ``df`` is the test, one row per second, with the domain labels in
+            the column 'domain'. ``info`` is a dict: the labelled thresholds VT1 and VT2 (s), VO2
+            there (VO2VT1, VO2VT2) and VO2max (mL/min), LT_vo2max and RCP_vo2max (% of VO2max),
+            the subject's age, height, weight and sex, and 'data', a breath-by-breath version.
 
     """
 
@@ -375,7 +390,6 @@ def draw_real_test(resting='random', index=None):
 
     file_name = f'{kind}_real_test_{index}.csv'
     bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
-    print(file_name, ' from', kind)
 
     s = str(bytes_data, 'utf-8')
     data = StringIO(s)
@@ -397,13 +411,14 @@ def draw_real_test(resting='random', index=None):
 
     duration = len(df)
 
-    df['VO2_I'] = df['VO2_I'] + [random.uniform(-100, 100) for i in np.arange(duration)]
-    df['VCO2_I'] = df['VCO2_I'] + [random.uniform(-100, 100) for i in np.arange(duration)]
-    df['VE_I'] = df['VE_I'] + [random.uniform(-2, 2) for i in np.arange(duration)]
-    df['HR_I'] = df['HR_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
-    df['RF_I'] = df['RF_I'] + [random.uniform(-2, 2) for i in np.arange(duration)]
-    df['PetO2_I'] = df['PetO2_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
-    df['PetCO2_I'] = df['PetCO2_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
+    if noise:
+        df['VO2_I'] = df['VO2_I'] + [random.uniform(-100, 100) for i in np.arange(duration)]
+        df['VCO2_I'] = df['VCO2_I'] + [random.uniform(-100, 100) for i in np.arange(duration)]
+        df['VE_I'] = df['VE_I'] + [random.uniform(-2, 2) for i in np.arange(duration)]
+        df['HR_I'] = df['HR_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
+        df['RF_I'] = df['RF_I'] + [random.uniform(-2, 2) for i in np.arange(duration)]
+        df['PetO2_I'] = df['PetO2_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
+        df['PetCO2_I'] = df['PetCO2_I'] + [random.uniform(-1, 1) for i in np.arange(duration)]
 
     df['VEVO2_I'] = df['VE_I']/df['VO2_I']
     df['VEVCO2_I'] = df['VE_I']/df['VCO2_I']
@@ -415,34 +430,33 @@ def draw_real_test(resting='random', index=None):
 
     VO2_peak = df.VO2_I.rolling(20).mean().max()
 
-    print('Data loaded for a ', gender, ' individual with ', fitness_group, ' fitness capacity.')
-    print('Weight: ', int(np.mean(df.weight.values)), ' kg')
-    print('Height: ', np.mean(df.height.values[0]), 'm')
-    print('Age: ', int(np.mean(df.age.values)), 'y')
-    print('VT1: ', str(VT1))
-    print('VT2: ', str(VT2))
-    print('VO2VT2: ', str(int(VO2VT1)))
-    print('VO2VT2: ', str(int(VO2VT2)))
+    if verbose:
+        print(f'{file_name}: a {gender.lower()} subject, {fitness_group.lower()} fitness, '
+              f'{int(np.mean(df.age.values))} y, {np.mean(df.height.values[0])} m, '
+              f'{int(np.mean(df.weight.values))} kg')
+        print(f'VT1 {int(round(VT1))} s (VO2 {int(VO2VT1)} mL/min), '
+              f'VT2 {int(round(VT2))} s (VO2 {int(VO2VT2)} mL/min)')
 
+    # Numbers, not strings (they were strings up to 1.0.1)
     data = dict()
-    data['Age'] = str(int(df.age.values[0]))
-    data['Height'] = str(df.height.values[0])
-    data['Weight'] = str(int(df.weight.values[0]))
+    data['Age'] = int(df.age.values[0])
+    data['Height'] = float(df.height.values[0])
+    data['Weight'] = int(df.weight.values[0])
     data['Gender'] = gender
     data['Aerobic_fitness_level'] = fitness_group
-    data['VT1'] = str(VT1)
-    data['VT2'] = str(VT2)
-    data['VO2VT1'] = str(int(VO2VT1))
-    data['VO2VT2'] = str(int(VO2VT2))
-    data['VO2max'] = str(int(VO2_peak))
-    data['LT'] = str(int(VO2VT1))
-    data['LT_vo2max'] = str(int((VO2VT1/VO2_peak)*100)) + '%'
-    data['RCP'] = str(int(VO2VT2))
-    data['RCP_vo2max'] = str(int((VO2VT2/VO2_peak) * 100)) + '%'
+    data['VT1'] = int(round(VT1))
+    data['VT2'] = int(round(VT2))
+    data['VO2VT1'] = int(VO2VT1)
+    data['VO2VT2'] = int(VO2VT2)
+    data['VO2max'] = int(VO2_peak)
+    data['LT'] = int(VO2VT1)
+    data['LT_vo2max'] = int((VO2VT1/VO2_peak)*100)
+    data['RCP'] = int(VO2VT2)
+    data['RCP_vo2max'] = int((VO2VT2/VO2_peak) * 100)
     data['id'] = 'real_#'
-    data['noise_factor'] = 'NA'
+    data['noise_factor'] = None
     data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
-    data['resting'] = str(resting)
+    data['resting'] = bool(resting)
 
     # create the dict for the exercise threshold app
     data['data'] = _breath_by_breath(df, duration)
@@ -542,22 +556,34 @@ def load_exercise_threshold_app_data(data_dict={}, filter_size = 20):
     return df
 
 def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, model='CNN', plot=False, inference_stride=1):
-    """Runs the pyoxynet inference
+    """Places VT1 and VT2 in a test with one of the frozen models
+
+    The test is put on a one-second grid, each signal is min-max scaled over the test, and the
+    model reads 40 s windows. Each threshold is placed at the start of the window in which the
+    model's outputs cross.
 
     Parameters:
-        tf_model (TFLiteModel) : Model loaded with load_model (loads `model` if not given)
-        input_df (pd df) : Test with columns time (s), VO2_I, VCO2_I, VE_I, PetO2_I, PetCO2_I and,
-            optionally, HR_I; any sampling, put on a one-second grid here (uses the bundled
-            example test if not given)
-        n_inputs (int) : Number of inputs (deafult to Oxynet configuration)
-        past_points (int) : Number of past points in the time series (deafult to Oxynet configuration)
+        tf_model (TFLiteModel) : a model from load_model; loads `model` if not given
+        input_df (pd df) : the test, with columns time (s), VO2_I, VCO2_I, VE_I, PetO2_I, PetCO2_I
+            and, optionally, HR_I. Any sampling; other columns are ignored. Without it, the
+            bundled example test is used.
+        n_inputs (int), past_points (int) : fixed by the models (5 signals, 40 s); leave them
         model (str) : 'CNN' (default) or 'LSTM', used when tf_model is not given
-        plot (bool) : Plot the domain probabilities in the terminal
-        inference_stride (int) : Stride inference for NN - speed up computation
+        plot (bool) : draw the three domain outputs in the terminal
+        inference_stride (int) : run the model every n seconds instead of every second
 
     Returns:
-        out_df (pd df) : Domain probabilities over time
-        out_dict (dict) : VT1 and VT2 (time, HR, VE, VO2)
+        tuple: ``(out_df, out_dict)``. ``out_df`` holds, at each window's end time, the model's
+            outputs for the moderate, heavy and severe domains (p_md, p_hv, p_sv: smoothed network
+            outputs, not calibrated probabilities) and the signals. ``out_dict`` holds, for VT1
+            and VT2, the time (s), VO2 (smoothed, as VO2_F in out_df), VE and HR, in the units
+            of input_df.
+
+    Raises:
+        ValueError : with the reason, when the input cannot be used (no rows, a missing, empty or
+            constant signal, time not in seconds, a test under 80 s) or no consistent thresholds
+            can be placed (the outputs never cross, VT1 at or after VT2, a crossing in the first
+            40 s)
 
     """
 
@@ -568,9 +594,13 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
     if tf_model is None or isinstance(tf_model, list):
         tf_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
 
-    if input_df is None or len(input_df) == 0:
+    # None, or [] (the default before 1.0.0), means the bundled example. An empty table is an
+    # error: a filter that matched nothing must not quietly analyse the example instead.
+    if input_df is None or (isinstance(input_df, list) and len(input_df) == 0):
         print('Using default pyoxynet data')
         df = load_csv_data()
+    elif len(input_df) == 0:
+        raise ValueError('input_df has no rows.')
     else:
         df = input_df
 
@@ -579,8 +609,20 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
     if missing:
         raise ValueError(f'The test has no {", ".join(missing)} column. test_pyoxynet reads time (s), '
                          f'{", ".join(signals)} and, optionally, HR_I.')
-    if not pd.api.types.is_numeric_dtype(df['time']):
-        raise ValueError('The time column must hold seconds from the start of the test, as numbers.')
+
+    # Cells that are not numbers (a units row under the header, '---', blanks) become NaN: a row
+    # without a time is dropped, and a gap in a signal is interpolated below.
+    df = df.copy()
+    for c in ['time'] + signals + (['HR_I'] if 'HR_I' in df.columns else []):
+        df[c] = pd.to_numeric(df[c], errors='coerce')
+    df = df.dropna(subset=['time'])
+    if df.empty:
+        raise ValueError('The time column must hold seconds from the start of the test, as numbers. '
+                         "pyoxynet.get_sec converts 'mm:ss' and 'h:mm:ss' strings.")
+    span = df['time'].max() - df['time'].min()
+    if span > 6 * 3600:
+        raise ValueError(f'The test spans {span:.0f} s, more than 6 hours: is time in milliseconds? '
+                         'test_pyoxynet needs seconds.')
 
     # some adjustments to input df
     # TODO: create dedicated function for this
@@ -600,7 +642,8 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
                          'five signals to vary.')
     min_length = 2 * past_points
     if len(df) < min_length:
-        raise ValueError(f'The test covers {len(df)} s; test_pyoxynet needs at least {min_length} s.')
+        raise ValueError(f'The test covers {len(df)} s; test_pyoxynet needs at least {min_length} s. '
+                         '(Is time in seconds?)')
     df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().bfill().ffill()
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
@@ -913,7 +956,8 @@ def generate_CPET(generator,
                   noise_factor=None,
                   resting=False,
                   training=True,
-                  normalization=False):
+                  normalization=False,
+                  verbose=False):
     """Generate synthetic CPET data using the conditional GAN generator.
 
     Load the generator first with load_generator().
@@ -926,10 +970,14 @@ def generate_CPET(generator,
         resting (bool): Whether to include a resting phase. Only False (or None) is implemented: True raises NotImplementedError.
         training (bool): Training mode flag. Default True.
         normalization (bool): Whether to normalize data. Default False.
+        verbose (bool): Print a summary of the generated test. Default False.
 
     Returns:
-        df (pd.DataFrame): Pandas dataframe with generated CPET data
-        data (dict): Metadata about the generated CPET test
+        tuple: ``(df, info)``. ``df`` is the generated test, one row per second, with the domain
+            labels in the column 'domain'. ``info`` is a dict: the thresholds it was generated
+            with, VT1 and VT2 (s), VO2 there (VO2VT1, VO2VT2) and VO2max (mL/min), LT_vo2max and
+            RCP_vo2max (% of VO2max), the ramp (W0 in W, W/min), and 'data', a breath-by-breath
+            version.
 
     Raises:
         ValueError: If generator model is None or invalid
@@ -1221,19 +1269,11 @@ def generate_CPET(generator,
     # print('Weight: ', int(db_df_sample.weight.values), ' kg')
     # print('Height: ', db_df_sample.height.values[0], 'm')
     # print('Age: ', int(db_df_sample.Age.values), 'y')
-    print('Noise factor: ', round(noise_factor, 2))
-    print('VT1: ', str(VT1), ' sec after start')
-    print('VT2: ', str(VT2), ' sec after start')
-    print('Duration:', duration, ' sec')
-    print('VO2VT1: ', str(int(VO2VT1)), ' mlO2')
-    print('VO2VT2: ', str(int(VO2VT2)), ' mlO2')
-    print('VO2VT1%: ', str(int(VO2VT1/VO2_peak * 100)), ' %')
-    print('VO2VT2%: ', str(int(VO2VT2/VO2_peak * 100)), ' %')
-    print('MAX RER: ', str(round(VCO2_peak / VO2_peak, 2)), ' %')
-    print('VO2peak: ', str(int(VO2_peak)), ' mlO2')
-    print('Resting: ', resting)
-    print('W0: ', str(W0), ' W')
-    print('ramp: ', str(eps), ' W/min')
+    if verbose:
+        print(f'Generated {duration} s ramp test from {W0} W at {eps} W/min, noise factor {round(noise_factor, 2)}')
+        print(f'VT1 {VT1} s (VO2 {int(VO2VT1)} mL/min, {int(VO2VT1/VO2_peak * 100)}% of VO2peak), '
+              f'VT2 {VT2} s (VO2 {int(VO2VT2)} mL/min, {int(VO2VT2/VO2_peak * 100)}% of VO2peak)')
+        print(f'VO2peak {int(VO2_peak)} mL/min, maximal RER {round(VCO2_peak / VO2_peak, 2)}')
 
     # TODO: create a function to generate this dict, as it is the same that we should use when drawing real data files
     # create dict fro Exercise Threshold App
@@ -1242,22 +1282,23 @@ def generate_CPET(generator,
     # data['Height'] = str(db_df_sample.height.values[0])
     # data['Weight'] = str(int(db_df_sample.weight.values))
     # data['Gender'] = gender
+    # Numbers, not strings (they were strings up to 1.0.1)
     data['Aerobic_fitness_level'] = fitness_group
-    data['VT1'] = str(VT1)
-    data['VT2'] = str(VT2)
-    data['VO2VT1'] = str(int(VO2VT1))
-    data['VO2VT2'] = str(int(VO2VT2))
-    data['VO2max'] = str(int(VO2_peak))
-    data['LT'] = str(int(VO2VT1))
-    data['LT_vo2max'] = str(int((VO2VT1/VO2_peak) * 100)) + '%'
-    data['RCP'] = str(int(VO2VT2))
-    data['RCP_vo2max'] = str(int((VO2VT2/VO2_peak) * 100)) + '%'
+    data['VT1'] = int(VT1)
+    data['VT2'] = int(VT2)
+    data['VO2VT1'] = int(VO2VT1)
+    data['VO2VT2'] = int(VO2VT2)
+    data['VO2max'] = int(VO2_peak)
+    data['LT'] = int(VO2VT1)
+    data['LT_vo2max'] = int((VO2VT1/VO2_peak) * 100)
+    data['RCP'] = int(VO2VT2)
+    data['RCP_vo2max'] = int((VO2VT2/VO2_peak) * 100)
     data['id'] = 'fake_#'
-    data['noise_factor'] = str(noise_factor)
+    data['noise_factor'] = float(noise_factor)
     data['created'] = datetime.today().strftime("%m/%d/%Y - %H:%M:%S")
-    data['resting'] = str(resting)
-    data['W0'] = str(W0)
-    data['W/min'] = str(eps)
+    data['resting'] = bool(resting)
+    data['W0'] = int(W0)
+    data['W/min'] = int(eps)
 
     # create the dict for the exercise threshold app
     data['data'] = _breath_by_breath(df, duration)
