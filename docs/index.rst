@@ -1,7 +1,12 @@
-Pyoxynet Documentation
-======================
+pyoxynet
+========
 
-**Pyoxynet** is a Python package for automatic interpretation of cardiopulmonary exercise test (CPET) data using deep learning models. It is part of the Oxynet project, which aims to provide universal access to quality healthcare through AI-powered diagnostic tools.
+The open-source models from the Oxynet research papers, for cardiopulmonary exercise test (CPET)
+data. Give pyoxynet a test and it returns, second by second, the model's output for the moderate,
+heavy and severe exercise-intensity domains, and the two ventilatory thresholds (VT1 and VT2)
+where those outputs cross. It can also generate synthetic tests.
+
+Everything runs on your machine. The models are frozen LiteRT files, so TensorFlow is not needed.
 
 .. image:: https://img.shields.io/pypi/v/pyoxynet.svg
    :target: https://pypi.org/project/pyoxynet/
@@ -11,72 +16,65 @@ Pyoxynet Documentation
    :target: https://pypi.org/project/pyoxynet/
    :alt: Python versions
 
-Key Features
-------------
-
-* **Inference Model**: Automatically estimates exercise intensity domains from CPET data
-* **Generator Model**: Creates synthetic CPET data using conditional GANs
-* **Flexible Deployment**: Choose between lightweight TFLite or full TensorFlow
-* **Model Explainability**: SHAP integration for understanding predictions
-* **Easy to Use**: Simple API for both beginners and advanced users
-
-Quick Example
--------------
-
-.. code-block:: python
-
-   import pyoxynet
-
-   # Load the TFLite model
-   tfl_model = pyoxynet.load_tf_model(n_inputs=5, past_points=40, model='CNN')
-
-   # Make inference on sample data
-   pyoxynet.test_pyoxynet(tfl_model)
-
-Installation
-------------
-
-Install the base package:
+Install
+-------
 
 .. code-block:: bash
 
    pip install pyoxynet
 
-For TFLite inference support:
+Python 3.10 to 3.14, on Windows, Linux and macOS (Apple silicon).
 
-.. code-block:: bash
+Quick start
+-----------
 
-   pip install "pyoxynet[tflite]" --extra-index-url https://google-coral.github.io/py-repo/
+.. code-block:: python
 
-For full TensorFlow with training capabilities:
+   import pyoxynet
 
-.. code-block:: bash
+   # The bundled example test, through the default model
+   out_df, thresholds = pyoxynet.test_pyoxynet()
 
-   pip install "pyoxynet[full]"
+   print(thresholds['VT1']['time'], round(thresholds['VT1']['VO2']))  # 372 2979
+   print(thresholds['VT2']['time'], round(thresholds['VT2']['VO2']))  # 550 3656
+
+The hosted Oxynet API
+---------------------
+
+pyoxynet is the open research package. Oxynet itself is a hosted service at
+`app.oxynet.net <https://app.oxynet.net>`_, with its own, separately trained models. It reads
+metabolic cart exports as they come off the cart (COSMED and Cortex among them), checks the
+signals, and returns ventilatory thresholds, substrate use and signal-quality checks as versioned
+JSON. API keys are free: `app.oxynet.net/signup <https://app.oxynet.net/signup>`_. See the
+`developer docs <https://www.oxynet.net/developers>`_. AI agents start at
+`app.oxynet.net/llms.txt <https://app.oxynet.net/llms.txt>`_.
 
 Contents
 --------
 
 .. toctree::
    :maxdepth: 2
-   :caption: User Guide
+   :caption: User guide
 
    usage
    examples
 
 .. toctree::
    :maxdepth: 2
-   :caption: API Documentation
+   :caption: Reference
 
    api
 
 .. toctree::
    :maxdepth: 1
-   :caption: Additional Resources
+   :caption: Links
 
-   GitHub Repository <https://github.com/andreazignoli/pyoxynet>
-   Web Application <https://pyoxynet-lite-app-b415901c79ab.herokuapp.com/>
-   Oxynet Website <http://oxynet.net>
+   GitHub repository <https://github.com/andreazignoli/pyoxynet>
+   GitHub Discussions <https://github.com/andreazignoli/pyoxynet/discussions>
+   Oxynet <https://www.oxynet.net>
+
+pyoxynet is research software, not a medical device: it does not diagnose, and its results are no
+substitute for a clinician's judgement.
 
 Indices and tables
 ==================

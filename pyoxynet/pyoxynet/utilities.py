@@ -3,8 +3,6 @@ import scipy.interpolate
 from scipy.stats import beta
 from scipy.interpolate import UnivariateSpline
 from scipy.interpolate import interp1d
-import matplotlib.pyplot as plt
-import tempfile
 
 def PrintHello(hello='hello'):
     """This function prints to screen.
@@ -74,103 +72,6 @@ def normalize(df, min_target=-1, max_target=1):
 
     return result
 
-def load_explainer(tf_model):
-    """Loads a deep explainer from the shap library and automatically loads the data to train it
-
-    Parameters:
-        tf_model (Model class) : deep learning model that deep explainer needs to explain
-
-    Returns:
-        explainer (deep) : deep explainer SHAP
-
-    """
-
-    import shap
-    from pyoxynet import data_test
-    import importlib_resources
-    import pickle
-    from keras.layers import Input
-    from keras.models import Model as mdl
-    from .model import Model
-
-    train_data_X_binaries = importlib_resources.read_binary(data_test, 'train_data_X.pickle')
-    open('/tmp/train_data_X.pickle', 'wb').write(train_data_X_binaries)
-    with open('/tmp/train_data_X.pickle', 'rb') as f:
-        training_data = pickle.load(f)
-
-    shap.explainers._deep.deep_tf.op_handlers['AddV2'] = shap.explainers._deep.deep_tf.passthrough
-    model = Model(n_classes=3, n_input=6)
-    newInput = Input(batch_shape=(1, 40, 6))
-    newOutputs = model(newInput)
-    newModel = mdl(newInput, newOutputs)
-    newModel.set_weights(tf_model.get_weights())
-    # explainer = shap.DeepExplainer(newModel, training_data)
-    # Gradient explainer faster and perhaps more robust when it comes to TF2 applications
-    explainer = shap.GradientExplainer(newModel, training_data)
-
-    return explainer
-
-def compute_shap(explainer, df, n_inputs=6, past_points=40, shap_stride=20):
-    """Computes SHAP values
-
-    Parameters:
-        explainer (explainer SHAP) : deep explainer that explains the deep learning model
-        data (pd df) : data for the local explanation
-
-    Returns:
-        shap (dict) : SHAP values
-
-    """
-
-    import shap
-    import pandas as pd
-    import numpy as np
-
-    # some adjustments to input df
-    # TODO: create dedicated function for this (duplicated taks)
-    df = df.drop_duplicates('time')
-    df['timestamp'] = pd.to_datetime(df['time'], unit='s')
-    df = df.set_index('timestamp')
-    df = df.resample('1S').mean()
-    df = df.interpolate()
-    df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().fillna(method='bfill').fillna(
-        method='ffill')
-    df = df.reset_index()
-    df = df.drop('timestamp', axis=1)
-
-    if n_inputs == 6 and past_points == 40:
-        if 'VCO2VO2_I' not in df.columns:
-            df['VCO2VO2_I'] = df['VCO2_I'].values/df['VO2_I'].values
-        filter_vars = ['VCO2VO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'VEVO2_I', 'VEVCO2_I']
-        X = df[filter_vars]
-        XN = normalize(X)
-        XN = XN.filter(filter_vars, axis=1)
-    if n_inputs == 5 and past_points == 40:
-        filter_vars = ['VO2_I', 'VE_I', 'PetO2_I', 'RF_I', 'VEVO2_I']
-        X = df[filter_vars]
-        XN = normalize(X)
-        XN = XN.filter(filter_vars, axis=1)
-
-    data_X = np.zeros([0, past_points, n_inputs])
-    for i in np.arange(1, XN.shape[0] - past_points, shap_stride):
-        tmp_x = XN[i: i + past_points]
-        tmp_x = np.expand_dims(tmp_x, 0)
-        data_X = np.vstack((data_X, tmp_x))
-
-    print('Computing SHAP values in progress')
-    shap_values = explainer.shap_values(data_X)
-    print('Done computing SHAP values!')
-
-    tmp_hv = pd.DataFrame(np.mean(shap_values[0][:, :, :], axis=1), columns=['hv_shap_v' + str(i) for i in np.arange(0, 6)])
-    tmp_sv = pd.DataFrame(np.mean(shap_values[1][:, :, :], axis=1),
-                          columns=['sv_shap_v' + str(i) for i in np.arange(0, 6)])
-    tmp_md = pd.DataFrame(np.mean(shap_values[2][:, :, :], axis=1),
-                          columns=['md_shap_v' + str(i) for i in np.arange(0, 6)])
-
-    df_tmp = pd.concat([tmp_md, tmp_hv, tmp_sv], axis=1)
-
-    return shap_values, df_tmp
-
 def optimal_filter(t, y, my_lambda):
     """A bad ass optimisation filter
     
@@ -228,316 +129,135 @@ def optimal_filter(t, y, my_lambda):
 
     return x
 
-def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
-    """This function loads the saved tf models.
+# The models this package ships: frozen .tflite files in pyoxynet/models, run with LiteRT.
+# models/README.md records where each one came from.
+MODELS = {
+    'CNN': 'cnn.tflite',
+    'LSTM': 'lstm.tflite',
+}
+# Names accepted before 1.0.0, kept so that old code fails with a clear message.
+REMOVED_MODELS = ('transformer', 'TCN', 'LSTMGRUModel', 'murias_lab', 'AIS', 'NSWIS')
+
+
+class TFLiteModel:
+    """A frozen pyoxynet model, called like a Keras model: model(x) returns a numpy array.
 
     Args:
-       n_inputs (int):  Number of input variables.
-       past_points (int):  Number of past inputs in the time-series.
-
-    Returns:
-       interpreter (tflite interpreter) : handle on the TFLite interpreter
+       filename (str):  Name of a .tflite file in pyoxynet/models.
 
     """
 
-    import importlib_resources
-    import pickle
-    from io import BytesIO
-    from pyoxynet import regressor, TCN, LSTMGRUModel, murias_lab, AIS, NSWIS
-    import tensorflow as tf
-    import os
+    def __init__(self, filename):
+        from importlib.resources import files
+        from ai_edge_litert.interpreter import Interpreter
 
-    if model == 'CNN':
-        # load the classic Oxynet model configuration
-        print('Classic Oxynet configuration model uploaded')
-        try:
-            saved_model_binaries = importlib_resources.read_binary(regressor, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(regressor, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(regressor, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(regressor, 'variables.index')
-        except:
-            saved_model_binaries = importlib_resources.files(regressor).joinpath('saved_model.pb').read_bytes()
-            keras_metadata_model_binaries = importlib_resources.files(regressor).joinpath('keras_metadata.pb').read_bytes()
-            variables_data_binaries = importlib_resources.files(regressor).joinpath('variables.data-00000-of-00001').read_bytes()
-            variables_index_binaries = importlib_resources.files(regressor).joinpath('variables.index').read_bytes()
+        self.filename = filename
+        model_content = files('pyoxynet').joinpath('models').joinpath(filename).read_bytes()
+        self._interpreter = Interpreter(model_content=model_content)
+        self._interpreter.allocate_tensors()
+        self._input = self._interpreter.get_input_details()[0]
+        self._output = self._interpreter.get_output_details()[0]
+        self.input_shape = tuple(int(n) for n in self._input['shape'])
 
-    if model == 'TCN':
-        # load the classic Oxynet model configuration
-        print('You are uploading an undocumented version of this model TCN')
-        try:
-            saved_model_binaries = importlib_resources.read_binary(TCN, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(TCN, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(TCN, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(TCN, 'variables.index')
-        except:
-            saved_model_binaries = importlib_resources.files(TCN).joinpath('saved_model.pb').read_bytes()
-            keras_metadata_model_binaries = importlib_resources.files(TCN).joinpath('keras_metadata.pb').read_bytes()
-            variables_data_binaries = importlib_resources.files(TCN).joinpath('variables.data-00000-of-00001').read_bytes()
-            variables_index_binaries = importlib_resources.files(TCN).joinpath('variables.index').read_bytes()
+    def __call__(self, x):
+        x = np.asarray(x, dtype=np.float32).reshape(self.input_shape)
+        self._interpreter.set_tensor(self._input['index'], x)
+        self._interpreter.invoke()
+        return self._interpreter.get_tensor(self._output['index']).copy()
 
-    if model == 'LSTMGRUModel':
-        # load the classic Oxynet model configuration
-        print('You are uploading an undocumented version of this model LSTMGRUModel')
-        try:
-            saved_model_binaries = importlib_resources.read_binary(LSTMGRUModel, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(LSTMGRUModel, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(LSTMGRUModel, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(LSTMGRUModel, 'variables.index')
-        except:
-            saved_model_binaries = importlib_resources.files(LSTMGRUModel).joinpath('saved_model.pb').read_bytes()
-            keras_metadata_model_binaries = importlib_resources.files(LSTMGRUModel).joinpath('keras_metadata.pb').read_bytes()
-            variables_data_binaries = importlib_resources.files(LSTMGRUModel).joinpath('variables.data-00000-of-00001').read_bytes()
-            variables_index_binaries = importlib_resources.files(LSTMGRUModel).joinpath('variables.index').read_bytes()
+    def __repr__(self):
+        return f'TFLiteModel({self.filename!r}, input_shape={self.input_shape})'
 
-    if model == 'murias_lab':
-        # load the classic Oxynet model configuration
-        print('Model custom trained on data from Juan Murias Lab uploaded')
-        print('This is an LSTMGRU model')
-        try:
-            saved_model_binaries = importlib_resources.read_binary(murias_lab, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(murias_lab, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(murias_lab, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(murias_lab, 'variables.index')
-        except:
-            saved_model_binaries = importlib_resources.files(murias_lab).joinpath('saved_model.pb').read_bytes()
-            keras_metadata_model_binaries = importlib_resources.files(murias_lab).joinpath('keras_metadata.pb').read_bytes()
-            variables_data_binaries = importlib_resources.files(murias_lab).joinpath('variables.data-00000-of-00001').read_bytes()
-            variables_index_binaries = importlib_resources.files(murias_lab).joinpath('variables.index').read_bytes()
-            
-    if model == 'AIS':
-        # load the classic Oxynet model configuration
-        print('Model custom trained on data from AIS')
-        print('This is an CNN model')
-        try:
-            saved_model_binaries = importlib_resources.read_binary(AIS, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(AIS, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(AIS, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(AIS, 'variables.index')
-        except:
-            saved_model_binaries = importlib_resources.files(AIS).joinpath('saved_model.pb').read_bytes()
-            keras_metadata_model_binaries = importlib_resources.files(AIS).joinpath('keras_metadata.pb').read_bytes()
-            variables_data_binaries = importlib_resources.files(AIS).joinpath('variables.data-00000-of-00001').read_bytes()
-            variables_index_binaries = importlib_resources.files(AIS).joinpath('variables.index').read_bytes()
-            
-    if model == 'NSWIS':
-        # load the classic Oxynet model configuration
-        print('Model custom trained on data from NSWIS')
-        print('This is an CNN model')
-        try:
-            saved_model_binaries = importlib_resources.read_binary(NSWIS, 'saved_model.pb')
-            keras_metadata_model_binaries = importlib_resources.read_binary(NSWIS, 'keras_metadata.pb')
-            variables_data_binaries = importlib_resources.read_binary(NSWIS, 'variables.data-00000-of-00001')
-            variables_index_binaries = importlib_resources.read_binary(NSWIS, 'variables.index')
-        except:
-            saved_model_binaries = importlib_resources.files(NSWIS).joinpath('saved_model.pb').read_bytes()
-            keras_metadata_model_binaries = importlib_resources.files(NSWIS).joinpath('keras_metadata.pb').read_bytes()
-            variables_data_binaries = importlib_resources.files(NSWIS).joinpath('variables.data-00000-of-00001').read_bytes()
-            variables_index_binaries = importlib_resources.files(NSWIS).joinpath('variables.index').read_bytes()
 
-    if model == 'transformer':
-        # load the classic Oxynet model configuration
-        print('Classic Oxynet configuration model uploaded')
-        tfl_model_binaries = importlib_resources.read_binary(regressor, 'transformer.pickle')
+def load_model(model='CNN'):
+    """Loads one of the frozen pyoxynet models.
 
-    try:
-        temp_dir = tempfile.mkdtemp()
-        model_dir = os.path.join(temp_dir, 'model')
-        variables_dir = os.path.join(model_dir, 'variables')
-        os.makedirs(variables_dir, exist_ok=True)
+    Args:
+       model (str):  'CNN' (default), the convolutional network evaluated in Keir et al. (2026),
+          or 'LSTM', a recurrent network with LSTM and GRU layers.
 
-        with open(os.path.join(model_dir, 'saved_model.pb'), 'wb') as f:
-            f.write(saved_model_binaries)
+    Returns:
+       model (TFLiteModel) : call it with an array of shape (1, 40, 5) to get the three domain outputs
 
-        with open(os.path.join(model_dir, 'keras_metadata.pb'), 'wb') as f:
-            f.write(keras_metadata_model_binaries)
+    """
 
-        with open(os.path.join(variables_dir, 'variables.data-00000-of-00001'), 'wb') as f:
-            f.write(variables_data_binaries)
+    if model in REMOVED_MODELS:
+        raise ValueError(f"The '{model}' model was removed in pyoxynet 1.0.0. "
+                         f"Available models: {', '.join(MODELS)}.")
+    if model not in MODELS:
+        raise ValueError(f"Unknown model '{model}'. Available models: {', '.join(MODELS)}.")
 
-        with open(os.path.join(variables_dir, 'variables.index'), 'wb') as f:
-            f.write(variables_index_binaries)
+    return TFLiteModel(MODELS[model])
 
-        from .model import Model, TCN, LSTMGRUModel
-        
-        if model == 'CNN':
-            model = tf.keras.models.load_model(model_dir)
-            my_model = Model(n_classes=3, n_input=n_inputs)
-            my_model.build(input_shape=(1, past_points, n_inputs))
-            my_model.set_weights(model.get_weights())
-        if model == 'LSTMGRUModel':
-            model = tf.keras.models.load_model(model_dir)
-            my_model = LSTMGRUModel(n_input=n_inputs)
-            my_model.build(input_shape=(1, past_points, n_inputs))
-            my_model.set_weights(model.get_weights())
-        if model == 'TCN':
-            model = tf.keras.models.load_model(model_dir)
-            num_classes = 3
-            num_filters = 128
-            kernel_size = 3
-            num_layers = 8
-            dropout_rate = 0.2
-            my_model = TCN(num_classes, n_inputs, num_layers=num_layers, num_filters=num_filters, kernel_size=kernel_size, dropout_rate=dropout_rate)
-            my_model.build(input_shape=(1, past_points, n_inputs))
-            my_model.set_weights(model.get_weights())
-        if model == 'murias_lab':
-            model = tf.keras.models.load_model(model_dir)
-            my_model = LSTMGRUModel(n_input=n_inputs)
-            my_model.build(input_shape=(1, past_points, n_inputs))
-            my_model.set_weights(model.get_weights())
-        if model == 'AIS':
-            model = tf.keras.models.load_model(model_dir)
-            my_model = Model(n_classes=3, n_input=n_inputs)
-            my_model.build(input_shape=(1, past_points, n_inputs))
-            my_model.set_weights(model.get_weights())
-        if model == 'NSWIS':
-            model = tf.keras.models.load_model(model_dir)
-            my_model = Model(n_classes=3, n_input=n_inputs)
-            my_model.build(input_shape=(1, past_points, n_inputs))
-            my_model.set_weights(model.get_weights())
 
-        return my_model
-    except:
-        print('Could not find a model that could satisfy the input size required')
-        return None  
+def load_tf_model(n_inputs=5, past_points=40, model='CNN'):
+    """Loads one of the frozen pyoxynet models. Kept for code written before 1.0.0: use load_model.
+
+    Args:
+       n_inputs (int):  Number of input variables. The models take 5.
+       past_points (int):  Number of past inputs in the time-series. The models take 40.
+       model (str):  'CNN' (default) or 'LSTM'.
+
+    Returns:
+       model (TFLiteModel) : see load_model
+
+    """
+
+    if (n_inputs, past_points) != (5, 40):
+        raise ValueError('The pyoxynet models take 5 inputs over 40 past points '
+                         f'(n_inputs=5, past_points=40), not n_inputs={n_inputs}, past_points={past_points}.')
+
+    return load_model(model)
+
+
+def load_generator():
+    """Loads the conditional GAN generator that generate_CPET draws synthetic tests from.
+
+    Returns:
+       generator (TFLiteModel) : call it with an array of shape (1, 23) to get a (1, 40, 7) window
+
+    """
+
+    return TFLiteModel('generator.tflite')
+
 
 def load_tf_generator():
-    """This function loads the saved TensorFlow generator model.
-
-    NOTE: This function requires full TensorFlow installation and will NOT work
-    with tflite_runtime only. If you installed the lite version of pyoxynet,
-    this generator functionality is not available.
-
-    Args:
-       None
+    """Loads the generator. Kept for code written before 1.0.0: use load_generator.
 
     Returns:
-       generator (TF model) : Handle on the TensorFlow generator model, or None if unavailable
+       generator (TFLiteModel) : see load_generator
 
     """
 
-    # Check if TensorFlow is available (not just tflite_runtime)
-    try:
-        import tensorflow as tf
-    except (ImportError, ModuleNotFoundError):
-        print('ERROR: TensorFlow generator requires full TensorFlow installation.')
-        print('The generator model cannot work with tflite_runtime only.')
-        print('To use the generator, please install: pip install tensorflow')
-        print('If you only need inference, the TFLite models work with tflite_runtime.')
-        return None
-
-    import importlib_resources
-    from pyoxynet import generator
-    import os
-
-    # load the classic Oxynet model configuration
-    print('Loading TensorFlow generator model (requires full TensorFlow)...')
-
-    try:
-        # importlib < 6.0
-        saved_model_binaries = importlib_resources.read_binary(generator, 'saved_model.pb')
-        keras_metadata_model_binaries = importlib_resources.read_binary(generator, 'keras_metadata.pb')
-        variables_data_binaries = importlib_resources.read_binary(generator, 'variables.data-00000-of-00001')
-        variables_index_binaries = importlib_resources.read_binary(generator, 'variables.index')
-    except:
-        # importlib >= 6.0
-        saved_model_binaries = importlib_resources.files(generator).joinpath('saved_model.pb').read_bytes()
-        keras_metadata_model_binaries = importlib_resources.files(generator).joinpath('keras_metadata.pb').read_bytes()
-        variables_data_binaries = importlib_resources.files(generator).joinpath('variables.data-00000-of-00001').read_bytes()
-        variables_index_binaries = importlib_resources.files(generator).joinpath('variables.index').read_bytes()
-
-    try:
-        # Use tempfile for cross-platform compatibility instead of hardcoded /tmp
-        temp_dir = tempfile.mkdtemp()
-        model_dir = os.path.join(temp_dir, 'generator')
-        variables_dir = os.path.join(model_dir, 'variables')
-        os.makedirs(variables_dir, exist_ok=True)
-
-        # Write model files to temp directory
-        with open(os.path.join(model_dir, 'saved_model.pb'), 'wb') as f:
-            f.write(saved_model_binaries)
-        with open(os.path.join(model_dir, 'keras_metadata.pb'), 'wb') as f:
-            f.write(keras_metadata_model_binaries)
-        with open(os.path.join(variables_dir, 'variables.data-00000-of-00001'), 'wb') as f:
-            f.write(variables_data_binaries)
-        with open(os.path.join(variables_dir, 'variables.index'), 'wb') as f:
-            f.write(variables_index_binaries)
-
-        # Load the TensorFlow model
-        # Try Keras 3 compatible method first (TFSMLayer for SavedModel)
-        try:
-            # Keras 3: Use TFSMLayer for SavedModel format
-            model = tf.keras.models.load_model(model_dir)
-        except (ValueError, OSError) as keras3_error:
-            # Keras 3 doesn't support SavedModel with load_model
-            # Try loading with TensorFlow's saved_model.load instead
-            print('Note: Using TensorFlow SavedModel loader (Keras 3 compatibility)')
-            try:
-                model = tf.saved_model.load(model_dir)
-            except Exception as tf_error:
-                raise ValueError(
-                    f"Cannot load generator model. "
-                    f"Keras 3 error: {keras3_error}. "
-                    f"TensorFlow loader error: {tf_error}. "
-                    f"The model may need to be re-exported in .keras or .h5 format."
-                )
-
-        from .model import generator as generator_model
-        my_model = generator_model(n_input=7, n_past_points=40, n_labels=3, data_noise_dim=20)
-        # TODO: this is hardcoded
-        my_model.build(input_shape=(1, 23))
-
-        # Extract weights - handle both Keras and SavedModel formats
-        try:
-            my_model.set_weights(model.get_weights())
-        except AttributeError:
-            # SavedModel object doesn't have get_weights(), need different approach
-            print('Warning: SavedModel format detected. Weight transfer may require manual mapping.')
-            print('The generator model structure is initialized but weights may not be loaded.')
-            print('Consider re-exporting the model in .keras format for full Keras 3 compatibility.')
-
-        print('Generator model loaded successfully')
-        return my_model
-    except Exception as e:
-        print(f'ERROR: Could not load generator model: {str(e)}')
-        print('This may be due to:')
-        print('  1. Missing TensorFlow installation (tflite_runtime is not sufficient)')
-        print('  2. Keras 3 incompatibility with SavedModel format (model needs .keras or .h5 format)')
-        print('  3. Incompatible model format or architecture mismatch')
-        print('  4. Missing model files')
-        print('\nRecommendation: Re-export the generator model in Keras 3 .keras format')
-        return None
+    return load_generator()
 
 def load_csv_data(csv_file='data_test.csv'):
-    """Loads data from csv file (returns test data if no arguments)
+    """Loads a CSV file, or the bundled example test when called without arguments
 
     Parameters:
-        n_inputs (int) :  Number of input variables.
-        past_points (int) :  Number of past inputs in the time-series.
+        csv_file (str) : Path to a CSV file. 'data_test.csv' (the default) is the bundled example.
 
     Returns:
-        df (pandas df) : Model output example
+        df (pandas df) : The file's contents
 
     """
 
-    from importlib import resources
     import pandas as pd
-    import pyoxynet.data_test
 
-    if csv_file=='data_test.csv':
+    if csv_file == 'data_test.csv':
         import pkgutil
         from io import StringIO
         bytes_data = pkgutil.get_data('pyoxynet.data_test', csv_file)
-        s = str(bytes_data, 'utf-8')
-        data = StringIO(s)
-        df = pd.read_csv(data)
+        return pd.read_csv(StringIO(str(bytes_data, 'utf-8')))
 
-    return df
+    return pd.read_csv(csv_file)
 
-def draw_real_test(resting='random'):
-    """Draw a single data file from the directory containing all the real files
+def draw_real_test(resting='random', index=None):
+    """Draw one of the bundled example tests, with a little random noise added to its signals
 
     Parameters:
-        none
+        resting (bool or 'random') : a test with a resting phase (50 of them) or a ramp test (88)
+        index (int) : which test, from 1; a random one if not given
 
     Returns:
         df (pandas df) : Real data output
@@ -557,12 +277,12 @@ def draw_real_test(resting='random'):
         resting = random.randint(0, 1)
 
     if resting:
-        file_index = str(random.randrange(1, 50))
+        file_index = str(index or random.randint(1, 50))
         file_name = 'resting_real_test_' + file_index + '.csv'
         bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
         print(file_name, ' from resting')
     else:
-        file_index = str(random.randrange(1, 88))
+        file_index = str(index or random.randint(1, 88))
         file_name = 'ramp_real_test_' + file_index + '.csv'
         bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
         print(file_name, ' from ramp')
@@ -642,12 +362,16 @@ def draw_real_test(resting='random'):
     n = 0
     while time_cum_sum < (duration - 6):
         try:
-            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
-            # TODO: this 25 is hardcoded, you should have len(df.columns)
+            breath = df.breaths.iloc[n]
+            # Some example tests record RF as 0, which the noise above can make negative: a breath of
+            # zero or negative length would never move the loop forward, so step one second instead.
+            if not np.isfinite(breath) or breath <= 0:
+                breath = 1.0
+            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + breath))].median()
             df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, len(df.columns)]),
                                                            columns=tmp.index.to_list())])
-            time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
-            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])
+            time_cum_sum = (time_cum_sum + breath)
+            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + breath))])
         except:
             break
 
@@ -762,41 +486,34 @@ def load_exercise_threshold_app_data(data_dict={}, filter_size = 20):
 
     return df
 
-def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='CNN', plot=False, inference_stride=1):
+def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, model='CNN', plot=False, inference_stride=1):
     """Runs the pyoxynet inference
 
-    Parameters: 
-        tf_model (TF model) : Model uploaded with load_tf_model
+    Parameters:
+        tf_model (TFLiteModel) : Model loaded with load_model (loads `model` if not given)
+        input_df (pd df) : Test with columns time (s), VO2_I, VCO2_I, VE_I, PetO2_I, PetCO2_I and,
+            optionally, HR_I; any sampling, put on a one-second grid here (uses the bundled
+            example test if not given)
         n_inputs (int) : Number of inputs (deafult to Oxynet configuration)
         past_points (int) : Number of past points in the time series (deafult to Oxynet configuration)
+        model (str) : 'CNN' (default) or 'LSTM', used when tf_model is not given
+        plot (bool) : Plot the domain probabilities in the terminal
         inference_stride (int) : Stride inference for NN - speed up computation
 
     Returns:
-        x (array) : Model output example
+        out_df (pd df) : Domain probabilities over time
+        out_dict (dict) : VT1 and VT2 (time, HR, VE, VO2)
 
     """
 
     import numpy as np
-    from uniplot import plot
     import pandas as pd
-    from scipy import stats
-    import json
 
-    # import the data for the normalisation
-    import pkgutil
-    from io import StringIO
-    bytes_data = pkgutil.get_data('pyoxynet.data_test', 'database_statistics_resting.csv')
-
-    s = str(bytes_data, 'utf-8')
-    data = StringIO(s)
-    db_df = pd.read_csv(data)
-
-    if tf_model == []:
+    # [] was the default before 1.0.0, so old calls may still pass it
+    if tf_model is None or isinstance(tf_model, list):
         tf_model = load_tf_model(n_inputs=n_inputs, past_points=past_points, model=model)
-    else:
-        pass
 
-    if len(input_df) == 0:
+    if input_df is None or len(input_df) == 0:
         print('Using default pyoxynet data')
         df = load_csv_data()
     else:
@@ -807,10 +524,9 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='C
     df = df.drop_duplicates('time')
     df['timestamp'] = pd.to_datetime(df['time'], unit='s')
     df = df.set_index('timestamp')
-    df = df.resample('1S').mean()
+    df = df.resample('1s').mean()
     df = df.interpolate()
-    df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().fillna(method='bfill').fillna(
-        method='ffill')
+    df['VO2_20s'] = df.VO2_I.rolling(20, win_type='triang', center=True).mean().bfill().ffill()
     df = df.reset_index()
     df = df.drop('timestamp', axis=1)
 
@@ -858,10 +574,10 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='C
 
     for i in np.arange(1, len(XN) - past_points, inference_stride):
         XN_array = np.asarray(XN[i:i+int(past_points)])
-        output_data = tf_model(XN_array.reshape(1, past_points, n_inputs))
-        p_1.append(output_data.numpy()[0][0])
-        p_2.append(output_data.numpy()[0][1])
-        p_3.append(output_data.numpy()[0][2])
+        output_data = np.asarray(tf_model(XN_array.reshape(1, past_points, n_inputs)))
+        p_1.append(output_data[0][0])
+        p_2.append(output_data[0][1])
+        p_3.append(output_data[0][2])
         time.append(df.time[i] + past_points)
         # ['VO2_I', 'VCO2_I', 'VE_I', 'PetO2_I', 'PetCO2_I', 'domain']
         VO2.append(np.mean(XN_array[-1, 0]) * (df['VO2_I'].max() - df['VO2_I'].min()) + df['VO2_I'].min())
@@ -910,12 +626,13 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='C
     out_df['PetCO2'] = PetCO2
     out_df['VO2_F'] = optimal_filter(np.asarray(time), np.asarray(VO2), 100)
 
-    if plot == True:
-        plot([out_df['p_md'], out_df['p_hv'], out_df['p_sv']],
-             title="Exercise intensity domains",
-             width=120,
-             color=True,
-             legend_labels=['1', '2', '3'])
+    if plot:
+        from uniplot import plot as terminal_plot
+        terminal_plot([out_df['p_md'], out_df['p_hv'], out_df['p_sv']],
+                      title="Exercise intensity domains",
+                      width=120,
+                      color=True,
+                      legend_labels=['1', '2', '3'])
 
     out_dict = {}
     out_dict['VT1'] = {}
@@ -927,9 +644,17 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='C
     # out_dict['VT2_upper'] = {}
     # out_dict['VT2_lower'] = {}
 
+    VT1_candidates = out_df[(out_df['p_hv'] >= out_df['p_md'])].index
+    VT2_candidates = out_df[(out_df['p_sv'] <= out_df['p_hv'])].index
+    if len(VT1_candidates) == 0 or len(VT2_candidates) == 0:
+        raise ValueError('The model output never crosses at '
+                         + ('VT1 (heavy never reaches moderate)' if len(VT1_candidates) == 0
+                            else 'VT2 (severe stays above heavy throughout)')
+                         + ', so no threshold can be placed in this test.')
+
     # FIXME: hard coded
-    VT1_index = int(out_df[(out_df['p_hv'] >= out_df['p_md'])].index[0] - int(past_points / inference_stride))
-    VT2_index = int(out_df[(out_df['p_sv'] <= out_df['p_hv'])].index[-1] - int(past_points / inference_stride))
+    VT1_index = int(VT1_candidates[0] - int(past_points / inference_stride))
+    VT2_index = int(VT2_candidates[-1] - int(past_points / inference_stride))
 
     VT1_time = int(out_df.iloc[VT1_index]['time'])
     VT2_time = int(out_df.iloc[VT2_index]['time'])
@@ -942,22 +667,24 @@ def test_pyoxynet(tf_model=[], input_df=[], n_inputs=5, past_points=40, model='C
     # out_dict['VT2_upper']['time'] = overlap_ci_2[1]
     # out_dict['VT2_lower']['time'] = overlap_ci_2[0]
 
-    out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
-    out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
+    # heart rate is reported, not used by the models, so a test without it still runs
+    has_hr = 'HR_I' in df.columns
+    out_dict['VT1']['HR'] = float(df.iloc[VT1_index]['HR_I']) if has_hr else float('nan')
+    out_dict['VT2']['HR'] = float(df.iloc[VT2_index]['HR_I']) if has_hr else float('nan')
     # out_dict['VT1_upper']['HR'] = df[df.time == overlap_ci_1[1]]['HR_I'].values[0]
     # out_dict['VT1_lower']['HR'] = df[df.time == overlap_ci_1[0]]['HR_I'].values[0]
     # out_dict['VT2_upper']['HR'] = df[df.time == overlap_ci_2[1]]['HR_I'].values[0]
     # out_dict['VT2_lower']['HR'] = df[df.time == overlap_ci_2[0]]['HR_I'].values[0]
 
-    out_dict['VT1']['VE'] = out_df.iloc[VT1_index]['VE']
-    out_dict['VT2']['VE'] = out_df.iloc[VT2_index]['VE']
+    out_dict['VT1']['VE'] = float(out_df.iloc[VT1_index]['VE'])
+    out_dict['VT2']['VE'] = float(out_df.iloc[VT2_index]['VE'])
     # out_dict['VT1_upper']['VE'] = out_df[out_df.time == overlap_ci_1[1]]['VE'].values[0]
     # out_dict['VT1_lower']['VE'] = out_df[out_df.time == overlap_ci_1[0]]['VE'].values[0]
     # out_dict['VT2_upper']['VE'] = out_df[out_df.time == overlap_ci_2[1]]['VE'].values[0]
     # out_dict['VT2_lower']['VE'] = out_df[out_df.time == overlap_ci_2[0]]['VE'].values[0]
 
-    out_dict['VT1']['VO2'] = out_df.iloc[VT1_index]['VO2_F']
-    out_dict['VT2']['VO2'] = out_df.iloc[VT2_index]['VO2_F']
+    out_dict['VT1']['VO2'] = float(out_df.iloc[VT1_index]['VO2_F'])
+    out_dict['VT2']['VO2'] = float(out_df.iloc[VT2_index]['VO2_F'])
     # out_dict['VT1_upper']['VO2'] = out_df[out_df.time == overlap_ci_1[1]]['VO2_F'].values[0]
     # out_dict['VT1_lower']['VO2'] = out_df[out_df.time == overlap_ci_1[0]]['VO2_F'].values[0]
     # out_dict['VT2_upper']['VO2'] = out_df[out_df.time == overlap_ci_2[1]]['VO2_F'].values[0]
@@ -1096,17 +823,16 @@ def generate_CPET(generator,
                   resting=False,
                   training=True,
                   normalization=False):
-    """Generate synthetic CPET data using the TensorFlow generator model.
+    """Generate synthetic CPET data using the conditional GAN generator.
 
-    NOTE: This function requires a loaded TensorFlow generator model (not TFLite).
-    Use load_tf_generator() to load the model first. Requires full TensorFlow installation.
+    Load the generator first with load_generator().
 
     Parameters:
-        generator: TensorFlow generator model (required). Use load_tf_generator() to load.
+        generator: Generator model (required). Use load_generator() to load.
         plot (bool): Whether to plot the generated data. Default False.
         fitness_group (int): Fitness level: 0=very low, 1=low, 2=medium, 3=high. None=random.
         noise_factor (float): Noise factor for white noise (1.5-2.5). None=random.
-        resting (bool): Whether to include resting phase. Default False.
+        resting (bool): Whether to include a resting phase. Only False is implemented.
         training (bool): Training mode flag. Default True.
         normalization (bool): Whether to normalize data. Default False.
 
@@ -1128,8 +854,7 @@ def generate_CPET(generator,
     if generator is None:
         raise ValueError(
             "Generator model is required but None was provided. "
-            "Load the generator first with load_tf_generator(). "
-            "Note: Requires full TensorFlow installation (not tflite_runtime)."
+            "Load the generator first with load_generator()."
         )
 
     import random
@@ -1171,7 +896,10 @@ def generate_CPET(generator,
         resting = random.choice([0, 1])
 
     if resting:
-        VO2_min = np.random.uniform(320, 540)
+        # This branch never set the ramp (W0, ramp rate, duration) the rest of the function needs,
+        # so it always failed with an UnboundLocalError.
+        raise NotImplementedError('generate_CPET does not generate a resting phase: '
+                                  'only resting=False is implemented.')
     else:
         if VO2_peak < 2200:
             VO2_basal = np.random.uniform(320, 540)
@@ -1277,7 +1005,7 @@ def generate_CPET(generator,
         # keep the seed?
         # input_data = np.array(np.random.random_sample(input_shape), dtype=np.float32)
         input_data[0, -3:] = np.array([[p_hF[seconds_], p_sF[seconds_], p_mF[seconds_]]])
-        output_data = generator(input_data)
+        output_data = np.asarray(generator(input_data))
         VO2.append(np.mean(output_data[0, :, 0]))
         VCO2.append(np.mean(output_data[0, :, 1]))
         VE.append(np.mean(output_data[0, :, 2]))
@@ -1351,7 +1079,7 @@ def generate_CPET(generator,
     df['VO2_F'] = optimal_filter(time_array, df['VO2_I'], 100)
 
     # TODO: this is hard coded, you need to subtract half window-length (see probability definition)
-    df['domain'] = np.NaN
+    df['domain'] = np.nan
     df.loc[df['time'] < (VT1), 'domain'] = -1
     df.loc[df['time'] >= (VT2), 'domain'] = 1
     df.loc[(df['time'] < (VT2)) & (df['time'] >= (VT1)), 'domain'] = 0

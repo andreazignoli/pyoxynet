@@ -1,6 +1,58 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
-]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyoxynet"
+version = "1.0.0"
+description = "The Oxynet research models for cardiopulmonary exercise test (CPET) data: exercise intensity domains, ventilatory thresholds and synthetic tests"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE.txt"]
+authors = [{ name = "Andrea Zignoli", email = "andrea.zignoli@unitn.it" }]
+keywords = ["CPET", "cardiopulmonary exercise test", "ventilatory threshold", "VT1", "VT2", "exercise physiology", "deep learning"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+dependencies = [
+    "ai-edge-litert>=2.1.2",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "uniplot",
+    "chardet",
+    "xlrd",
+    "openpyxl",
+]
+
+[project.optional-dependencies]
+# model.py defines the networks in Keras, for anyone retraining them. Inference and generation
+# do not need it.
+train = ["tensorflow"]
+test = ["pytest"]
+
+[project.urls]
+Homepage = "https://www.oxynet.net"
+Documentation = "https://pyoxynet.readthedocs.io"
+Source = "https://github.com/andreazignoli/pyoxynet"
+Issues = "https://github.com/andreazignoli/pyoxynet/issues"
+
+[tool.setuptools]
+packages = ["pyoxynet", "pyoxynet.data_test", "pyoxynet.test"]
+
+[tool.setuptools.package-data]
+pyoxynet = ["models/*.tflite"]
+"pyoxynet.data_test" = ["*.csv", "*.pickle"]
+"pyoxynet.test" = ["*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
