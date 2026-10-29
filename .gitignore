@@ -44,3 +44,5 @@ docs/*
 # Claude Code local files
 .claude/commands/
 .claude/settings.local.json
+
+build
