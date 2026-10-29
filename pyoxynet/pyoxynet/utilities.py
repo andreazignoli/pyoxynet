@@ -232,36 +232,32 @@ def load_tf_generator():
     return load_generator()
 
 def load_csv_data(csv_file='data_test.csv'):
-    """Loads data from csv file (returns test data if no arguments)
+    """Loads a CSV file, or the bundled example test when called without arguments
 
     Parameters:
-        n_inputs (int) :  Number of input variables.
-        past_points (int) :  Number of past inputs in the time-series.
+        csv_file (str) : Path to a CSV file. 'data_test.csv' (the default) is the bundled example.
 
     Returns:
-        df (pandas df) : Model output example
+        df (pandas df) : The file's contents
 
     """
 
-    from importlib import resources
     import pandas as pd
-    import pyoxynet.data_test
 
-    if csv_file=='data_test.csv':
+    if csv_file == 'data_test.csv':
         import pkgutil
         from io import StringIO
         bytes_data = pkgutil.get_data('pyoxynet.data_test', csv_file)
-        s = str(bytes_data, 'utf-8')
-        data = StringIO(s)
-        df = pd.read_csv(data)
+        return pd.read_csv(StringIO(str(bytes_data, 'utf-8')))
 
-    return df
+    return pd.read_csv(csv_file)
 
-def draw_real_test(resting='random'):
-    """Draw a single data file from the directory containing all the real files
+def draw_real_test(resting='random', index=None):
+    """Draw one of the bundled example tests, with a little random noise added to its signals
 
     Parameters:
-        none
+        resting (bool or 'random') : a test with a resting phase (50 of them) or a ramp test (88)
+        index (int) : which test, from 1; a random one if not given
 
     Returns:
         df (pandas df) : Real data output
@@ -281,12 +277,12 @@ def draw_real_test(resting='random'):
         resting = random.randint(0, 1)
 
     if resting:
-        file_index = str(random.randint(1, 50))
+        file_index = str(index or random.randint(1, 50))
         file_name = 'resting_real_test_' + file_index + '.csv'
         bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
         print(file_name, ' from resting')
     else:
-        file_index = str(random.randint(1, 88))
+        file_index = str(index or random.randint(1, 88))
         file_name = 'ramp_real_test_' + file_index + '.csv'
         bytes_data = pkgutil.get_data('pyoxynet.data_test', file_name)
         print(file_name, ' from ramp')
@@ -366,12 +362,16 @@ def draw_real_test(resting='random'):
     n = 0
     while time_cum_sum < (duration - 6):
         try:
-            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))].median()
-            # TODO: this 25 is hardcoded, you should have len(df.columns)
+            breath = df.breaths.iloc[n]
+            # Some example tests record RF as 0, which the noise above can make negative: a breath of
+            # zero or negative length would never move the loop forward, so step one second instead.
+            if not np.isfinite(breath) or breath <= 0:
+                breath = 1.0
+            tmp = df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + breath))].median()
             df_breath = pd.concat([df_breath, pd.DataFrame(data=np.reshape(tmp.values, [1, len(df.columns)]),
                                                            columns=tmp.index.to_list())])
-            time_cum_sum = (time_cum_sum + df.breaths.iloc[n])
-            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + df.breaths.iloc[n]))])
+            time_cum_sum = (time_cum_sum + breath)
+            n = n + len(df[(df.time >= time_cum_sum) & (df.time < (time_cum_sum + breath))])
         except:
             break
 
@@ -491,8 +491,9 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
 
     Parameters:
         tf_model (TFLiteModel) : Model loaded with load_model (loads `model` if not given)
-        input_df (pd df) : Test with columns time, VO2_I, VCO2_I, VE_I, PetO2_I, PetCO2_I, HR_I
-            (uses the bundled example test if not given)
+        input_df (pd df) : Test with columns time (s), VO2_I, VCO2_I, VE_I, PetO2_I, PetCO2_I and,
+            optionally, HR_I; any sampling, put on a one-second grid here (uses the bundled
+            example test if not given)
         n_inputs (int) : Number of inputs (deafult to Oxynet configuration)
         past_points (int) : Number of past points in the time series (deafult to Oxynet configuration)
         model (str) : 'CNN' (default) or 'LSTM', used when tf_model is not given
@@ -666,22 +667,24 @@ def test_pyoxynet(tf_model=None, input_df=None, n_inputs=5, past_points=40, mode
     # out_dict['VT2_upper']['time'] = overlap_ci_2[1]
     # out_dict['VT2_lower']['time'] = overlap_ci_2[0]
 
-    out_dict['VT1']['HR'] = df.iloc[VT1_index]['HR_I']
-    out_dict['VT2']['HR'] = df.iloc[VT2_index]['HR_I']
+    # heart rate is reported, not used by the models, so a test without it still runs
+    has_hr = 'HR_I' in df.columns
+    out_dict['VT1']['HR'] = float(df.iloc[VT1_index]['HR_I']) if has_hr else float('nan')
+    out_dict['VT2']['HR'] = float(df.iloc[VT2_index]['HR_I']) if has_hr else float('nan')
     # out_dict['VT1_upper']['HR'] = df[df.time == overlap_ci_1[1]]['HR_I'].values[0]
     # out_dict['VT1_lower']['HR'] = df[df.time == overlap_ci_1[0]]['HR_I'].values[0]
     # out_dict['VT2_upper']['HR'] = df[df.time == overlap_ci_2[1]]['HR_I'].values[0]
     # out_dict['VT2_lower']['HR'] = df[df.time == overlap_ci_2[0]]['HR_I'].values[0]
 
-    out_dict['VT1']['VE'] = out_df.iloc[VT1_index]['VE']
-    out_dict['VT2']['VE'] = out_df.iloc[VT2_index]['VE']
+    out_dict['VT1']['VE'] = float(out_df.iloc[VT1_index]['VE'])
+    out_dict['VT2']['VE'] = float(out_df.iloc[VT2_index]['VE'])
     # out_dict['VT1_upper']['VE'] = out_df[out_df.time == overlap_ci_1[1]]['VE'].values[0]
     # out_dict['VT1_lower']['VE'] = out_df[out_df.time == overlap_ci_1[0]]['VE'].values[0]
     # out_dict['VT2_upper']['VE'] = out_df[out_df.time == overlap_ci_2[1]]['VE'].values[0]
     # out_dict['VT2_lower']['VE'] = out_df[out_df.time == overlap_ci_2[0]]['VE'].values[0]
 
-    out_dict['VT1']['VO2'] = out_df.iloc[VT1_index]['VO2_F']
-    out_dict['VT2']['VO2'] = out_df.iloc[VT2_index]['VO2_F']
+    out_dict['VT1']['VO2'] = float(out_df.iloc[VT1_index]['VO2_F'])
+    out_dict['VT2']['VO2'] = float(out_df.iloc[VT2_index]['VO2_F'])
     # out_dict['VT1_upper']['VO2'] = out_df[out_df.time == overlap_ci_1[1]]['VO2_F'].values[0]
     # out_dict['VT1_lower']['VO2'] = out_df[out_df.time == overlap_ci_1[0]]['VO2_F'].values[0]
     # out_dict['VT2_upper']['VO2'] = out_df[out_df.time == overlap_ci_2[1]]['VO2_F'].values[0]
@@ -829,7 +832,7 @@ def generate_CPET(generator,
         plot (bool): Whether to plot the generated data. Default False.
         fitness_group (int): Fitness level: 0=very low, 1=low, 2=medium, 3=high. None=random.
         noise_factor (float): Noise factor for white noise (1.5-2.5). None=random.
-        resting (bool): Whether to include resting phase. Default False.
+        resting (bool): Whether to include a resting phase. Only False is implemented.
         training (bool): Training mode flag. Default True.
         normalization (bool): Whether to normalize data. Default False.
 
@@ -893,7 +896,10 @@ def generate_CPET(generator,
         resting = random.choice([0, 1])
 
     if resting:
-        VO2_min = np.random.uniform(320, 540)
+        # This branch never set the ramp (W0, ramp rate, duration) the rest of the function needs,
+        # so it always failed with an UnboundLocalError.
+        raise NotImplementedError('generate_CPET does not generate a resting phase: '
+                                  'only resting=False is implemented.')
     else:
         if VO2_peak < 2200:
             VO2_basal = np.random.uniform(320, 540)

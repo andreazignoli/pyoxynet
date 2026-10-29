@@ -13,7 +13,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../pyoxynet/pyoxynet'))
+sys.path.insert(0, os.path.abspath('../pyoxynet'))
 
 # -- Project information -----------------------------------------------------
 
@@ -21,9 +21,15 @@ project = 'pyoxynet'
 copyright = '2025, Andrea Zignoli'
 author = 'Andrea Zignoli'
 
-# The full version, including alpha/beta/rc tags
-release = '0.1.11'
-version = '0.1.11'
+# The version, from the installed package (Read the Docs installs it) or from pyproject.toml
+try:
+    from importlib.metadata import version as _installed_version
+    release = _installed_version('pyoxynet')
+except Exception:
+    import re
+    with open(os.path.join(os.path.dirname(__file__), '..', 'pyoxynet', 'pyproject.toml')) as _f:
+        release = re.search(r'^version = "([^"]+)"', _f.read(), re.M).group(1)
+version = release
 
 # -- General configuration ---------------------------------------------------
 
@@ -48,7 +54,7 @@ napoleon_include_init_with_doc = True
 autosummary_generate = True
 
 # Autodoc settings
-autodoc_mock_imports = ['tensorflow', 'shap']
+autodoc_mock_imports = ['tensorflow', 'ai_edge_litert']
 autodoc_default_options = {
     'members': True,
     'undoc-members': False,

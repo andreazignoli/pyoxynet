@@ -1,36 +1,31 @@
-API Reference
+API reference
 =============
 
-This section provides detailed documentation for all modules and functions in the pyoxynet package.
+utilities
+---------
 
-Utilities Module
-----------------
+Loading the models, inference, generation and the example tests.
 
-The utilities module contains the core functionality for data processing, model loading, and inference.
-
-.. automodule:: utilities
+.. automodule:: pyoxynet.utilities
    :members:
    :undoc-members:
-   :show-inheritance:
 
+testing
+-------
 
-Testing Module
---------------
+The ``Test`` class, which reads some metabolic cart exports into the columns
+``test_pyoxynet`` takes.
 
-The testing module provides functions for testing and validating the package functionality.
-
-.. automodule:: testing
+.. automodule:: pyoxynet.testing
    :members:
    :undoc-members:
-   :show-inheritance:
 
+model
+-----
 
-Model Module
-------------
+The networks, defined in Keras for anyone who wants to retrain them. This module needs
+TensorFlow (``pip install "pyoxynet[train]"``); inference and generation do not use it.
 
-The model module contains model-related utilities and configurations.
-
-.. automodule:: model
+.. automodule:: pyoxynet.model
    :members:
    :undoc-members:
-   :show-inheritance:

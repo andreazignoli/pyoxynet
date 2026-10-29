@@ -1,153 +1,82 @@
 Examples
 ========
 
-This section provides practical examples of using pyoxynet for various tasks.
-
-Basic Inference Example
------------------------
-
-Here's a simple example of how to use pyoxynet for inference on sample data:
+The bundled example test
+------------------------
 
 .. code-block:: python
 
    import pyoxynet
 
-   # Load the TFLite model (default: 5 inputs, 40 past points, CNN model)
-   tfl_model = pyoxynet.load_tf_model(n_inputs=5, past_points=40, model='CNN')
+   out_df, thresholds = pyoxynet.test_pyoxynet(plot=True)
 
-   # Make inference on random input data
-   pyoxynet.test_pyoxynet(tfl_model)
+Without ``input_df``, ``test_pyoxynet`` runs the default model on the example test bundled with
+the package. ``plot=True`` draws the three domain outputs in the terminal.
 
-This will generate random CPET data and perform inference to estimate exercise intensity domains.
-
-
-Generating Synthetic CPET Data
--------------------------------
-
-To generate synthetic CPET data using the conditional GAN:
-
-.. code-block:: python
-
-   from pyoxynet import *
-
-   # Load the generator model
-   generator = load_tf_generator()
-
-   # Generate a Pandas DataFrame with synthetic CPET data
-   df = generate_CPET(generator, plot=True)
-
-   # Optionally, run inference on the generated data
-   tfl_model = load_tf_model(n_inputs=5, past_points=40, model='CNN')
-   test_pyoxynet(tfl_model, input_df=df, plot=True)
-
-
-Working with Your Own Data
----------------------------
-
-To use pyoxynet with your own CPET data:
+Comparing the two models
+------------------------
 
 .. code-block:: python
 
    import pyoxynet
-   import pandas as pd
 
-   # Load your CPET data (must include required columns)
-   # Required columns: VO2, VCO2, VE, PetO2, PetCO2
-   df = pd.read_csv('your_cpet_data.csv')
+   df = pyoxynet.load_csv_data()            # the bundled example; or load_csv_data('my_test.csv')
+   for name in ('CNN', 'LSTM'):
+       _, thresholds = pyoxynet.test_pyoxynet(input_df=df, model=name)
+       print(name, thresholds['VT1']['time'], thresholds['VT2']['time'])
 
-   # Load the model
-   tfl_model = pyoxynet.load_tf_model(n_inputs=5, past_points=40, model='CNN')
+Synthetic tests
+---------------
 
-   # Perform inference
-   results = pyoxynet.test_pyoxynet(tfl_model, input_df=df, plot=True)
-
-
-Data Processing with Optimal Filter
-------------------------------------
-
-Apply optimal filtering to smooth your CPET data:
+pyoxynet includes a conditional generative adversarial network (GAN) that generates synthetic
+ramp tests.
 
 .. code-block:: python
 
    import pyoxynet
+
+   generator = pyoxynet.load_generator()
+   df, info = pyoxynet.generate_CPET(generator, fitness_group=2)
+
+   print(info['VT1'], info['VT2'])          # the thresholds it was generated with, in seconds
+   out_df, thresholds = pyoxynet.test_pyoxynet(input_df=df)
+
+* ``fitness_group`` goes from ``0`` (very low) to ``3`` (high); leave it out for a random level.
+* A generated test has VO2, VCO2, VE, HR, respiratory frequency, PetO2 and PetCO2.
+  ``info['data']`` holds a breath-by-breath version built from it.
+* Only ramp tests that start under load are generated: ``resting=True`` raises
+  ``NotImplementedError``.
+
+The example tests
+-----------------
+
+The package includes 138 anonymised tests (88 ramp tests and 50 with a resting phase), each
+labelled with its thresholds.
+
+.. code-block:: python
+
+   import pyoxynet
+
+   df, info = pyoxynet.draw_real_test()     # a random one
+   print(info['VT1'], info['VT2'])          # the labelled thresholds, in seconds
+   out_df, thresholds = pyoxynet.test_pyoxynet(input_df=df)
+
+   df, info = pyoxynet.draw_real_test(resting=False, index=12)   # ramp test 12
+
+``draw_real_test`` adds a little random noise to the signals of the test it draws.
+
+Smoothing a signal
+------------------
+
+``optimal_filter`` is the smoothing filter pyoxynet applies to the model outputs and to VO2.
+
+.. code-block:: python
+
    import numpy as np
-
-   # Your time series data
-   t = np.arange(0, 600)  # Time in seconds
-   y = your_noisy_data     # Your measurement data
-
-   # Apply optimal filter with lambda parameter
-   filtered_y = pyoxynet.optimal_filter(t, y, my_lambda=500)
-
-
-Custom Probability Functions
------------------------------
-
-Create custom probability functions for generating synthetic data with specific characteristics:
-
-.. code-block:: python
-
    import pyoxynet
 
-   # Generate probabilities for VT1 and VT2 transitions
-   probabilities = pyoxynet.create_probabilities(
-       duration=600,  # Test duration in seconds
-       VT1=320,      # First ventilatory threshold at 320s
-       VT2=460       # Second ventilatory threshold at 460s
-   )
+   t = np.arange(0, 600, dtype=float)       # time in seconds
+   y = np.sin(t / 60) + np.random.normal(0, 0.2, t.size)
+   smooth = pyoxynet.optimal_filter(t, y, 500)
 
-   # Use these probabilities with the generator
-   generator = pyoxynet.load_tf_generator()
-   df = pyoxynet.generate_CPET(generator, plot=True, fitness_group=probabilities)
-
-
-Model Explainability with SHAP
--------------------------------
-
-Understand model predictions using SHAP values (requires full installation):
-
-.. code-block:: python
-
-   import pyoxynet
-
-   # Load model and explainer
-   tfl_model = pyoxynet.load_tf_model(n_inputs=5, past_points=40, model='CNN')
-   explainer = pyoxynet.load_explainer(tfl_model)
-
-   # Load or generate data
-   df = pyoxynet.load_csv_data('data_test.csv')
-
-   # Compute SHAP values
-   shap_values = pyoxynet.compute_shap(
-       explainer,
-       df,
-       n_inputs=5,
-       past_points=40,
-       shap_stride=20
-   )
-
-
-Advanced Usage: Custom Model Parameters
-----------------------------------------
-
-Load models with different input configurations:
-
-.. code-block:: python
-
-   import pyoxynet
-
-   # For 7-input model (including respiratory frequency)
-   tfl_model_7 = pyoxynet.load_tf_model(n_inputs=7, past_points=40, model='CNN')
-
-   # For different temporal window (e.g., 60 past time points)
-   tfl_model_60 = pyoxynet.load_tf_model(n_inputs=5, past_points=60, model='CNN')
-
-   # Test with your specific configuration
-   results = pyoxynet.test_pyoxynet(
-       tfl_model_7,
-       input_df=your_df,
-       n_inputs=7,
-       past_points=40,
-       plot=True,
-       inference_stride=1
-   )
+A larger last argument smooths more.
